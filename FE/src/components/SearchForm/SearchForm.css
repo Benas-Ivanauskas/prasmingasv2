@@ -1,0 +1,463 @@
+/* =========================================
+   SEARCH FORM STYLES
+   ========================================= */
+
+.search-form-section {
+  position: relative;
+  z-index: 10;
+  margin-top: -50px;
+  margin-bottom: 2.5rem;
+  width: 100%;
+  /* Accounts for the sticky header (72px) when scrolled to via #search-form,
+     so the form doesn't land partially hidden underneath it. */
+  scroll-margin-top: 90px;
+}
+
+/* Card Container */
+.search-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-bottom-left-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem 1.75rem;
+  position: relative;
+}
+
+/* Prevent index.css global * reset from breaking transparent children */
+.search-card * {
+  background-color: transparent;
+}
+
+/* =========================================
+   TOP SEARCH ROW (Desktop)
+   ========================================= */
+
+.search-main-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Input container */
+.search-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 52px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface) !important;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.destination-group {
+  flex: 2;
+}
+
+.date-group {
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-input-group:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 91, 84, 0.12);
+}
+
+.input-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  background-color: transparent !important;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+/* =========================================
+   TRAVEL TYPE SELECT
+   ========================================= */
+
+.travel-type-select {
+  flex: 1;
+  min-width: 180px;
+  height: 52px;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding: 0 16px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  background-color: var(--surface) !important;
+  color: var(--text);
+
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.travel-type-select:hover {
+  border-color: var(--primary);
+}
+
+.travel-type-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 91, 84, 0.12);
+}
+
+.travel-type-select option {
+  background-color: var(--surface);
+  color: var(--text);
+
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+/* Submit search button */
+.search-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 26px;
+  height: 52px;
+  min-width: 140px;
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.search-submit-btn:hover {
+  background-color: var(--primary-dark) !important;
+}
+
+.search-submit-btn:active {
+  transform: translateY(1px);
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+/* =========================================
+   SECONDARY FILTERS ROW (Pixel-Perfect Alignment)
+   ========================================= */
+
+.search-filters-row {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: 1.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-light);
+  align-items: flex-start;
+}
+
+.filter-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+/* Unified header row for all 3 columns */
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  line-height: 1;
+}
+
+.filter-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Unified control row container for all 3 columns */
+.filter-control {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* 1. Trip Mode Buttons */
+.trip-type-options {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.trip-type-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  background-color: var(--surface) !important;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.trip-btn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.trip-type-btn:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.trip-type-btn.active {
+  background-color: var(--primary-soft) !important;
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.trip-icon {
+  font-size: 1.15rem;
+}
+
+/* 2. Duration / Date Range Column */
+.duration-days-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary) !important;
+  background-color: var(--primary-soft) !important;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(31, 91, 84, 0.18);
+  line-height: 1.2;
+}
+
+.duration-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 44px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface) !important;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.date-input-wrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 91, 84, 0.12);
+}
+
+.date-field-icon {
+  color: var(--primary);
+  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.date-field {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text);
+  background-color: transparent !important;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Hide duplicate browser native calendar icon and make entire input clickable */
+.date-field::-webkit-calendar-picker-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* 3. Price Slider Column */
+.price-display {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.2;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  width: 100%;
+}
+
+.price-slider {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  border-radius: 9999px;
+  margin: 0;
+}
+
+/* =========================================
+   MOBILE RESPONSIVE (<= 768px)
+   ========================================= */
+
+@media (max-width: 768px) {
+  .search-form-section {
+    margin-top: -35px;
+    margin-top: -30px; /* increased overlap for mobile */
+    margin-bottom: 1.5rem;
+  }
+
+  .search-card {
+    width: 100%;
+    max-width: none;
+    padding: 1.15rem 1rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .search-main-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .destination-group,
+  .travel-type-select {
+    width: 100%;
+    min-width: unset;
+    height: 48px;
+  }
+
+  .search-submit-btn {
+    width: 100%;
+    height: 48px;
+  }
+
+  .search-filters-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-top: 1.15rem;
+    padding-top: 1.15rem;
+  }
+
+  /* Only here (single-column, cramped layout) do items need to shrink below
+     their natural content width — on desktop that would just squeeze the
+     narrower grid tracks and truncate labels for no reason. */
+  .filter-col {
+    min-width: 0;
+  }
+
+  .trip-type-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .trip-type-btn {
+    padding: 0 4px;
+    font-size: 0.8rem;
+    gap: 4px;
+    height: 44px;
+    min-width: 0;
+  }
+
+  .trip-icon {
+    font-size: 1.05rem;
+  }
+
+  .duration-inputs-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .date-input-wrapper {
+    height: 44px;
+  }
+
+  .date-field {
+    font-size: 0.8rem;
+  }
+}
+
+/* =========================================
+   NARROW PHONES (<= 340px)
+   ========================================= */
+
+@media (max-width: 340px) {
+  /* Native date inputs have their own minimum render width and can't
+     truncate like text, so stack them instead of squeezing two per row. */
+  .duration-inputs-grid {
+    grid-template-columns: 1fr;
+  }
+}

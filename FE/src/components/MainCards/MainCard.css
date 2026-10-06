@@ -1,0 +1,239 @@
+/* =========================================
+   MAIN CARDS SECTION
+   ========================================= */
+
+.main-cards-section {
+  padding: 3.5rem 0 4.5rem;
+  background-color: var(--background);
+}
+
+/* Reset universal background */
+.main-cards-section * {
+  background-color: transparent;
+}
+
+/* Section Header */
+.main-cards-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.main-cards-title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.main-cards-title {
+  color: var(--text);
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.main-cards-subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin: 0.35rem 0 0;
+}
+
+/* Filter and Sort Toolbar */
+.main-cards-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Category Filter Tabs */
+.main-cards-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background-color: var(--surface) !important;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-tab:hover {
+  background-color: var(--primary-soft) !important;
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.category-tab.active {
+  background-color: var(--primary) !important;
+  border-color: var(--primary);
+  color: #ffffff !important;
+}
+
+.category-tab .tab-count {
+  font-size: 0.76rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  color: inherit;
+}
+
+.category-tab.active .tab-count {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Clear-all-filters action, only shown while a search or tab is active */
+.clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  background-color: transparent !important;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clear-filters-btn svg {
+  font-size: 1.05rem;
+}
+
+.clear-filters-btn:hover {
+  color: var(--danger);
+}
+
+/* Sorting selector */
+.main-cards-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-label {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sort-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface) !important;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.sort-select:focus {
+  border-color: var(--primary);
+}
+
+/* =========================================
+   CARDS GRID
+   ========================================= */
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  /* Prevent Grid from stretching every card in a row to match the tallest
+     one — without this, expanding one card's dates visually grows its
+     row-mates too, even though their content/state hasn't changed. */
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 680px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* =========================================
+   LOADING STATE
+   ========================================= */
+
+.cards-loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* =========================================
+   EMPTY STATE
+   ========================================= */
+
+.cards-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+
+.cards-empty h3 {
+  color: var(--text);
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.cards-empty p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.reset-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.4rem;
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.reset-filter-btn:hover {
+  background-color: var(--primary-dark) !important;
+}

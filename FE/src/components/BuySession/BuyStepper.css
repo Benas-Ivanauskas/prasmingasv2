@@ -1,0 +1,52 @@
+.buy-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 1.5rem 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.buy-stepper-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.buy-stepper-item:not(:last-child)::after {
+  content: "";
+  width: 24px;
+  height: 1px;
+  margin-left: 8px;
+  background-color: var(--border);
+}
+
+.buy-stepper-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--border-light) !important;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.buy-stepper-item.current .buy-stepper-number {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+.buy-stepper-item.current .buy-stepper-label {
+  color: var(--text);
+}
+
+.buy-stepper-item.done .buy-stepper-number {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}

@@ -1,0 +1,134 @@
+/* =========================================
+   BANNER / HERO STYLES
+   ========================================= */
+
+.banner-section {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.banner-card {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure global * surface background does not overwrite transparent overlay/text */
+.banner-section *,
+.banner-card * {
+  background-color: transparent;
+}
+
+/* Background landscape photo */
+.banner-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 60%;
+  display: block;
+}
+
+/* Dark gradient overlay for text readability */
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 35, 32, 0.72) 0%,
+      rgba(15, 35, 32, 0.38) 45%,
+      rgba(15, 35, 32, 0.05) 100%
+    ),
+    linear-gradient(0deg, rgba(15, 35, 32, 0.4) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Banner text block */
+.banner-content {
+  position: relative;
+  z-index: 2;
+  padding: 3rem 3.5rem;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.banner-title {
+  color: #ffffff !important;
+  font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+
+.banner-subtitle {
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.45;
+  margin: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* =========================================
+   MOBILE RESPONSIVE (<= 768px)
+   ========================================= */
+
+@media (max-width: 768px) {
+  .banner-section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .banner-card {
+    height: 220px;
+    border-radius: var(--radius-lg);
+    align-items: flex-end;
+  }
+
+  .banner-image {
+    object-position: 75% center;
+  }
+
+  .banner-overlay {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(15, 35, 32, 0.78) 0%,
+        rgba(15, 35, 32, 0.45) 60%,
+        rgba(15, 35, 32, 0.1) 100%
+      ),
+      linear-gradient(0deg, rgba(15, 35, 32, 0.5) 0%, transparent 70%);
+  }
+
+  .banner-content {
+    padding: 1.25rem 1.25rem 1.75rem;
+    gap: 0.35rem;
+    max-width: 100%;
+  }
+
+  .banner-title {
+    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
+    line-height: 1.2;
+  }
+
+  .banner-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+}

@@ -1,0 +1,109 @@
+.trip-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Separate layer behind everything else, so closing on backdrop-click never
+   depends on stopPropagation bubbling logic in the content above it. */
+.trip-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: rgba(15, 25, 24, 0.92) !important;
+}
+
+.trip-lightbox-image {
+  position: relative;
+  z-index: 1;
+  max-width: min(90vw, 1100px);
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+/* Solid, high-contrast controls — deliberately NOT a subtle translucent
+   overlay, since a barely-there control on a dark backdrop is hard to
+   notice at all, let alone read as clickable. */
+.trip-lightbox-close,
+.trip-lightbox-nav {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background-color: #ffffff !important;
+  color: var(--primary-dark);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+
+.trip-lightbox-close {
+  top: 20px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.5rem;
+}
+
+.trip-lightbox-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  font-size: 1.7rem;
+}
+
+.trip-lightbox-prev {
+  left: 20px;
+}
+
+.trip-lightbox-next {
+  right: 20px;
+}
+
+.trip-lightbox-counter {
+  position: absolute;
+  z-index: 2;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: var(--primary-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .trip-lightbox-image {
+    max-width: 92vw;
+    max-height: 75vh;
+  }
+
+  .trip-lightbox-nav {
+    width: 42px;
+    height: 42px;
+    font-size: 1.4rem;
+  }
+
+  .trip-lightbox-prev {
+    left: 8px;
+  }
+
+  .trip-lightbox-next {
+    right: 8px;
+  }
+
+  .trip-lightbox-close {
+    top: 12px;
+    right: 12px;
+  }
+}

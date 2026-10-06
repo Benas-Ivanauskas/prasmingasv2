@@ -1,0 +1,99 @@
+/* =========================================
+   PAGE LAYOUT
+   ========================================= */
+
+.trip-page-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  column-gap: 2rem;
+  row-gap: 0; /* summary/tabs cards sit flush — see the split-card note below */
+  align-items: start;
+  margin-top: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+/* The summary+tabs content used to be one .trip-page-main card. Split into
+   two pieces, explicitly placed in the grid, so the sidebar can be a plain
+   sibling that sits between them in *source order* (which is what controls
+   visual order once the grid collapses to one column on mobile) while still
+   looking like one seamless card on desktop (zero row-gap, matching
+   border-radius/border only on the outer edges of each half). */
+.trip-page-summary-card,
+.trip-page-tabs-card {
+  /* Grid items default to min-width:auto, which lets intrinsically-wide
+     content (e.g. the Programa tab strip's labels) force the whole grid —
+     and with it the page — wider than the viewport instead of
+     wrapping/scrolling internally. This is the actual fix for "doesn't fit
+     on mobile," not a media query. */
+  min-width: 0;
+  grid-column: 1;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 0 2rem;
+}
+
+.trip-page-summary-card {
+  grid-row: 1;
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding-top: 1.75rem;
+  padding-bottom: 0.5rem;
+}
+
+.trip-page-tabs-card {
+  grid-row: 2;
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding-top: 0.5rem;
+  padding-bottom: 2.25rem;
+}
+
+.trip-page-summary-card *,
+.trip-page-tabs-card * {
+  background-color: transparent;
+}
+
+.trip-sidebar {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+
+@media (max-width: 900px) {
+  .trip-page-body {
+    grid-template-columns: 1fr;
+    /* Summary/sidebar/tabs are three distinct stacked sections again (the
+       sidebar now sits between the other two), not two halves of one card —
+       but kept tight since the info row between summary and sidebar is
+       hidden on mobile (TripSummary.css), so there's no section boundary to
+       separate with a full gap there. */
+    row-gap: 0.75rem;
+  }
+
+  .trip-page-summary-card,
+  .trip-page-tabs-card {
+    grid-column: 1;
+    /* No longer adjacent, and this narrow a layout drops the card framing
+       entirely (its own side padding was stacking on top of .container's,
+       leaving a cramped content width) — full-width, no border, relying on
+       .container's own padding for the left/right reading margin. */
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .trip-page-summary-card {
+    grid-row: 1;
+  }
+
+  .trip-sidebar {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .trip-page-tabs-card {
+    grid-row: 3;
+  }
+}

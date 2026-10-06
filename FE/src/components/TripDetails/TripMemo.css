@@ -1,0 +1,56 @@
+.trip-memo {
+  max-width: 760px;
+}
+
+.trip-memo-heading {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.05rem;
+  color: var(--primary-dark);
+}
+
+.trip-memo-heading:first-child {
+  margin-top: 0;
+}
+
+.trip-memo p {
+  margin: 0 0 0.9rem;
+  line-height: 1.6;
+}
+
+.trip-memo-list {
+  margin: 0 0 0.9rem;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trip-memo-list > li {
+  line-height: 1.55;
+}
+
+.trip-memo-sublist {
+  margin: 0.4rem 0 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.95em;
+}
+
+.trip-memo a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.trip-memo-divider {
+  margin: 1.75rem 0 1.1rem;
+  border: none;
+  border-top: 1px dashed var(--border);
+}
+
+.trip-memo-footer-line {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}

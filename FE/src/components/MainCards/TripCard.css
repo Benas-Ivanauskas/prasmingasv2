@@ -1,0 +1,368 @@
+/* =========================================
+   TRIP CARD COMPONENT
+   ========================================= */
+
+.trip-card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface) !important;
+  border: 1px solid #dce4ec;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  position: relative;
+  cursor: pointer;
+  text-align: left;
+}
+
+.trip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(23, 59, 58, 0.12);
+  border-color: #cbd5e1;
+}
+
+/* =========================================
+   MEDIA / IMAGE CONTAINER
+   ========================================= */
+
+.trip-card-media {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  background-color: #f1f5f9;
+}
+
+.trip-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.trip-card:hover .trip-card-image {
+  transform: scale(1.05);
+}
+
+/* =========================================
+   IMAGE OVERLAY BADGES
+   ========================================= */
+
+/* Top-Left Duration Badge (e.g. Bus + 1d.) */
+.trip-card-badge-top {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.trip-card-badge-top svg {
+  font-size: 1.1rem;
+  color: #ffffff !important;
+}
+
+/* Bottom-Left Price Badge ("NUO 55.25 €") */
+.trip-card-badge-from {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  padding: 4px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  line-height: 1.15;
+}
+
+.trip-card-badge-from .badge-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff !important;
+  letter-spacing: 0.05em;
+}
+
+.trip-card-badge-from .badge-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  letter-spacing: -0.01em;
+}
+
+/* Bottom-Right Discount Badge ("IKI -15%") */
+.trip-card-badge-discount {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+  padding: 4px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  line-height: 1.15;
+}
+
+.trip-card-badge-discount .badge-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff !important;
+  letter-spacing: 0.05em;
+}
+
+.trip-card-badge-discount .badge-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  letter-spacing: -0.01em;
+}
+
+/* =========================================
+   BODY CONTENT
+   ========================================= */
+
+.trip-card-body {
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  background-color: var(--surface) !important;
+}
+
+/* Title */
+.trip-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #1e293b;
+  letter-spacing: -0.015em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.7em;
+  transition: color 0.18s ease;
+}
+
+.trip-card:hover .trip-card-title {
+  color: var(--primary);
+}
+
+/* Location */
+.trip-card-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.trip-card-location svg {
+  font-size: 1.1rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* Tag / Highlight */
+.trip-card-tag {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ef4444;
+  margin-top: -2px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================
+   DEPARTURES SECTION & ROWS
+   ========================================= */
+
+.trip-card-departures-wrapper {
+  margin-top: auto;
+  border-top: 1px solid #e2e8f0;
+  background-color: var(--surface) !important;
+}
+
+.trip-departure-row {
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.86rem;
+  background-color: var(--surface) !important;
+  transition: background-color 0.15s ease;
+}
+
+.trip-departure-row:not(:first-child) {
+  border-top: 1px solid #f1f5f9;
+}
+
+.trip-departure-row:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Date */
+.trip-card-date {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.trip-card-date.is-first {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Availability & Guaranteed */
+.trip-card-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.trip-card-availability {
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.trip-card-availability.sold-out {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.guarantee-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  font-size: 0.72rem;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  user-select: none;
+}
+
+/* Pricing Section */
+.trip-card-price-group {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.trip-card-price-group .discount-text {
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.trip-card-price-group .original-strike {
+  color: #64748b;
+  font-size: 0.88rem;
+  text-decoration: line-through;
+}
+
+.trip-card-price-group .final-price {
+  color: #16a34a;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+/* =========================================
+   "VISOS DATOS" TOGGLE BUTTON
+   ========================================= */
+
+.trip-card-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-top: 1px solid #f1f5f9;
+  background-color: var(--surface) !important;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.trip-card-expand-btn:hover {
+  background-color: #f8fafc !important;
+  color: var(--primary);
+}
+
+.trip-card-expand-btn svg {
+  font-size: 0.95rem;
+  transition: transform 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .trip-card-media {
+    height: 190px;
+  }
+
+  .trip-departure-row {
+    padding: 8px 10px;
+    gap: 4px;
+    font-size: 0.78rem;
+  }
+
+  .trip-card-date {
+    font-size: 0.78rem;
+  }
+
+  .trip-card-availability {
+    font-size: 0.75rem;
+  }
+
+  .trip-card-price-group .final-price {
+    font-size: 0.94rem;
+  }
+
+  .trip-card-expand-btn {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+  }
+}

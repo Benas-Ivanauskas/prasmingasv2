@@ -1,0 +1,72 @@
+.buy-session-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2rem;
+  /* top-align both columns — now that the stepper/title/subtitle live above
+     this grid rather than inside .buy-session-main, the sidebar's top edge
+     lines up with the seat map/cabin picker cards' top edge instead of with
+     the title block. */
+  align-items: start;
+  padding-bottom: 3rem;
+}
+
+.buy-session-main {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Every element here defaults to a white background via index.css's global
+   `body, * { background-color: var(--surface) }` reset — anything in this
+   page that doesn't explicitly want its own background (plain text, labels,
+   spans) needs this override, or it shows an unwanted white box wherever it
+   has any visible padding/line-height. Real controls (inputs etc.) still
+   set their own background explicitly with !important, so they're unaffected. */
+.buy-session-main * {
+  background-color: transparent;
+}
+
+.buy-session-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0.9rem;
+  color: var(--text-muted) !important;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.buy-session-back-link:hover {
+  color: var(--primary) !important;
+}
+
+.buy-session-title {
+  margin: 0 0 0.35rem;
+}
+
+.buy-session-subtitle {
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+}
+
+.buy-session-cruise-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  /* The bus seat map is always much taller than the 3-row cabin list
+     (full seat grid vs. a handful of stepper rows) — stretching the cabin
+     card to match left a large empty void under it, so both just size to
+     their own content and start at the same top edge instead. */
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .buy-session-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .buy-session-cruise-columns {
+    grid-template-columns: 1fr;
+  }
+}

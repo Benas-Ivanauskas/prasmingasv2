@@ -1,0 +1,217 @@
+/* =========================================
+   HEADER STYLES
+   ========================================= */
+
+.header-wrapper {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Isolate nested elements from universal surface background */
+.header-wrapper * {
+  background-color: transparent;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+/* Brand Logo / Title */
+.header-brand {
+  display: flex;
+  align-items: center;
+}
+
+.brand-logo {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--primary);
+  text-decoration: none;
+  letter-spacing: -0.015em;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.brand-logo:hover {
+  color: var(--primary-dark);
+}
+
+/* Navigation List (Desktop) */
+.header-nav {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-list li {
+  display: flex;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.nav-label {
+  display: inline-block;
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background-color: var(--primary-soft) !important;
+}
+
+.nav-link.active {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  font-weight: 600;
+}
+
+/* User Profile / Login Action */
+.header-user {
+  display: flex;
+  align-items: center;
+}
+
+.user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.user-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.user-btn:hover {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+/* =========================================
+   MOBILE RESPONSIVE (<= 768px)
+   ========================================= */
+
+@media (max-width: 768px) {
+  .header-container {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand user"
+      "nav   nav";
+    row-gap: 12px;
+    height: auto;
+    padding-top: 12px;
+    padding-bottom: 10px;
+  }
+
+  .header-brand {
+    grid-area: brand;
+    align-self: center;
+    min-width: 0;
+  }
+
+  .brand-logo {
+    font-size: clamp(0.78rem, 3.4vw, 0.92rem);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .header-user {
+    grid-area: user;
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  .user-btn {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .header-nav {
+    grid-area: nav;
+    width: 100%;
+    border-top: 1px solid var(--border-light);
+    padding-top: 8px;
+  }
+
+  .navbar-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 8px 4px;
+    border-radius: var(--radius-md);
+    gap: 4px;
+    text-align: center;
+  }
+
+  .nav-icon {
+    font-size: 1.3rem;
+  }
+
+  .nav-label {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .nav-link.active {
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
+  }
+}

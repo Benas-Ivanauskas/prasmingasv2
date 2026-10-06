@@ -1,0 +1,131 @@
+/* Grid items default to min-width:auto, which lets intrinsically-wide
+   content (anywhere in this column) force the whole .trip-page-body grid —
+   and with it the page — wider than the viewport instead of wrapping. This
+   is the actual fix for "doesn't fit on mobile," not a media query. */
+.trip-sidebar {
+  min-width: 0;
+}
+
+.trip-sidebar-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  position: sticky;
+  top: 88px;
+}
+
+.trip-sidebar-card * {
+  background-color: transparent;
+}
+
+.trip-sidebar-card h3 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.trip-sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  padding: 6px 0;
+}
+
+.trip-sidebar-row svg {
+  color: var(--primary);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.trip-sidebar-availability.sold-out {
+  color: var(--danger) !important;
+  font-weight: 600;
+}
+
+.trip-sidebar-guarantee {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary) !important;
+  background-color: var(--primary-soft) !important;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.trip-sidebar-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 0.75rem;
+  margin-bottom: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.trip-sidebar-price-original {
+  color: var(--text-muted);
+  font-size: 1rem;
+  text-decoration: line-through;
+}
+
+.trip-sidebar-price-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.trip-cta {
+  width: 100%;
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+.trip-cta:hover:not(:disabled) {
+  background-color: var(--primary-dark) !important;
+}
+
+.trip-cta:disabled {
+  background-color: var(--border) !important;
+  border-color: var(--border) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+}
+
+.trip-pdf-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.trip-pdf-cta:hover {
+  background-color: var(--primary-soft) !important;
+  border-color: var(--primary);
+  color: var(--primary) !important;
+}
+
+.trip-pdf-cta svg {
+  font-size: 1.05rem;
+}
+
+@media (max-width: 900px) {
+  .trip-sidebar-card {
+    position: static;
+  }
+}
+

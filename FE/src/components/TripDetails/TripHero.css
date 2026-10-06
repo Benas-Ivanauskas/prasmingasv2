@@ -1,0 +1,60 @@
+/* =========================================
+   HERO IMAGE — contained to the same width as the page content below,
+   matching the Banner component's card treatment (rounded, not edge-to-edge)
+   ========================================= */
+
+.trip-hero-card {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  margin-top: 1.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.trip-hero-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.trip-hero-gallery-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 9999px;
+  background-color: rgba(23, 59, 58, 0.75) !important;
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  /* True edge-to-edge bleed on mobile — breaks out of the parent .container's
+     1.5rem padding (negative margin + matching width) instead of sitting as
+     an inset card, which is the one thing worth bleeding full-screen here;
+     the info below it keeps normal reading margins. */
+  .trip-hero-card {
+    height: 160px;
+    margin: 1rem -1.5rem 0;
+    width: calc(100% + 3rem);
+    border: none;
+    border-radius: 0;
+  }
+
+  .trip-hero-gallery-btn {
+    right: 10px;
+    bottom: 10px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+  }
+}

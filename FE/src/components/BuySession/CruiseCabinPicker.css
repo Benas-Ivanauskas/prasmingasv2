@@ -1,0 +1,84 @@
+.cruise-cabin-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+}
+
+.cruise-cabin-picker-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.cruise-cabin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.cruise-cabin-row:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.cruise-cabin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cruise-cabin-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cruise-cabin-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.cruise-cabin-total {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.cruise-cabin-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.cruise-cabin-stepper-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent !important;
+  color: var(--primary);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cruise-cabin-stepper-btn:disabled {
+  color: var(--border);
+  cursor: not-allowed;
+}
+
+.cruise-cabin-stepper-count {
+  min-width: 1.5ch;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}

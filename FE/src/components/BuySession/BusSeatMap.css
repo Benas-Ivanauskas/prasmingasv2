@@ -1,0 +1,257 @@
+.bus-seat-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 1.25rem 1.75rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+}
+
+/* Bus silhouette — plain, directly-anchored CSS on the same box as the seat
+   content (not a separately-scaled SVG background), so nothing can drift
+   out of alignment relative to the content's actual rendered size. */
+.bus-illustration {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+  margin: 8px 0;
+  padding: 1.5rem 1rem 1.75rem;
+  background-color: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 48px 48px 20px 20px;
+}
+
+.bus-windshield-label {
+  margin-bottom: 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--border);
+  text-transform: uppercase;
+}
+
+.bus-illustration-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 1.1rem;
+}
+
+.bus-badge {
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.bus-badge-driver {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+
+.bus-badge-door {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.bus-seat-map-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Fixed columns, identical for every row — this is what keeps the left and
+   right seat pairs aligned across rows regardless of whether a given row's
+   middle slot (bonus seat) or amenity slots are actually filled. A row that
+   centers its own content independently would shift column positions
+   whenever its total content width differs from other rows (e.g. the one
+   wide 5-seat row vs. every normal 4-seat row) — a fixed grid avoids that
+   entirely by reserving the same column widths whether or not they're used. */
+.bus-seat-row {
+  display: grid;
+  grid-template-columns: 16px 84px 38px 84px 16px;
+  column-gap: 16px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.bus-row-number {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--border);
+}
+
+.bus-seat-group {
+  display: flex;
+  gap: 8px;
+}
+
+.bus-seat-group-middle {
+  justify-content: center;
+}
+
+/* Occupies the same footprint as a seat pair (2 × 38px + 8px gap), since it
+   replaces one on rows with a restroom / mid-bus exit — the other side of
+   that same row still shows real seats right next to it. */
+.bus-amenity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38px;
+  padding: 0 4px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--background) !important;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.bus-seat {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface) !important;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bus-seat:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.bus-seat.selected {
+  background-color: var(--primary) !important;
+  border-color: var(--primary);
+  color: #ffffff !important;
+}
+
+.bus-seat.held {
+  background-color: var(--accent) !important;
+  border-color: var(--accent);
+  color: #ffffff !important;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.bus-seat.taken {
+  background-color: var(--border-light) !important;
+  border-color: var(--border-light);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.bus-seat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.bus-seat-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.bus-seat-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background-color: var(--surface) !important;
+}
+
+.bus-seat-swatch.selected {
+  background-color: var(--primary) !important;
+  border-color: var(--primary);
+}
+
+.bus-seat-swatch.held {
+  background-color: var(--accent) !important;
+  border-color: var(--accent);
+}
+
+.bus-seat-swatch.taken {
+  background-color: var(--border-light) !important;
+  border-color: var(--border-light);
+}
+
+/* The grid above uses fixed pixel columns so seat rows stay aligned, but
+   that means it doesn't shrink on its own. Below 900px this component can
+   end up squeezed to roughly half the viewport width (the CRUISE page puts
+   it side by side with CruiseCabinPicker down to a 640px breakpoint), so it
+   needs its own compact sizing rather than relying on the page to give it
+   room. These sizes are picked to still fit a single, full-width column
+   down to a 320px-wide phone. */
+@media (max-width: 900px) {
+  .bus-seat-map {
+    padding: 1.25rem 0.75rem 1.5rem;
+  }
+
+  .bus-illustration {
+    padding: 1.25rem 0.5rem 1.5rem;
+  }
+
+  .bus-illustration-top {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .bus-badge {
+    padding: 4px 10px;
+    font-size: 0.64rem;
+  }
+
+  .bus-seat-row {
+    grid-template-columns: 12px 58px 24px 58px 12px;
+    column-gap: 8px;
+  }
+
+  .bus-seat-group {
+    gap: 6px;
+  }
+
+  .bus-seat {
+    width: 26px;
+    height: 32px;
+    font-size: 0.62rem;
+  }
+
+  .bus-amenity {
+    height: 32px;
+    padding: 0 2px;
+    font-size: 0.48rem;
+  }
+
+  .bus-row-number {
+    font-size: 0.58rem;
+  }
+}
