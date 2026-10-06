@@ -86,7 +86,8 @@ export default function BuyPayment() {
     { code: string; type: "PERCENTAGE" | "FIXED"; value: number } | null
   >(() => {
     const code = paymentExtras?.discountCode;
-    const discount = code ? MOCK_DISCOUNT_CODES[code] : undefined;
+    if (!code) return null;
+    const discount = MOCK_DISCOUNT_CODES[code];
     return discount ? { code, ...discount } : null;
   });
   const [voucherInput, setVoucherInput] = useState("");
@@ -94,7 +95,8 @@ export default function BuyPayment() {
   const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; value: number } | null>(
     () => {
       const code = paymentExtras?.voucherCode;
-      const value = code ? MOCK_VOUCHERS[code] : undefined;
+      if (!code) return null;
+      const value = MOCK_VOUCHERS[code];
       return value ? { code, value } : null;
     }
   );
