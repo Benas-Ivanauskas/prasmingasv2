@@ -8,12 +8,15 @@ import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
 import { downloadConsentDocument } from "../../api/trips";
+import { formatLtPhone, getEmailError, isValidEmail, isValidLtPhone, PHONE_PREFIX } from "../../utils/validation";
+import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import { useCountdown } from "../../hooks/useCountdown";
 import {
   getTripPricing,
   getCabinTypeLabel,
-  getCabinCapacity,
+  getCabinUnitSize,
+  getCabinPricing,
   getBookingBaseTotal,
   formatTripDate,
   formatEuro,
@@ -28,18 +31,23 @@ import type {
 import "./BuyOneSession.css";
 import "./BuyTravellerInfo.css";
 
-// Applied the same way regardless of trip type for now — the client still
-// needs to confirm which documents apply to BUS vs FLIGHT vs CRUISE.
-const CONSENT_DOCUMENTS: {
+type ConsentDocument = {
   key: keyof ConsentForm;
   documentKey: string;
+  // Hosted page opened in a new tab; documents without one yet fall back to
+  // the downloadConsentDocument stub.
+  url?: string;
   linkText: string;
   before: string;
   after: string;
-}[] = [
+};
+
+// BUS and CRUISE use these; FLIGHT adds AIR_CARRIAGE_CONSENT on top.
+const CONSENT_DOCUMENTS: ConsentDocument[] = [
   {
     key: "agreedInfoForm",
     documentKey: "info-form",
+    url: LEGAL_LINKS.infoForm,
     linkText: "Standartinės informacijos teikimo forma",
     before: "Susipažinau ir sutinku su ",
     after:
@@ -48,6 +56,7 @@ const CONSENT_DOCUMENTS: {
   {
     key: "agreedPrivacyPolicy",
     documentKey: "privacy-policy",
+    url: LEGAL_LINKS.privacyPolicy,
     linkText: "Privatumo politika",
     before: "Patvirtinu, kad susipažinau su įmonės ",
     after:
@@ -61,6 +70,14 @@ const CONSENT_DOCUMENTS: {
     after: ".",
   },
 ];
+
+const AIR_CARRIAGE_CONSENT: ConsentDocument = {
+  key: "agreedAirCarriage",
+  documentKey: "air-carriage-conditions",
+  linkText: "pagrindinėmis vežimo oru sąlygomis",
+  before: "Susipažinau ir sutinku su ",
+  after: ".",
+};
 
 const emptyTraveller = (): TravellerForm => ({
   firstName: "",
@@ -94,7 +111,7 @@ export default function BuyTravellerInfo() {
     () =>
       restoredBooking?.contact ?? {
         email: "",
-        phone: "",
+        phone: PHONE_PREFIX,
         city: "",
         pickupCity: "",
         wantsInvoice: false,
@@ -107,12 +124,14 @@ export default function BuyTravellerInfo() {
       ? restoredBooking.travellers.map((t) => new Set(t.extraIds))
       : Array.from({ length: travellerCount }, () => new Set<string>())
   );
+  const [touched, setTouched] = useState({ email: false, phone: false });
   const [consents, setConsents] = useState<ConsentForm>(
     () =>
       restoredBooking?.consents ?? {
         agreedInfoForm: false,
         agreedPrivacyPolicy: false,
         agreedTravellerMemo: false,
+        agreedAirCarriage: false,
       }
   );
 
@@ -123,6 +142,9 @@ export default function BuyTravellerInfo() {
   const pricing = getTripPricing(departure);
   const isFlight = trip.tripType === "FLIGHT";
   const isCruise = trip.tripType === "CRUISE";
+  const consentDocuments = isFlight
+    ? [...CONSENT_DOCUMENTS, AIR_CARRIAGE_CONSENT]
+    : CONSENT_DOCUMENTS;
   const pickupPoints = departure.pickupPoints ?? [];
   // Cruise pricing is per cabin type, not a flat per-person departure cost —
   // a per-traveller price only makes sense for BUS/FLIGHT, so cruises get a
@@ -132,14 +154,14 @@ export default function BuyTravellerInfo() {
         .filter((c) => (seatSelection.cabinSelections?.[c.id] ?? 0) > 0)
         .map((c) => {
           const qty = seatSelection.cabinSelections?.[c.id] ?? 0;
-          const capacity = getCabinCapacity(c.type);
+          const capacity = getCabinUnitSize(c.type);
           return {
             id: c.id,
             label: getCabinTypeLabel(c.type),
             qty,
-            // qty is a cabin COUNT — each cabin sleeps `capacity` travellers,
-            // all paying pricePerPerson, so the line total scales by both.
-            totalPrice: qty * capacity * c.pricePerPerson,
+            // qty counts units (places for QUAD, cabins otherwise) — each
+            // covers `capacity` travellers paying the discounted price.
+            totalPrice: qty * capacity * getCabinPricing(c).finalPrice,
           };
         })
     : [];
@@ -167,8 +189,9 @@ export default function BuyTravellerInfo() {
     consents.agreedInfoForm &&
     consents.agreedPrivacyPolicy &&
     consents.agreedTravellerMemo &&
-    contact.email.trim() &&
-    contact.phone.trim() &&
+    (!isFlight || consents.agreedAirCarriage) &&
+    isValidEmail(contact.email) &&
+    isValidLtPhone(contact.phone) &&
     contact.city.trim() &&
     (pickupPoints.length === 0 || contact.pickupCity.trim()) &&
     travellers.every(
@@ -242,18 +265,29 @@ export default function BuyTravellerInfo() {
               <IoDocumentTextOutline aria-hidden="true" />
               Sutikimai ir taisyklės
             </h3>
-            {CONSENT_DOCUMENTS.map((doc) => (
+            {consentDocuments.map((doc) => (
               <label key={doc.key} className="traveller-consent-row">
                 <input
                   type="checkbox"
-                  checked={consents[doc.key]}
+                  checked={Boolean(consents[doc.key])}
                   onChange={(e) =>
                     setConsents((prev) => ({ ...prev, [doc.key]: e.target.checked }))
                   }
                 />
                 <span>
                   {doc.before}
-                  <strong>{doc.linkText}</strong>
+                  {doc.url ? (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="traveller-consent-link"
+                    >
+                      {doc.linkText}
+                    </a>
+                  ) : (
+                    <strong>{doc.linkText}</strong>
+                  )}
                   {doc.after}{" "}
                   <button
                     type="button"
@@ -261,7 +295,8 @@ export default function BuyTravellerInfo() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      downloadConsentDocument(doc.documentKey);
+                      if (doc.url) window.open(doc.url, "_blank", "noopener,noreferrer");
+                      else downloadConsentDocument(doc.documentKey);
                     }}
                   >
                     <IoDownloadOutline aria-hidden="true" />
@@ -279,17 +314,41 @@ export default function BuyTravellerInfo() {
                 El. paštas *
                 <input
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   value={contact.email}
+                  aria-invalid={touched.email && !isValidEmail(contact.email)}
                   onChange={(e) => setContact((prev) => ({ ...prev, email: e.target.value }))}
+                  onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
                 />
+                {touched.email && getEmailError(contact.email) && (
+                  <span className="traveller-field-error">{getEmailError(contact.email)}</span>
+                )}
               </label>
               <label>
                 Telefonas *
                 <input
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="+370 6xx xxxxx"
                   value={contact.phone}
-                  onChange={(e) => setContact((prev) => ({ ...prev, phone: e.target.value }))}
+                  aria-invalid={touched.phone && !isValidLtPhone(contact.phone)}
+                  onChange={(e) =>
+                    setContact((prev) => ({ ...prev, phone: formatLtPhone(e.target.value) }))
+                  }
+                  onFocus={(e) => {
+                    // Caret always lands after the fixed prefix.
+                    const end = e.target.value.length;
+                    requestAnimationFrame(() => e.target.setSelectionRange(end, end));
+                  }}
+                  onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
                 />
+                {touched.phone && !isValidLtPhone(contact.phone) && (
+                  <span className="traveller-field-error">
+                    Įveskite pilną numerį, pvz. +370 612 34567
+                  </span>
+                )}
               </label>
               <label>
                 Miestas *

@@ -13,7 +13,8 @@ import { useTripBySlug } from "../../hooks/useTripBySlug";
 import {
   getTripPricing,
   getCabinTypeLabel,
-  getCabinCapacity,
+  getCabinUnitSize,
+  getCabinPricing,
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
@@ -62,11 +63,11 @@ export default function BuyOneSession() {
     });
   };
 
-  // cabinSelections counts CABINS, not people — each cabin sleeps
-  // getCabinCapacity(type) travellers, so the actual headcount (and thus how
-  // many bus seats/passengers this implies) scales by that capacity.
+  // cabinSelections counts selectable units (places for QUAD, cabins for
+  // DOUBLE/TRIPLE) — each covers getCabinUnitSize(type) travellers, so the
+  // actual headcount (and thus bus seats/passengers) scales by that.
   const totalCabinTravellers = cabinTypes.reduce(
-    (sum, c) => sum + (cabinSelections[c.id] ?? 0) * getCabinCapacity(c.type),
+    (sum, c) => sum + (cabinSelections[c.id] ?? 0) * getCabinUnitSize(c.type),
     0
   );
 
@@ -96,7 +97,8 @@ export default function BuyOneSession() {
       .join(", ");
     totalPrice = cabinTypes.reduce(
       (sum, c) =>
-        sum + (cabinSelections[c.id] ?? 0) * getCabinCapacity(c.type) * c.pricePerPerson,
+        sum +
+        (cabinSelections[c.id] ?? 0) * getCabinUnitSize(c.type) * getCabinPricing(c).finalPrice,
       0
     );
     selectionSummary = [
@@ -197,6 +199,7 @@ export default function BuyOneSession() {
                 <CruiseCabinPicker
                   cabinTypes={cabinTypes}
                   selections={cabinSelections}
+                  maxTravellers={selectedSeatIds.size}
                   onChange={(id, qty) =>
                     setCabinSelections((prev) => ({ ...prev, [id]: qty }))
                   }

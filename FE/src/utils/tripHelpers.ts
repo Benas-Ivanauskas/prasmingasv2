@@ -3,6 +3,7 @@ import type {
   Departure,
   TripType,
   TripSearchFilters,
+  CabinType,
   CabinTypeName,
   ProgramDay,
   TripImage,
@@ -33,12 +34,12 @@ export function getTripTypeLabel(type: TripType): string {
 export function getCabinTypeLabel(type: CabinTypeName): string {
   switch (type) {
     case "DOUBLE":
-      return "2 vietų kajutė";
+      return "Dvivietė kajutė be lango";
     case "TRIPLE":
-      return "3 vietų kajutė";
+      return "Trivietė kajutė be lango";
     case "QUAD":
     default:
-      return "4 vietų kajutė";
+      return "Vieta keturvietėje kajutėje be lango";
   }
 }
 
@@ -55,6 +56,23 @@ export function getCabinCapacity(type: CabinTypeName): number {
     default:
       return 4;
   }
+}
+
+// How many travellers ONE selectable unit covers. QUAD cabins are sold per
+// place (1 bed = 1 person, so 4 travellers just pick 4 places), while
+// DOUBLE/TRIPLE are sold as whole cabins. Everything that counts headcount
+// or price from cabinSelections goes through this, not getCabinCapacity.
+export function getCabinUnitSize(type: CabinTypeName): number {
+  return type === "QUAD" ? 1 : getCabinCapacity(type);
+}
+
+export function getCabinPricing(cabin: CabinType) {
+  const discount = cabin.discount ?? 0;
+  const hasDiscount = discount > 0;
+  const finalPrice = Number(
+    (hasDiscount ? cabin.pricePerPerson * (1 - discount / 100) : cabin.pricePerPerson).toFixed(2)
+  );
+  return { originalPrice: cabin.pricePerPerson, finalPrice, discount, hasDiscount };
 }
 
 export function getTripDepartures(trip: Trip): Departure[] {
@@ -171,11 +189,12 @@ export function getBookingBaseTotal(
   cabinSelections?: Record<string, number>
 ): number {
   if (trip.tripType === "CRUISE" && cabinSelections) {
-    // cabinSelections counts CABINS, not people — each one sleeps
-    // getCabinCapacity(c.type) travellers, all paying pricePerPerson.
+    // cabinSelections counts selectable units (places for QUAD, cabins for
+    // DOUBLE/TRIPLE) — each covers getCabinUnitSize(c.type) travellers, all
+    // paying the discounted per-person price.
     return (departure.cabinTypes ?? []).reduce(
       (sum, c) =>
-        sum + (cabinSelections[c.id] ?? 0) * getCabinCapacity(c.type) * c.pricePerPerson,
+        sum + (cabinSelections[c.id] ?? 0) * getCabinUnitSize(c.type) * getCabinPricing(c).finalPrice,
       0
     );
   }
@@ -206,8 +225,9 @@ export function getTripAvailability(departure?: Departure): AvailabilityInfo {
     takenSeats = departure.flightSeatsTaken ?? 0;
     freeSeats = Math.max(0, totalSeats - takenSeats);
   } else if (departure.cabinTypes && departure.cabinTypes.length > 0) {
-    totalSeats = departure.cabinTypes.reduce((acc, c) => acc + c.totalUnits, 0);
-    takenSeats = departure.cabinTypes.reduce((acc, c) => acc + c.takenUnits, 0);
+    // Units differ per type (places vs cabins), so count people.
+    totalSeats = departure.cabinTypes.reduce((acc, c) => acc + c.totalUnits * getCabinUnitSize(c.type), 0);
+    takenSeats = departure.cabinTypes.reduce((acc, c) => acc + c.takenUnits * getCabinUnitSize(c.type), 0);
     freeSeats = Math.max(0, totalSeats - takenSeats);
   }
 

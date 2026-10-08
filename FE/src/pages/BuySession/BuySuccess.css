@@ -1,0 +1,123 @@
+.success-page {
+  padding: 3rem 0 5rem;
+}
+
+/* index.css gives every element a white background. Keep text elements
+   transparent so nothing shows as boxes on the tinted areas below. */
+.success-page :where(h1, p, span, svg, div) {
+  background-color: transparent;
+}
+
+.success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 2.6rem;
+}
+
+.success-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.8rem;
+}
+
+.success-text {
+  margin: 0 0 1.75rem;
+  max-width: 320px;
+}
+
+.success-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+  margin-bottom: 1.75rem;
+  padding: 0 0.5rem;
+  text-align: left;
+}
+
+.success-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.success-detail svg {
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: 1.3rem;
+}
+
+.success-order {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 1.1rem;
+  background-color: var(--background);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+
+.success-order-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.success-order-number {
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.success-cta {
+  width: 100%;
+}
+
+.success-email {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.success-email svg {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .success-page {
+    padding: 1.5rem 0 3rem;
+  }
+
+  .success-card {
+    padding: 2rem 1.25rem;
+  }
+}

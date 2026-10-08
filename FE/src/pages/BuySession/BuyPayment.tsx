@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   IoMapOutline,
   IoCallOutline,
@@ -8,6 +8,7 @@ import {
   IoLocationOutline,
   IoMailOutline,
   IoReceiptOutline,
+  IoDocumentTextOutline,
 } from "react-icons/io5";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -16,17 +17,20 @@ import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
 import { confirmHold } from "../../api/trips";
+import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import { useCountdown } from "../../hooks/useCountdown";
 import {
   getTripPricing,
   getCabinTypeLabel,
-  getCabinCapacity,
+  getCabinUnitSize,
+  getCabinPricing,
   getBookingBaseTotal,
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
 import type { BookingState } from "./buySessionTypes";
+import type { BuySuccessState } from "./BuySuccess";
 import "./BuyOneSession.css";
 import "./BuyPayment.css";
 
@@ -70,6 +74,7 @@ function PaymentInfoRow({
 export default function BuyPayment() {
   const { slug, departureId } = useParams<{ slug: string; departureId: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const booking = (location.state as BookingState | null) ?? null;
   const { trip, departure, status } = useTripBySlug(slug, departureId);
 
@@ -167,12 +172,12 @@ export default function BuyPayment() {
         .filter((c) => (booking.cabinSelections?.[c.id] ?? 0) > 0)
         .map((c) => {
           const qty = booking.cabinSelections?.[c.id] ?? 0;
-          const capacity = getCabinCapacity(c.type);
+          const capacity = getCabinUnitSize(c.type);
           return {
             id: c.id,
             label: getCabinTypeLabel(c.type),
             qty,
-            totalPrice: qty * capacity * c.pricePerPerson,
+            totalPrice: qty * capacity * getCabinPricing(c).finalPrice,
           };
         })
     : [];
@@ -234,6 +239,20 @@ export default function BuyPayment() {
       appliedDiscount,
       appliedVoucher,
       finalTotal,
+    });
+
+    // Mock order number: BE will return the real one after the payment
+    // provider confirms, and this navigation moves to its return URL.
+    const successState: BuySuccessState = {
+      orderNumber: `PR-${Math.floor(10000 + Math.random() * 90000)}`,
+      email: booking.contact.email,
+      travellerCount,
+      seatNumbers: booking.seatNumbers,
+      pickupCity: booking.contact.pickupCity || undefined,
+    };
+    navigate(`/buy/${trip.slug}/${departure.id}/success`, {
+      state: successState,
+      replace: true,
     });
   };
 
@@ -464,13 +483,33 @@ export default function BuyPayment() {
               placeholder="Jei turite papildomų klausimų ar pastabų dėl kelionės, parašykite čia..."
             />
 
+            <a
+              href={LEGAL_LINKS.tourismTerms}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="payment-terms-link"
+            >
+              <IoDocumentTextOutline aria-hidden="true" />
+              ORGANIZUOTOS TURISTINĖS KELIONĖS SUTARTIES SĄLYGOS
+            </a>
+
             <label className="payment-consent">
               <input
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
               />
-              Sutinku su kelionės pirkimo sąlygomis
+              <span>
+                Susipažinau ir sutinku su{" "}
+                <a
+                  href={LEGAL_LINKS.tourismTerms}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="payment-consent-link"
+                >
+                  organizuotos turistinės kelionės sutarties sąlygomis
+                </a>
+              </span>
             </label>
           </div>
         </div>
@@ -508,7 +547,7 @@ export default function BuyPayment() {
           note={
             isHoldExpired
               ? "Rezervacijos laikas baigėsi — grįžkite ir pasirinkite vietas iš naujo."
-              : "Mokėjimo apdorojimas bus pridėtas vėliau."
+              : "Apmokėjimas bus vykdomas per Paysera saugią mokėjimo sistemą."
           }
         >
           <div className="payment-coupon">

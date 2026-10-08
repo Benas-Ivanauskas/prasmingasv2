@@ -24,6 +24,17 @@
   color: var(--text);
 }
 
+.traveller-consent-link {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.traveller-consent-link:hover {
+  color: var(--primary);
+}
+
 .traveller-consent-download {
   display: inline-flex;
   align-items: center;
@@ -229,4 +240,14 @@
   font-size: 0.86rem;
   font-weight: 700;
   color: var(--primary);
+}
+
+.traveller-fields input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.traveller-field-error {
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 500;
 }

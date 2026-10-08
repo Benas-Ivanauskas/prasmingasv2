@@ -1,0 +1,257 @@
+.about-page {
+  padding: 2.5rem 0 4rem;
+}
+
+/* index.css gives every element a white background, which shows up as boxes
+   behind text on tinted/image areas. Reset it for plain text elements here
+   (zero specificity, so the classed backgrounds below still win). */
+.about-page :where(h1, h2, h3, p, span, a, svg, div) {
+  background-color: transparent;
+}
+
+/* HERO */
+.about-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 380px;
+  padding: 3rem;
+  border-radius: var(--radius-xl);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.about-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(14, 44, 41, 0.88) 0%,
+    rgba(14, 44, 41, 0.45) 60%,
+    rgba(14, 44, 41, 0.15) 100%
+  );
+}
+
+.about-hero-content {
+  position: relative;
+  max-width: 560px;
+}
+
+.about-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.9rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.about-hero h1 {
+  margin: 0 0 1rem;
+  color: #ffffff;
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+}
+
+.about-hero p {
+  margin: 0 0 1.5rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.about-cta {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.about-cta:hover {
+  background: #e0a600;
+}
+
+/* SECTIONS */
+.about-section-title {
+  margin: 3rem 0 1.25rem;
+  font-size: 1.3rem;
+}
+
+/* HIGHLIGHTS */
+.about-highlights {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.1rem;
+}
+
+.about-highlight {
+  padding: 1.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.about-highlight:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.about-highlight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 1.5rem;
+}
+
+.about-highlight h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.about-highlight p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+/* INFO — one card, white details on the left, green contact panel on the right */
+.about-info {
+  display: grid;
+  margin-top: 3rem;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.about-details,
+.about-contact {
+  display: flex;
+  flex-direction: column;
+  padding: 2.25rem;
+}
+
+.about-panel-eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-company {
+  margin: 0 0 1.5rem;
+  font-size: 1.35rem;
+}
+
+.about-detail-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.about-detail {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.3rem 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.about-detail-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.about-detail-value {
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.about-contact {
+  gap: 0.35rem;
+  background: linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.about-contact .about-panel-eyebrow {
+  color: var(--accent);
+}
+
+.about-contact .about-company {
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.about-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.55rem 0.6rem;
+  margin: 0 -0.6rem;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-size: 0.93rem;
+  font-weight: 500;
+  transition: background-color 160ms ease;
+}
+
+a.about-contact-row:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.about-contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 1.15rem;
+}
+
+@media (max-width: 900px) {
+  .about-highlights {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-info {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-hero {
+    min-height: 320px;
+    padding: 1.75rem 1.25rem;
+  }
+
+}
+
+@media (max-width: 480px) {
+  .about-highlights {
+    grid-template-columns: 1fr;
+  }
+}

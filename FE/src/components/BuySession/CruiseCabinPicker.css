@@ -13,6 +13,17 @@
   font-size: 1rem;
 }
 
+.cruise-cabin-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.cruise-cabin-hint.is-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .cruise-cabin-row {
   display: flex;
   align-items: center;
@@ -37,6 +48,48 @@
 .cruise-cabin-name {
   font-size: 0.95rem;
   font-weight: 600;
+  color: var(--text);
+}
+
+.cruise-cabin-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cruise-cabin-beds {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.cruise-cabin-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cruise-cabin-price-original {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.cruise-cabin-discount {
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.cruise-cabin-price-final {
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--text);
 }
 

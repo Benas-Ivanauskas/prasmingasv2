@@ -40,14 +40,15 @@ export default function TripTabs({
   const galleryImages = trip.images.slice(1);
   const pickupPoints = selectedDeparture?.pickupPoints ?? [];
 
-  // "Išvykimo vietos" and "Atmintinė" only show up once there's something to
-  // put in them — not every departure/trip has pickup points or a memo yet.
+  // "Išvykimo vietos" only shows up once there are pickup points. "Atmintinė"
+  // is always present for every trip type; it shows a placeholder until the
+  // admin fills in the memo text.
   const tabs: { id: TripDetailTab; label: string }[] = [
     { id: "overview", label: "Apžvalga" },
     { id: "program", label: "Programa" },
     ...(pickupPoints.length > 0 ? [{ id: "pickup" as const, label: "Išvykimo vietos" }] : []),
     { id: "included", label: "Įskaičiuota" },
-    ...(trip.travellerMemo ? [{ id: "memo" as const, label: "Atmintinė" }] : []),
+    { id: "memo", label: "Atmintinė" },
   ];
 
   return (
@@ -164,7 +165,12 @@ export default function TripTabs({
           </div>
         )}
 
-        {activeTab === "memo" && trip.travellerMemo && <TripMemo text={trip.travellerMemo} />}
+        {activeTab === "memo" &&
+          (trip.travellerMemo ? (
+            <TripMemo text={trip.travellerMemo} />
+          ) : (
+            <p>Kelionės atmintinė bus paskelbta artimiausiu metu.</p>
+          ))}
       </div>
     </>
   );

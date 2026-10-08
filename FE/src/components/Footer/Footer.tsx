@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { LEGAL_LINKS } from "../../constants/legalLinks";
 import {
   IoCallOutline,
   IoMailOutline,
@@ -98,12 +99,22 @@ export default function Footer() {
 
           <div className="footer-col">
             <h4 className="footer-col-title">Informacija</h4>
-            <NavLink to="/tourism-services-agreement" className="footer-link">
+            <a
+              href={LEGAL_LINKS.tourismTerms}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
               Turizmo paslaugų sutartis
-            </NavLink>
-            <NavLink to="/privacy-policy" className="footer-link">
+            </a>
+            <a
+              href={LEGAL_LINKS.privacyPolicy}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
               Privatumo politika
-            </NavLink>
+            </a>
           </div>
         </div>
       </div>

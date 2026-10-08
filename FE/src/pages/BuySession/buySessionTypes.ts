@@ -37,13 +37,13 @@ export interface SeatSelectionState {
 }
 
 // Legal-document acknowledgements collected once per order (not per
-// traveller), applied the same way for BUS/FLIGHT/CRUISE for now — the
-// client still needs to confirm which documents apply to which trip type,
-// so this stays uniform until that comes in.
+// traveller). BUS/CRUISE collect the first three; FLIGHT additionally
+// collects agreedAirCarriage (air carriage conditions).
 export interface ConsentForm {
   agreedInfoForm: boolean;
   agreedPrivacyPolicy: boolean;
   agreedTravellerMemo: boolean;
+  agreedAirCarriage?: boolean;
 }
 
 // Step 4's own fields — only ever set when round-tripping Step 4 → Step 3 →

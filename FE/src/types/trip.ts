@@ -23,7 +23,9 @@ export interface Seat {
 export interface CabinType {
   id: string;
   type: CabinTypeName;
-  pricePerPerson: number;
+  pricePerPerson: number; // full (pre-discount) price
+  discount?: number | null; // e.g. 20 (meaning 20%)
+  // QUAD is sold per PLACE (people); DOUBLE/TRIPLE per whole CABIN.
   totalUnits: number;
   takenUnits: number;
 }
