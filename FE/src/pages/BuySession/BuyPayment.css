@@ -286,6 +286,60 @@
   color: var(--primary-dark);
 }
 
+.payment-deposit-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.payment-method-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.payment-method-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface) !important;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.payment-method-option input {
+  margin-top: 3px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.payment-method-option.active {
+  border-color: var(--primary);
+  background-color: var(--primary-soft) !important;
+}
+
+.payment-method-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.payment-method-option-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.payment-method-option-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .payment-notes textarea {
   width: 100%;
   min-height: 100px;

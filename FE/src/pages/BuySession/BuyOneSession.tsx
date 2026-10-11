@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
+import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BusSeatMap from "../../components/BuySession/BusSeatMap";
 import FlightTravellerStepper from "../../components/BuySession/FlightTravellerStepper";
@@ -44,8 +45,8 @@ export default function BuyOneSession() {
   );
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
-  if (!trip) return <StatusPage message="Kelionė nerasta." />;
-  if (!departure) return <StatusPage message="Išvykimas nerastas." />;
+  if (!trip) return <NotFound />;
+  if (!departure) return <NotFound />;
 
   const pricing = getTripPricing(departure);
   const seats = departure.seats ?? [];

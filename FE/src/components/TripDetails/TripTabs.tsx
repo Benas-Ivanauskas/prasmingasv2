@@ -7,6 +7,8 @@ import type { Trip, Departure } from "../../types/trip";
 import { getScaledImageUrl, getProgramDayPhotos } from "../../utils/tripHelpers";
 import TripGallery from "./TripGallery";
 import TripMemo from "./TripMemo";
+import RichText from "../RichText/RichText";
+import { isHtml } from "../RichText/richTextUtils";
 import "./TripTabs.css";
 
 export type TripDetailTab = "overview" | "program" | "pickup" | "included" | "memo";
@@ -71,7 +73,7 @@ export default function TripTabs({
         {activeTab === "overview" && (
           <div className="trip-overview">
             <h2>Kodėl verta rinktis šią kelionę?</h2>
-            <p>{trip.description || trip.shortDescription}</p>
+            <RichText value={trip.description || trip.shortDescription} />
 
             <TripGallery
               images={galleryImages}
@@ -94,7 +96,7 @@ export default function TripTabs({
                 <li key={day.day} className="trip-program-day">
                   <span className="trip-program-day-number">{day.day} diena</span>
                   <h3>{day.title}</h3>
-                  <p>{day.description}</p>
+                  <RichText value={day.description} />
 
                   {visiblePhotos.length > 0 && (
                     <div className="trip-program-day-photos">
@@ -146,28 +148,24 @@ export default function TripTabs({
               <h3>
                 <IoCheckmarkCircleOutline aria-hidden="true" /> Įskaičiuota
               </h3>
-              <ul>
-                {(trip.inclusions ?? []).map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+              <RichText value={trip.inclusions} />
             </div>
             <div>
               <h3>
                 <IoCloseCircleOutline aria-hidden="true" /> Neįskaičiuota
               </h3>
-              <ul>
-                {(trip.exclusions ?? []).map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+              <RichText value={trip.exclusions} />
             </div>
           </div>
         )}
 
         {activeTab === "memo" &&
           (trip.travellerMemo ? (
-            <TripMemo text={trip.travellerMemo} />
+            isHtml(trip.travellerMemo) ? (
+              <RichText value={trip.travellerMemo} className="trip-memo" />
+            ) : (
+              <TripMemo text={trip.travellerMemo} />
+            )
           ) : (
             <p>Kelionės atmintinė bus paskelbta artimiausiu metu.</p>
           ))}

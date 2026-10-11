@@ -165,7 +165,7 @@ export const mockTrips: Trip[] = [
 
 • Medicininių išlaidų draudimas
 
-IŠVYKIMO VIETOS IR LAIKAS
+IŠVYKIMO VIETOS
 
 Pažintinė 5 dienų kelionė į Latviją autobusu iš Kauno per Vilnių, Ukmergę ir Uteną.
 
@@ -173,27 +173,27 @@ Prašome atvykti 10 min. iki autobuso išvykimo.
 
 Išvykimo laikas gali būti tikslinamas 1-2 d. prieš kelionės pradžią.
 
-Kaunas - prie MCDONALD‘S, Savanorių pr. 321 (šalia yra automobilių stovėjimo aikštelė, savaitgaliais nemokama); išvykimas 05:15, planuojamas grįžimas 5-ą kelionės dieną tarp 22:30 ir 23:30
+Kaunas - prie MCDONALD‘S, Savanorių pr. 321 (šalia yra automobilių stovėjimo aikštelė, savaitgaliais nemokama); planuojamas grįžimas 5-ą kelionės dieną tarp 22:30 ir 23:30
 
 Vilnius
 
-• Gariūnai, sustojimas link Vilniaus centro; išvykimas ~06:25
+• Gariūnai, sustojimas link Vilniaus centro
 
-• ERGO stovėjimo aikštelė, Geležinio Vilko g. 6A, prie Gerosios Vilties žiedo; išvykimas ~06:30, planuojamas grįžimas 5-ą kelionės dieną tarp 21:00 ir 22:00
+• ERGO stovėjimo aikštelė, Geležinio Vilko g. 6A, prie Gerosios Vilties žiedo; planuojamas grįžimas 5-ą kelionės dieną tarp 21:00 ir 22:00
 
-Rumšiškės - sustojimas link Vilniaus; išvykimas ~05:30
+Rumšiškės - sustojimas link Vilniaus
 
-Žiežmariai - sustojimas link Vilniaus; išvykimas ~05:45
+Žiežmariai - sustojimas link Vilniaus
 
-Elektrėnai - degalinė CIRCLE K, prie autostrados, link Vilniaus; išvykimas ~05:55
+Elektrėnai - degalinė CIRCLE K, prie autostrados, link Vilniaus
 
-Vievis - sustojimas link Vilniaus; išvykimas ~06:05
+Vievis - sustojimas link Vilniaus
 
-Grigiškės - degalinė VIADA, prie autostrados, Kovo 11-osios g. 75, Grigiškės; išvykimas ~06:20
+Grigiškės - degalinė VIADA, prie autostrados, Kovo 11-osios g. 75, Grigiškės
 
-Ukmergė - aikštelė prie PC EIFELIS; išvykimas ~07:35
+Ukmergė - aikštelė prie PC EIFELIS
 
-Utena - Circle K Utena, J. Basanavičiaus g. 108a; išvykimas ~08:35
+Utena - Circle K Utena, J. Basanavičiaus g. 108a
 
 KITOS PASTABOS
 
@@ -264,21 +264,20 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-latgala-2026-09-26",
         date: "2026-09-26T00:00:00.000Z",
-        time: "06:30",
-        // Matches travellerMemo's "IŠVYKIMO VIETOS IR LAIKAS" section verbatim —
-        // the two Vilnius stops are named distinctly since pickup-point
+        // Matches travellerMemo's "IŠVYKIMO VIETOS" section verbatim — the
+        // two Vilnius stops are named distinctly since pickup-point
         // selection elsewhere keys off `city`.
         pickupPoints: [
-          { city: "Kaunas", time: "05:15" },
-          { city: "Rumšiškės", time: "05:30" },
-          { city: "Žiežmariai", time: "05:45" },
-          { city: "Elektrėnai", time: "05:55" },
-          { city: "Vievis", time: "06:05" },
-          { city: "Grigiškės", time: "06:20" },
-          { city: "Vilnius (Gariūnai)", time: "06:25" },
-          { city: "Vilnius (ERGO)", time: "06:30" },
-          { city: "Ukmergė", time: "07:35" },
-          { city: "Utena", time: "08:35" },
+          { city: "Kaunas" },
+          { city: "Rumšiškės" },
+          { city: "Žiežmariai" },
+          { city: "Elektrėnai" },
+          { city: "Vievis" },
+          { city: "Grigiškės" },
+          { city: "Vilnius (Gariūnai)" },
+          { city: "Vilnius (ERGO)" },
+          { city: "Ukmergė" },
+          { city: "Utena" },
         ],
         durationDays: 5,
         cost: 289,
@@ -310,18 +309,17 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-latgala-2026-10-17",
         date: "2026-10-17T00:00:00.000Z",
-        time: "06:30",
         pickupPoints: [
-          { city: "Kaunas", time: "05:15" },
-          { city: "Rumšiškės", time: "05:30" },
-          { city: "Žiežmariai", time: "05:45" },
-          { city: "Elektrėnai", time: "05:55" },
-          { city: "Vievis", time: "06:05" },
-          { city: "Grigiškės", time: "06:20" },
-          { city: "Vilnius (Gariūnai)", time: "06:25" },
-          { city: "Vilnius (ERGO)", time: "06:30" },
-          { city: "Ukmergė", time: "07:35" },
-          { city: "Utena", time: "08:35" },
+          { city: "Kaunas" },
+          { city: "Rumšiškės" },
+          { city: "Žiežmariai" },
+          { city: "Elektrėnai" },
+          { city: "Vievis" },
+          { city: "Grigiškės" },
+          { city: "Vilnius (Gariūnai)" },
+          { city: "Vilnius (ERGO)" },
+          { city: "Ukmergė" },
+          { city: "Utena" },
         ],
         durationDays: 5,
         cost: 289,
@@ -329,6 +327,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteeThreshold: 70,
         guaranteedOverride: false,
         remainingPaymentDays: 5,
+        depositPercentage: 30,
         status: "ACTIVE",
         seats: makeBusSeats("s-lat-2", 53),
         extraOptions: [
@@ -384,10 +383,9 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-siauliai-2026-10-03",
         date: "2026-10-03T00:00:00.000Z",
-        time: "07:00",
         pickupPoints: [
-          { city: "Vilnius", time: "07:00" },
-          { city: "Kaunas", time: "08:15" },
+          { city: "Vilnius" },
+          { city: "Kaunas" },
         ],
         durationDays: 1,
         cost: 67,
@@ -451,10 +449,9 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-bistrampolis-2026-10-04",
         date: "2026-10-04T00:00:00.000Z",
-        time: "07:30",
         pickupPoints: [
-          { city: "Vilnius", time: "07:30" },
-          { city: "Kaunas", time: "08:45" },
+          { city: "Vilnius" },
+          { city: "Kaunas" },
         ],
         durationDays: 1,
         cost: 67,
@@ -485,13 +482,13 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
     id: "trip-italy-bus-001",
     slug: "italija-gardos-ezeras-verona",
     title: "Italija: Gardos ežeras ir Verona",
-    shortDescription: "Pažintinė kelionė autobusu po Šiaurės Italiją.",
+    shortDescription: "Poilsinė kelionė autobusu po Šiaurės Italiją.",
     description:
       "Kelionė po vieną gražiausių Italijos regionų. Aplankysime Veroną, Gardos ežerą ir Sirmionę.",
     tripType: "BUS",
-    category: "SIGHTSEEING",
+    category: "LEISURE",
     destinationCountry: "Italija",
-    filterTags: ["uzsienyje", "pazintines", "autobusu", "italija"],
+    filterTags: ["uzsienyje", "poilsines", "autobusu", "italija"],
     invoiceName: "ITA",
     nextInvoiceNumber: 1,
     isActive: true,
@@ -556,18 +553,8 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-italy-2027-05-12",
         date: "2027-05-12T00:00:00.000Z",
-        time: null,
 
-        pickupPoints: [
-          {
-            city: "Vilnius",
-            time: "06:00",
-          },
-          {
-            city: "Kaunas",
-            time: "07:30",
-          },
-        ],
+        pickupPoints: [{ city: "Vilnius" }, { city: "Kaunas" }],
 
         durationDays: 4,
         cost: 499,
@@ -598,10 +585,9 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-italy-2027-06-15",
         date: "2027-06-15T00:00:00.000Z",
-        time: null,
         pickupPoints: [
-          { city: "Vilnius", time: "06:00" },
-          { city: "Kaunas", time: "07:30" },
+          { city: "Vilnius" },
+          { city: "Kaunas" },
         ],
         durationDays: 4,
         cost: 499,
@@ -623,13 +609,13 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
     id: "trip-prague-bus-001",
     slug: "cekija-praha",
     title: "Čekija: Praha ir Karlovy Varai",
-    shortDescription: "Pažintinė kelionė autobusu į Čekiją.",
+    shortDescription: "Poilsinė kelionė autobusu į Čekiją.",
     description:
       "Kelionė į Prahą ir Karlovy Varus. Architektūra, istorija ir jaukūs Čekijos miestai.",
     tripType: "BUS",
-    category: "SIGHTSEEING",
+    category: "LEISURE",
     destinationCountry: "Čekija",
-    filterTags: ["uzsienyje", "pazintines", "autobusu", "cekija"],
+    filterTags: ["uzsienyje", "poilsines", "autobusu", "cekija"],
     invoiceName: "CZE",
     nextInvoiceNumber: 1,
     isActive: true,
@@ -682,18 +668,8 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-prague-2027-04-17",
         date: "2027-04-17T00:00:00.000Z",
-        time: null,
 
-        pickupPoints: [
-          {
-            city: "Vilnius",
-            time: "05:30",
-          },
-          {
-            city: "Kaunas",
-            time: "07:00",
-          },
-        ],
+        pickupPoints: [{ city: "Vilnius" }, { city: "Kaunas" }],
 
         durationDays: 4,
         cost: 329,
@@ -703,6 +679,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteedOverride: false,
 
         remainingPaymentDays: 5,
+        depositPercentage: 30,
         status: "ACTIVE",
 
         flightSeatsTotal: null,
@@ -803,7 +780,6 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-barcelona-2027-06-08",
         date: "2027-06-08T00:00:00.000Z",
-        time: "09:20",
 
         pickupPoints: [],
 
@@ -913,9 +889,12 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-cruise-2027-07-15",
         date: "2027-07-15T00:00:00.000Z",
-        time: null,
 
-        pickupPoints: [],
+        // Port-transfer coach pickup points (cruises pick a bus seat too).
+        pickupPoints: [
+          { city: "Vilnius" },
+          { city: "Kaunas" },
+        ],
 
         durationDays: 5,
         cost: 899,
@@ -925,6 +904,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteedOverride: true,
 
         remainingPaymentDays: 10,
+        depositPercentage: 30,
         status: "ACTIVE",
 
         flightSeatsTotal: null,
@@ -982,15 +962,15 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
     id: "trip-norway-cruise-001",
     slug: "norvegijos-fiordai",
     title: "Norvegijos fiordai",
-    shortDescription: "Pažintinė kelionė kruizu po Norvegijos fiordus.",
+    shortDescription: "Poilsinė kelionė kruizu po Norvegijos fiordus.",
     description:
       "Kelionė kruizu po įspūdingus Norvegijos fiordus, kalnus ir jaukius uostamiesčius.",
     tripType: "CRUISE",
-    category: "SIGHTSEEING",
+    category: "LEISURE",
     destinationCountry: "Norvegija",
     filterTags: [
       "uzsienyje",
-      "pazintines",
+      "poilsines",
       "kruizines",
       "norvegija",
       "fiordai",
@@ -1058,9 +1038,13 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       {
         id: "departure-norway-2027-08-21",
         date: "2027-08-21T00:00:00.000Z",
-        time: null,
 
-        pickupPoints: [],
+        // Port-transfer coach pickup points (cruises pick a bus seat too).
+        pickupPoints: [
+          { city: "Vilnius" },
+          { city: "Kaunas" },
+          { city: "Klaipėda" },
+        ],
 
         durationDays: 5,
         cost: 1199,

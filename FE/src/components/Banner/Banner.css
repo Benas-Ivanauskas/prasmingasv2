@@ -3,8 +3,10 @@
    ========================================= */
 
 .banner-section {
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+  /* No margin-bottom — SearchForm sits directly beneath with zero gap,
+     the two together forming one seamless card (this rounds the top,
+     SearchForm's card rounds the bottom; see SearchForm.css). */
   width: 100%;
 }
 
@@ -12,7 +14,9 @@
   position: relative;
   width: 100%;
   height: 380px;
-  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  border-bottom: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   overflow: hidden;
   box-shadow: var(--shadow-md);
   display: flex;
@@ -92,12 +96,11 @@
 @media (max-width: 768px) {
   .banner-section {
     margin-top: 1rem;
-    margin-bottom: 1rem;
   }
 
   .banner-card {
     height: 220px;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     align-items: flex-end;
   }
 

@@ -4,6 +4,7 @@ import { IoDocumentTextOutline, IoDownloadOutline } from "react-icons/io5";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
+import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
@@ -136,8 +137,8 @@ export default function BuyTravellerInfo() {
   );
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
-  if (!trip) return <StatusPage message="Kelionė nerasta." />;
-  if (!departure) return <StatusPage message="Išvykimas nerastas." />;
+  if (!trip) return <NotFound />;
+  if (!departure) return <NotFound />;
 
   const pricing = getTripPricing(departure);
   const isFlight = trip.tripType === "FLIGHT";
@@ -374,7 +375,7 @@ export default function BuyTravellerInfo() {
                   </option>
                   {pickupPoints.map((point) => (
                     <option key={point.city} value={point.city}>
-                      {point.city} ({point.time})
+                      {point.city}
                     </option>
                   ))}
                 </select>

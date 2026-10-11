@@ -1,0 +1,62 @@
+/* Shared typography for rich text — used on the public pages and inside the
+   admin editor, so what the admin sees is what visitors get. */
+.rich-text,
+.rich-text .tiptap {
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.rich-text :where(p, h2, h3, h4, ul, ol, li, strong, em, u, span, a, blockquote) {
+  background-color: transparent;
+}
+
+.rich-text p {
+  margin: 0 0 0.9rem;
+  color: inherit;
+}
+
+.rich-text h2 {
+  margin: 1.4rem 0 0.6rem;
+  font-size: 1.25rem;
+}
+
+.rich-text h3 {
+  margin: 1.2rem 0 0.5rem;
+  font-size: 1.05rem;
+  color: var(--primary-dark);
+}
+
+.rich-text ul,
+.rich-text ol {
+  margin: 0 0 0.9rem;
+  padding-left: 1.3rem;
+}
+
+.rich-text ul {
+  list-style: disc;
+}
+
+.rich-text ol {
+  list-style: decimal;
+}
+
+.rich-text li {
+  margin-bottom: 0.35rem;
+}
+
+.rich-text li > p {
+  margin: 0;
+}
+
+.rich-text a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.rich-text > :first-child {
+  margin-top: 0;
+}
+
+.rich-text > :last-child {
+  margin-bottom: 0;
+}

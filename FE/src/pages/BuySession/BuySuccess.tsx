@@ -9,7 +9,10 @@ import {
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
+import NotFound from "../NotFound/NotFound";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
+import type { OrderPaymentStatus } from "../../types/order";
+import { formatEuro } from "../../utils/tripHelpers";
 import "./BuySuccess.css";
 
 // What Step 4 hands over after a successful "Apmokėti". With a real backend
@@ -21,6 +24,11 @@ export interface BuySuccessState {
   travellerCount: number;
   seatNumbers: string[];
   pickupCity?: string;
+  paymentStatus: OrderPaymentStatus;
+  // Only set when paymentStatus is DEPOSIT_PAID.
+  depositAmount?: number;
+  remainingAmount?: number;
+  remainingDueDate?: string;
 }
 
 const MONTHS_GENITIVE = [
@@ -78,7 +86,7 @@ export default function BuySuccess() {
   if (!order) return <Navigate to="/" replace />;
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
-  if (!trip || !departure) return <StatusPage message="Kelionė nerasta." />;
+  if (!trip || !departure) return <NotFound />;
 
   const placeParts = [
     order.pickupCity,
@@ -122,6 +130,17 @@ export default function BuySuccess() {
               <span className="success-order-label">Užsakymo numeris</span>
               <span className="success-order-number">{order.orderNumber}</span>
             </div>
+
+            {order.paymentStatus === "DEPOSIT_PAID" && (
+              <p className="success-text">
+                Sumokėjote depozitą {formatEuro(order.depositAmount ?? 0)}. Likusią sumą{" "}
+                {formatEuro(order.remainingAmount ?? 0)}
+                {order.remainingDueDate
+                  ? ` reikės sumokėti iki ${order.remainingDueDate}`
+                  : " sumokėsite vėliau"}
+                .
+              </p>
+            )}
 
             <Link to="/" className="btn-primary success-cta">
               Grįžti į pagrindinį

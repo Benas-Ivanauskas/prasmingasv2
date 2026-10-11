@@ -9,14 +9,16 @@ import {
   IoMailOutline,
   IoReceiptOutline,
   IoDocumentTextOutline,
+  IoWalletOutline,
 } from "react-icons/io5";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
+import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
-import { confirmHold } from "../../api/trips";
+import { confirmHold, lookupDiscountCode, lookupVoucher, createOrder } from "../../api/trips";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import { useCountdown } from "../../hooks/useCountdown";
@@ -33,24 +35,6 @@ import type { BookingState } from "./buySessionTypes";
 import type { BuySuccessState } from "./BuySuccess";
 import "./BuyOneSession.css";
 import "./BuyPayment.css";
-
-// Mock-only codes — there's no backend to validate these against, so a
-// couple of demo entries stand in for what would normally be API calls.
-// Two distinct concepts, kept as separate mechanisms:
-// - Discount code (mirrors schema.prisma's Discount model): a promo rule,
-//   either PERCENTAGE or a FIXED € amount off.
-// - Gift voucher: a prepaid € balance (bought/gifted beforehand) that's
-//   credited toward the total like partial payment, not a promo rule.
-const MOCK_DISCOUNT_CODES: Record<string, { type: "PERCENTAGE" | "FIXED"; value: number }> = {
-  SAULE10: { type: "PERCENTAGE", value: 10 },
-  KELIONE5: { type: "PERCENTAGE", value: 5 },
-  KODAS20: { type: "FIXED", value: 20 },
-};
-
-const MOCK_VOUCHERS: Record<string, number> = {
-  DOVANA100: 100,
-  DOVANA50: 50,
-};
 
 function PaymentInfoRow({
   label,
@@ -92,8 +76,8 @@ export default function BuyPayment() {
   >(() => {
     const code = paymentExtras?.discountCode;
     if (!code) return null;
-    const discount = MOCK_DISCOUNT_CODES[code];
-    return discount ? { code, ...discount } : null;
+    const discount = lookupDiscountCode(code);
+    return discount ? { code: discount.code, type: discount.type, value: discount.value } : null;
   });
   const [voucherInput, setVoucherInput] = useState("");
   const [voucherError, setVoucherError] = useState("");
@@ -101,15 +85,16 @@ export default function BuyPayment() {
     () => {
       const code = paymentExtras?.voucherCode;
       if (!code) return null;
-      const value = MOCK_VOUCHERS[code];
-      return value ? { code, value } : null;
+      const voucher = lookupVoucher(code);
+      return voucher ? { code: voucher.code, value: voucher.value } : null;
     }
   );
+  const [paymentMethod, setPaymentMethod] = useState<"FULL" | "DEPOSIT">("FULL");
   const secondsLeft = useCountdown(booking?.holdExpiresAt);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
-  if (!trip) return <StatusPage message="Kelionė nerasta." />;
-  if (!departure) return <StatusPage message="Išvykimas nerastas." />;
+  if (!trip) return <NotFound />;
+  if (!departure) return <NotFound />;
 
   if (!booking) {
     return (
@@ -165,6 +150,27 @@ export default function BuyPayment() {
   const voucherAmount = appliedVoucher ? Math.min(appliedVoucher.value, afterDiscountTotal) : 0;
   const voucherLeftover = appliedVoucher ? appliedVoucher.value - voucherAmount : 0;
   const finalTotal = afterDiscountTotal - voucherAmount;
+  // Departure opts into a deposit option (admin-set %) — otherwise checkout
+  // stays "pay the full total now" exactly as before.
+  const depositPercentage = departure.depositPercentage ?? 0;
+  const hasDepositOption = depositPercentage > 0;
+  const depositAmount = hasDepositOption
+    ? Math.round(finalTotal * (depositPercentage / 100) * 100) / 100
+    : 0;
+  const remainingAmount = finalTotal - depositAmount;
+  const payingDeposit = hasDepositOption && paymentMethod === "DEPOSIT";
+  const amountDueNow = payingDeposit ? depositAmount : finalTotal;
+  // Finally gives remainingPaymentDays (admin-set, previously unused) real
+  // purpose — only relevant once a deposit (not the full total) is paid now.
+  const remainingDueDate =
+    payingDeposit && departure.remainingPaymentDays
+      ? formatTripDate(
+          new Date(
+            new Date(departure.date).getTime() -
+              departure.remainingPaymentDays * 24 * 60 * 60 * 1000
+          ).toISOString()
+        )
+      : undefined;
   // Cruise prices by cabin, with no traveller-to-cabin mapping collected —
   // shown as a one-time breakdown instead of a (misleading) per-traveller price.
   const cabinBreakdown = isCruise
@@ -188,9 +194,9 @@ export default function BuyPayment() {
   const handleApplyDiscount = () => {
     const code = discountInput.trim().toUpperCase();
     if (!code) return;
-    const discount = MOCK_DISCOUNT_CODES[code];
+    const discount = lookupDiscountCode(code);
     if (discount) {
-      setAppliedDiscount({ code, ...discount });
+      setAppliedDiscount({ code: discount.code, type: discount.type, value: discount.value });
       setDiscountError("");
     } else {
       setAppliedDiscount(null);
@@ -201,9 +207,9 @@ export default function BuyPayment() {
   const handleApplyVoucher = () => {
     const code = voucherInput.trim().toUpperCase();
     if (!code) return;
-    const value = MOCK_VOUCHERS[code];
-    if (value) {
-      setAppliedVoucher({ code, value });
+    const voucher = lookupVoucher(code);
+    if (voucher) {
+      setAppliedVoucher({ code: voucher.code, value: voucher.value });
       setVoucherError("");
     } else {
       setAppliedVoucher(null);
@@ -224,31 +230,43 @@ export default function BuyPayment() {
     },
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (isHoldExpired) return;
     // Turns the held seats permanent (TAKEN) instead of leaving them to
     // expire — the swap point for a real "confirm order" endpoint later.
     if (booking.holdId) {
       confirmHold(booking.holdId);
     }
-    console.log("Payment submitted:", {
+
+    const firstTraveller = booking.travellers[0];
+    const order = await createOrder({
       tripId: trip.id,
       departureId: departure.id,
-      booking,
-      comment,
-      appliedDiscount,
-      appliedVoucher,
-      finalTotal,
+      tripTitle: trip.title,
+      clientName: firstTraveller
+        ? `${firstTraveller.firstName} ${firstTraveller.lastName}`.trim()
+        : booking.contact.email,
+      phone: booking.contact.phone,
+      email: booking.contact.email,
+      note: comment || undefined,
+      travellerCount,
+      seatIds: booking.selectedSeatIds,
+      totalAmount: finalTotal,
+      depositAmount: payingDeposit ? depositAmount : undefined,
+      paymentStatus: payingDeposit ? "DEPOSIT_PAID" : "FULLY_PAID",
+      createdByAdmin: false,
     });
 
-    // Mock order number: BE will return the real one after the payment
-    // provider confirms, and this navigation moves to its return URL.
     const successState: BuySuccessState = {
-      orderNumber: `PR-${Math.floor(10000 + Math.random() * 90000)}`,
+      orderNumber: order.orderNumber,
       email: booking.contact.email,
       travellerCount,
       seatNumbers: booking.seatNumbers,
       pickupCity: booking.contact.pickupCity || undefined,
+      paymentStatus: order.paymentStatus,
+      depositAmount: payingDeposit ? depositAmount : undefined,
+      remainingAmount: payingDeposit ? remainingAmount : undefined,
+      remainingDueDate,
     };
     navigate(`/buy/${trip.slug}/${departure.id}/success`, {
       state: successState,
@@ -468,11 +486,59 @@ export default function BuyPayment() {
             </div>
           </div>
 
+          {hasDepositOption && (
+            <div className="payment-section">
+              <div className="payment-section-label">
+                <IoWalletOutline aria-hidden="true" />
+                Apmokėjimo būdas
+              </div>
+              <div className="payment-method-options">
+                <label className={`payment-method-option ${!payingDeposit ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    checked={paymentMethod === "FULL"}
+                    onChange={() => setPaymentMethod("FULL")}
+                  />
+                  <span className="payment-method-option-text">
+                    <span className="payment-method-option-title">
+                      Mokėti visą sumą ({formatEuro(finalTotal)})
+                    </span>
+                  </span>
+                </label>
+                <label className={`payment-method-option ${payingDeposit ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    checked={paymentMethod === "DEPOSIT"}
+                    onChange={() => setPaymentMethod("DEPOSIT")}
+                  />
+                  <span className="payment-method-option-text">
+                    <span className="payment-method-option-title">
+                      Mokėti depozitą ({formatEuro(depositAmount)})
+                    </span>
+                    <span className="payment-method-option-sub">
+                      Liks sumokėti {formatEuro(remainingAmount)}
+                      {remainingDueDate ? ` iki ${remainingDueDate}` : ""}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="payment-section">
             <div className="payment-totals">
               <span>Viso keliautojų: {travellerCount}</span>
               <span>Viso: {formatEuro(finalTotal)}</span>
             </div>
+            {payingDeposit && (
+              <p className="payment-deposit-note">
+                Šiandien mokate {formatEuro(depositAmount)}, likusius{" "}
+                {formatEuro(remainingAmount)}
+                {remainingDueDate ? ` reikės sumokėti iki ${remainingDueDate}` : " sumokėsite vėliau"}.
+              </p>
+            )}
           </div>
 
           <div className="payment-section payment-notes">
@@ -519,13 +585,8 @@ export default function BuyPayment() {
           title="Užsakymo suvestinė"
           routeLabel={`${trip.destinationCountry} · ${travellerCount} keliautojai`}
           dateLabel={formatTripDate(departure.date)}
-          selectionSummary={
-            extrasTotal > 0
-              ? `Papildomos paslaugos: +${formatEuro(extrasTotal)}`
-              : "Papildomų paslaugų nepasirinkta"
-          }
           totalNote={
-            appliedDiscount || appliedVoucher ? (
+            appliedDiscount || appliedVoucher || payingDeposit ? (
               <>
                 {appliedDiscount && (
                   <div>
@@ -537,13 +598,19 @@ export default function BuyPayment() {
                     Kuponas: {appliedVoucher.code} (-{formatEuro(voucherAmount)})
                   </div>
                 )}
+                {payingDeposit && (
+                  <div>
+                    Depozitas — liks sumokėti {formatEuro(remainingAmount)}
+                    {remainingDueDate ? ` iki ${remainingDueDate}` : ""}
+                  </div>
+                )}
               </>
             ) : undefined
           }
-          formattedTotal={formatEuro(finalTotal)}
+          formattedTotal={formatEuro(amountDueNow)}
           isValid={agreed && !isHoldExpired}
           onContinue={handlePay}
-          buttonLabel={`Apmokėti ${formatEuro(finalTotal)}`}
+          buttonLabel={`Apmokėti ${formatEuro(amountDueNow)}`}
           note={
             isHoldExpired
               ? "Rezervacijos laikas baigėsi — grįžkite ir pasirinkite vietas iš naujo."

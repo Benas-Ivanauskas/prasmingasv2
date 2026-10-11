@@ -1,4 +1,14 @@
+.status-page-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .page-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
   padding: 4rem 0;
   text-align: center;
   color: var(--text-muted);

@@ -1,5 +1,9 @@
 import { mockTrips } from "../../trip";
+import { mockDiscountCodes, mockVouchers } from "../../discounts";
+import { mockOrders } from "../../orders";
 import type { Trip } from "../types/trip";
+import type { DiscountCode, GiftVoucher } from "../types/discount";
+import type { Order } from "../types/order";
 
 // Cached at module scope (not per-component) so repeated mounts of MainCard
 // — e.g. navigating away and back — reuse the same fetch instead of
@@ -28,6 +32,61 @@ export function fetchTrips(): Promise<Trip[]> {
 export async function fetchTripBySlug(slug: string): Promise<Trip | undefined> {
   const trips = await fetchTrips();
   return trips.find((trip) => trip.slug === slug);
+}
+
+// Checkout's Step 4 "Nuolaidos kodas"/"Dovanų kuponas" lookups — read the
+// same arrays api/adminDiscounts.ts edits, so an admin toggling a code
+// inactive (or deleting it) takes effect here immediately, same relationship
+// fetchTrips() has with adminTrips.ts's mockTrips.
+export function lookupDiscountCode(code: string): DiscountCode | undefined {
+  const normalized = code.trim().toUpperCase();
+  return mockDiscountCodes.find((d) => d.isActive && d.code.toUpperCase() === normalized);
+}
+
+export function lookupVoucher(code: string): GiftVoucher | undefined {
+  const normalized = code.trim().toUpperCase();
+  return mockVouchers.find((v) => v.isActive && v.code.toUpperCase() === normalized);
+}
+
+// Reusable order-number generator (checkout used to inline a one-off
+// `PR-${...}` literal) — BE will return the real number once a payment
+// provider confirms; this just needs to look plausible for the mock flow.
+export function generateOrderNumber(): string {
+  return `ORD${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
+}
+
+// The real persistence call checkout was missing — until now, "Apmokėti"
+// only logged to the console and navigated away, so nothing survived a
+// refresh and no admin view of "what was purchased" could exist. Swap this
+// for a real `POST /api/orders` once the backend exists.
+export async function createOrder(
+  input: Omit<Order, "id" | "orderNumber" | "createdAt" | "status">
+): Promise<Order> {
+  const order: Order = {
+    ...input,
+    id: `order-${Date.now()}`,
+    orderNumber: generateOrderNumber(),
+    createdAt: new Date().toISOString(),
+    status: "ACTIVE",
+  };
+  mockOrders.push(order);
+  return order;
+}
+
+// No backend yet to actually render one — BE will need to generate the PVM
+// invoice PDF and serve it from a real file/URL. A deposit-paid order needs
+// two documents (deposit invoice + final-payment invoice), a fully paid one
+// needs a single combined invoice. Swap this for a real
+// `GET /api/orders/:id/invoice.pdf` later; the caller already awaits it.
+export async function downloadOrderInvoicePdf(order: Order): Promise<void> {
+  if (order.paymentStatus === "DEPOSIT_PAID") {
+    console.log(
+      "TODO(BE): generate and download BOTH deposit and final-payment invoice PDFs for order",
+      order.orderNumber
+    );
+  } else {
+    console.log("TODO(BE): generate and download the full-payment invoice PDF for order", order.orderNumber);
+  }
 }
 
 // No backend yet to actually render one — BE will need to generate the PDF

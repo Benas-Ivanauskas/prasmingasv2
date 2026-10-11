@@ -11,7 +11,6 @@ export interface TripImage {
 
 export interface PickupPoint {
   city: string;
-  time: string;
 }
 
 export interface Seat {
@@ -40,7 +39,6 @@ export interface ExtraOption {
 export interface Departure {
   id: string;
   date: string;
-  time: string | null;
   pickupPoints?: PickupPoint[];
   durationDays: number;
   cost: number;
@@ -48,6 +46,9 @@ export interface Departure {
   guaranteeThreshold: number | null;
   guaranteedOverride: boolean;
   remainingPaymentDays?: number;
+  // e.g. 30 meaning a 30% deposit option is offered at checkout; null/0/
+  // unset means full payment only (today's default behavior).
+  depositPercentage?: number | null;
   status: DepartureStatus;
   flightSeatsTotal?: number | null;
   flightSeatsTaken?: number;
@@ -73,6 +74,8 @@ export interface Trip {
   id: string;
   slug: string;
   title: string;
+  // shortDescription / description / programDays[].description / travellerMemo
+  // may be HTML from the admin rich text editor or legacy plain text.
   shortDescription?: string;
   description?: string;
   tripType: TripType;
@@ -85,8 +88,10 @@ export interface Trip {
   badgeTag?: string; // e.g., "Paskutinė minutė!", "Paskutinė minutė! Sekmadienis"
   images: TripImage[];
   programDays?: ProgramDay[];
-  inclusions?: string[];
-  exclusions?: string[];
+  // Rich text (HTML) from the admin editor. Older data is a plain list of
+  // strings — RichText/RichTextEditor accept both.
+  inclusions?: string | string[];
+  exclusions?: string | string[];
   // Free-form admin-authored text for the "Atmintinė" tab (what's
   // included/excluded in detail, departure points/times, contract terms,
   // payment instructions, organizer info, etc.) — not every trip has one

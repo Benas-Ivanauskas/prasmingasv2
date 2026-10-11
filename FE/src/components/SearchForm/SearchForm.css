@@ -5,8 +5,9 @@
 .search-form-section {
   position: relative;
   z-index: 10;
-  margin-top: -50px;
-  margin-bottom: 2.5rem;
+  /* Sits directly beneath Banner with zero gap — together they form one
+     seamless card (Banner rounds the top, this rounds the bottom). */
+  margin-bottom: 1.5rem;
   width: 100%;
   /* Accounts for the sticky header (72px) when scrolled to via #search-form,
      so the form doesn't land partially hidden underneath it. */
@@ -17,6 +18,7 @@
 .search-card {
   background-color: var(--surface);
   border: 1px solid var(--border-light);
+  border-top: none;
   border-bottom-left-radius: var(--radius-xl);
   border-bottom-right-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
@@ -375,8 +377,6 @@
 
 @media (max-width: 768px) {
   .search-form-section {
-    margin-top: -35px;
-    margin-top: -30px; /* increased overlap for mobile */
     margin-bottom: 1.5rem;
   }
 
@@ -384,7 +384,11 @@
     width: 100%;
     max-width: none;
     padding: 1.15rem 1rem;
-    border-radius: var(--radius-lg);
+    /* Sits directly beneath Banner's card with zero gap — no top
+       border/radius, so it reads as the bottom half of one seamless card
+       instead of a separate box with a seam across it. */
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   }
 
   .search-main-row {
@@ -397,6 +401,18 @@
     width: 100%;
     min-width: unset;
     height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+  }
+
+  /* Native <select> doesn't vertically center its content the same way a
+     div wrapping an <input> does. line-height must target the CONTENT box
+     (48px height minus the 1px top+bottom border, under box-sizing:
+     border-box), not the full 48px — matching the outer height here would
+     demand more vertical room than the border leaves available and makes
+     some mobile browsers grow the select past 48px instead of clipping to it. */
+  .travel-type-select {
+    line-height: 46px;
   }
 
   .search-submit-btn {

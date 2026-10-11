@@ -7,15 +7,16 @@ interface StatusPageProps {
   message: ReactNode;
 }
 
-// The "Kraunama...", "Kelionė nerasta.", "Išvykimas nerastas." (and similar)
-// full-page fallbacks — every page that resolves a trip/departure from the
-// URL used to repeat this same Header+message+Footer shell.
+// Transient-only now — "Kraunama..." is the only caller left. Anything that
+// used to show "Kelionė nerasta."/"Išvykimas nerastas." here renders the
+// shared <NotFound /> page instead, so every "not found" case looks the same
+// site-wide rather than each page having its own wording.
 export default function StatusPage({ message }: StatusPageProps) {
   return (
-    <>
+    <div className="status-page-layout">
       <Header />
       <div className="container page-status">{message}</div>
       <Footer />
-    </>
+    </div>
   );
 }

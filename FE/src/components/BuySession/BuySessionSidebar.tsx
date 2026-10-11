@@ -8,7 +8,7 @@ interface BuySessionSidebarProps {
   title?: string;
   routeLabel: string;
   dateLabel: string;
-  selectionSummary: string;
+  selectionSummary?: string;
   formattedTotal: string;
   totalNote?: ReactNode;
   isValid: boolean;
@@ -56,7 +56,9 @@ export default function BuySessionSidebar({
           </div>
         </div>
 
-        <div className="buy-session-selection">{selectionSummary}</div>
+        {selectionSummary && (
+          <div className="buy-session-selection">{selectionSummary}</div>
+        )}
 
         {children}
 

@@ -82,13 +82,16 @@
   line-height: 1.6;
 }
 
-/* Same responsive rule TripGallery.css uses for Apžvalga — auto-fit already
-   reflows this from several columns on desktop down to one on narrow
-   mobile with no extra breakpoint needed, and keeps both tabs' photo grids
-   looking the same. */
+/* Same responsive rule TripGallery.css uses for Apžvalga — auto-fill (not
+   auto-fit) reflows this from several columns down to one on narrow mobile
+   with no extra breakpoint, while also NOT collapsing empty tracks: a day
+   with only 1-2 photos keeps its normal tile width instead of stretching
+   to fill the whole row (auto-fit would collapse the unused tracks and let
+   the few real photos grow into that space, cropping them into an
+   ugly wide strip via the fixed-height object-fit below). */
 .trip-program-day-photos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
   margin-top: 1rem;
 }

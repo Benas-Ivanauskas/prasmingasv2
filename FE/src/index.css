@@ -75,6 +75,14 @@
   width: 100%;
   min-height: 100vh;
   isolation: isolate;
+  /* Deliberately no background-color here. Setting it to var(--background)
+     does fix the white strip that can appear under the footer on a page
+     shorter than the viewport, but it also makes #root a visibly different
+     shade from the white cards sitting on it (Header/Banner/SearchForm/
+     etc.), which turned every margin between them into an obvious "gap" —
+     worse sitewide than the strip it fixed. Left as-is (picks up the
+     generic `* { background-color: var(--surface) }` reset below, matching
+     the cards) until those gaps are deliberately resized instead. */
 }
 
 /* =========================================
@@ -92,6 +100,13 @@ html {
   scroll-behavior: smooth;
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  /* The actual culprit behind the white strip below the footer: once an
+     element has ANY explicit background (even picked up from the generic
+     `* { background-color: var(--surface) }` reset below), the browser
+     paints the viewport/scroll canvas beyond the document's own height
+     with THAT color instead of propagating body's background — so html
+     needs its own correct color here, not just body or #root. */
+  background-color: var(--background);
 }
 
 body {
@@ -111,7 +126,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body,
+/* Excludes body — it already sets its own var(--background) above; this
+   reset is for everything else (so a nested div/span with padding doesn't
+   default to transparent), and including body here would silently
+   override that with white wherever page content is shorter than the
+   viewport (visible as a white strip below the footer). */
 * {
   background-color: var(--surface);
 }

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
+import NotFound from "../NotFound/NotFound";
 import TripHero from "../../components/TripDetails/TripHero";
 import TripSummary from "../../components/TripDetails/TripSummary";
 import TripTabs, { type TripDetailTab } from "../../components/TripDetails/TripTabs";
@@ -26,7 +27,7 @@ export default function TripPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
-  if (!trip) return <StatusPage message="Kelionė nerasta." />;
+  if (!trip) return <NotFound />;
 
   const departures = getTripDepartures(trip);
   const selectedDeparture =
