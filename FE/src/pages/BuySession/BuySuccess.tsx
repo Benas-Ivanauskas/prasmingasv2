@@ -136,7 +136,7 @@ export default function BuySuccess() {
                 Sumokėjote depozitą {formatEuro(order.depositAmount ?? 0)}. Likusią sumą{" "}
                 {formatEuro(order.remainingAmount ?? 0)}
                 {order.remainingDueDate
-                  ? ` reikės sumokėti iki ${order.remainingDueDate}`
+                  ? ` — mokėjimo nuorodą atsiųsime el. paštu ${order.remainingDueDate} dieną`
                   : " sumokėsite vėliau"}
                 .
               </p>

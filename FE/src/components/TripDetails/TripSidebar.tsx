@@ -3,7 +3,6 @@ import type { Departure, Trip } from "../../types/trip";
 import {
   getTripTypeLabel,
   formatTripDate,
-  type TripPricing,
   type AvailabilityInfo,
 } from "../../utils/tripHelpers";
 import { downloadTripProgramPdf } from "../../api/trips";
@@ -13,17 +12,13 @@ import "./TripSidebar.css";
 interface TripSidebarProps {
   trip: Trip;
   selectedDeparture?: Departure;
-  pricing: TripPricing;
   availability: AvailabilityInfo;
-  onSelectTrip?: () => void;
 }
 
 export default function TripSidebar({
   trip,
   selectedDeparture,
-  pricing,
   availability,
-  onSelectTrip,
 }: TripSidebarProps) {
   return (
     <aside className="trip-sidebar">
@@ -54,24 +49,6 @@ export default function TripSidebar({
             <span className="trip-sidebar-guarantee">Garantuotas išvykimas</span>
           )}
         </div>
-
-        <div className="trip-sidebar-price">
-          {pricing.hasDiscount && (
-            <del className="trip-sidebar-price-original">
-              {pricing.formattedOriginalPrice}
-            </del>
-          )}
-          <span className="trip-sidebar-price-value">{pricing.formattedFinalPrice}</span>
-        </div>
-
-        <button
-          type="button"
-          className="btn-primary trip-cta"
-          disabled={availability.isSoldOut || !onSelectTrip}
-          onClick={onSelectTrip}
-        >
-          Rinktis kelionę
-        </button>
 
         <button
           type="button"

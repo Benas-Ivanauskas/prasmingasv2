@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
@@ -20,21 +20,18 @@ import "./TripPage.css";
 
 export default function TripPage() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const { trip, status } = useTripBySlug(slug);
-  const [selectedDepartureId, setSelectedDepartureId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TripDetailTab>("overview");
+  const [activeTab, setActiveTab] = useState<TripDetailTab>("program");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
   if (!trip) return <NotFound />;
 
   const departures = getTripDepartures(trip);
-  const selectedDeparture =
-    departures.find((d) => d.id === selectedDepartureId) ?? departures[0];
+  const selectedDeparture = departures[0];
   const pricing = getTripPricing(selectedDeparture);
   const availability = getTripAvailability(selectedDeparture);
-  const heroImage = trip.images[0];
+  const heroImage = trip.bannerImage ?? trip.images[0];
 
   // One continuous sequence for the lightbox: Overview's own images first
   // (unchanged indices, so onOpenGalleryImage below still works as before),
@@ -54,7 +51,7 @@ export default function TripPage() {
       <TripHero
         imageUrl={heroImage?.url}
         imageAlt={heroImage?.alt || trip.title}
-        photoCount={trip.images.length}
+        photoCount={lightboxImages.length}
         onOpenGallery={() => setLightboxIndex(0)}
       />
 
@@ -64,34 +61,18 @@ export default function TripPage() {
           after the summary instead of after the whole tabbed content below. */}
       <div className="container trip-page-body">
         <div className="trip-page-summary-card">
-          <TripSummary
-            trip={trip}
-            departures={departures}
-            selectedDeparture={selectedDeparture}
-            onSelectDeparture={setSelectedDepartureId}
-            pricing={pricing}
-          />
+          <TripSummary trip={trip} selectedDeparture={selectedDeparture} pricing={pricing} />
         </div>
 
-        <TripSidebar
-          trip={trip}
-          selectedDeparture={selectedDeparture}
-          pricing={pricing}
-          availability={availability}
-          onSelectTrip={
-            selectedDeparture
-              ? () => navigate(`/buy/${trip.slug}/${selectedDeparture.id}`)
-              : undefined
-          }
-        />
+        <TripSidebar trip={trip} selectedDeparture={selectedDeparture} availability={availability} />
 
         <div className="trip-page-tabs-card">
           <TripTabs
             trip={trip}
             selectedDeparture={selectedDeparture}
+            departures={departures}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            onOpenGalleryImage={setLightboxIndex}
             onOpenProgramImage={(dayIndex, photoIndex) =>
               setLightboxIndex(programDayStartIndex[dayIndex] + photoIndex)
             }

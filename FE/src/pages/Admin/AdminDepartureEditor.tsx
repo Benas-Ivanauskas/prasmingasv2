@@ -85,6 +85,28 @@ export default function AdminDepartureEditor({
             onChange={(v) => onChange({ remainingPaymentDays: v ?? 0 })}
           />
         </Field>
+        <Field label="Depozito dydis (%, 0 = tik pilnas apmokėjimas)">
+          <NumberInput
+            min={0}
+            max={100}
+            value={d.depositPercentage}
+            onChange={(v) => onChange({ depositPercentage: v })}
+          />
+        </Field>
+        <Field
+          label="Depozito terminas (paskutinė diena)"
+          hint="Po šios dienos siūlomas tik pilnas apmokėjimas. Tuščia = be termino."
+        >
+          <input
+            type="date"
+            value={d.depositDeadline?.slice(0, 10) ?? ""}
+            onChange={(e) =>
+              onChange({
+                depositDeadline: e.target.value ? `${e.target.value}T00:00:00.000Z` : null,
+              })
+            }
+          />
+        </Field>
         <label className="admin-check">
           <input
             type="checkbox"

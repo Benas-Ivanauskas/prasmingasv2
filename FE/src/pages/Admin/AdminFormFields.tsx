@@ -24,17 +24,20 @@ export function NumberInput({
   value,
   onChange,
   min,
+  max,
   step,
 }: {
   value: number | null | undefined;
   onChange: (value: number | null) => void;
   min?: number;
+  max?: number;
   step?: number;
 }) {
   return (
     <input
       type="number"
       min={min}
+      max={max}
       step={step}
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}

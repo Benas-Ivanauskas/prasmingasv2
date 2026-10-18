@@ -57,6 +57,8 @@ export function createEmptyDeparture(): Departure {
     guaranteeThreshold: null,
     guaranteedOverride: false,
     remainingPaymentDays: 5,
+    depositPercentage: null,
+    depositDeadline: null,
     status: "ACTIVE",
     flightSeatsTotal: null,
     flightSeatsTaken: 0,
@@ -81,6 +83,7 @@ export function createEmptyTrip(): Trip {
     nextInvoiceNumber: 1,
     isActive: true,
     badgeTag: "",
+    bannerImage: null,
     images: [],
     programDays: [],
     inclusions: "",
@@ -89,6 +92,7 @@ export function createEmptyTrip(): Trip {
     seoTitle: "",
     seoDescription: "",
     departures: [createEmptyDeparture()],
+    reviews: [],
   };
 }
 

@@ -49,6 +49,10 @@ export interface Departure {
   // e.g. 30 meaning a 30% deposit option is offered at checkout; null/0/
   // unset means full payment only (today's default behavior).
   depositPercentage?: number | null;
+  // Last day the deposit option is still offered — on/before this date, both
+  // full and deposit are available; after it, checkout falls back to full
+  // payment only even if depositPercentage is still set. null/unset = no cutoff.
+  depositDeadline?: string | null;
   status: DepartureStatus;
   flightSeatsTotal?: number | null;
   flightSeatsTaken?: number;
@@ -86,6 +90,11 @@ export interface Trip {
   nextInvoiceNumber?: number;
   isActive?: boolean;
   badgeTag?: string; // e.g., "Paskutinė minutė!", "Paskutinė minutė! Sekmadienis"
+  // Wide/panoramic format for the /trips/:slug cover ONLY (TripHero) —
+  // separate from images[0], which is used everywhere else (list card,
+  // buy-session sidebar, overview gallery). Falls back to images[0] when
+  // unset, so existing trips need no migration.
+  bannerImage?: TripImage | null;
   images: TripImage[];
   programDays?: ProgramDay[];
   // Rich text (HTML) from the admin editor. Older data is a plain list of
@@ -100,6 +109,16 @@ export interface Trip {
   seoTitle?: string;
   seoDescription?: string;
   departures: Departure[];
+  reviews?: Review[];
+}
+
+// Keliautojų atsiliepimas — tik rodymas (admin-authored), be lankytojo
+// pateikimo formos šiuo metu. Veidrodis BE/schema.prisma's Review modelio,
+// be rating/isPublished laukų (nėra admin moderavimo UI dar).
+export interface Review {
+  id: string;
+  authorName: string;
+  comment: string;
 }
 
 // Criteria collected by SearchForm and applied by MainCard to narrow which

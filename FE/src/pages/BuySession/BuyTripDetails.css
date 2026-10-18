@@ -1,0 +1,120 @@
+.buy-trip-date-field select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface) !important;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.buy-trip-date-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 91, 84, 0.12);
+}
+
+.buy-trip-count-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.buy-trip-count-field > span:first-child {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.buy-trip-count-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.buy-trip-count-control button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface) !important;
+  color: var(--primary) !important;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.buy-trip-count-control button:hover:not(:disabled) {
+  background-color: var(--primary-soft) !important;
+}
+
+.buy-trip-count-control button:disabled {
+  color: var(--border) !important;
+  cursor: not-allowed;
+}
+
+.buy-trip-count-value {
+  min-width: 1.5ch;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.buy-trip-count-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.buy-trip-discount {
+  max-width: 480px;
+}
+
+.buy-trip-discount .payment-coupon {
+  margin: 0;
+}
+
+.buy-trip-discount-applied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-soft) !important;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.buy-trip-discount-applied strong {
+  color: var(--primary);
+}
+
+.buy-trip-discount-applied button {
+  padding: 0;
+  border: none;
+  background: transparent !important;
+  color: var(--danger) !important;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.buy-trip-discount-applied button:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .buy-trip-discount {
+    max-width: none;
+  }
+}

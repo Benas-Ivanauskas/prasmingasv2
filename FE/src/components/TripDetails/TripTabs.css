@@ -5,14 +5,14 @@
 .trip-tabs {
   display: flex;
   flex-wrap: wrap;
-  row-gap: 0.6rem;
-  column-gap: 1.5rem;
+  row-gap: 0.4rem;
+  column-gap: 1.25rem;
   border-bottom: 1px solid var(--border-light);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .trip-tab {
-  padding: 0 0 10px;
+  padding: 0 0 8px;
   border: none;
   border-bottom: 2px solid transparent;
   background-color: transparent !important;
@@ -51,6 +51,13 @@
   gap: 1.25rem;
 }
 
+/* Overview's description and the Programa list now sit directly adjacent
+   in the same "Kelionės programa" tab panel (no longer separate tabs) —
+   needs its own breathing room before "1 diena" starts. */
+.trip-program-list-spaced {
+  margin-top: 1.75rem;
+}
+
 .trip-program-day {
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-light);
@@ -82,9 +89,9 @@
   line-height: 1.6;
 }
 
-/* Same responsive rule TripGallery.css uses for Apžvalga — auto-fill (not
-   auto-fit) reflows this from several columns down to one on narrow mobile
-   with no extra breakpoint, while also NOT collapsing empty tracks: a day
+/* auto-fill (not auto-fit) reflows this from several columns down to one
+   on narrow mobile with no extra breakpoint, while also NOT collapsing
+   empty tracks: a day
    with only 1-2 photos keeps its normal tile width instead of stretching
    to fill the whole row (auto-fit would collapse the unused tracks and let
    the few real photos grow into that space, cropping them into an
@@ -169,6 +176,20 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+}
+
+/* Now sits at the END of "Kelionės programa" (after the ticket list),
+   not as its own tab — needs its own top spacing/divider since it no
+   longer starts a fresh tab panel. */
+.trip-included-grid-end {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.trip-tickets-heading {
+  margin: 2rem 0 0;
+  font-size: 1.05rem;
 }
 
 .trip-included-grid h3 {

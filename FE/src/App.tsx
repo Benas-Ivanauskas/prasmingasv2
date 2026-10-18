@@ -13,6 +13,7 @@ import AdminDiscounts from "./pages/Admin/AdminDiscounts";
 import AdminNewsletter from "./pages/Admin/AdminNewsletter";
 import AdminOrders from "./pages/Admin/AdminOrders";
 import AdminOrderNew from "./pages/Admin/AdminOrderNew";
+import BuyTripDetails from "./pages/BuySession/BuyTripDetails";
 import BuyOneSession from "./pages/BuySession/BuyOneSession";
 import BuyTravellerInfo from "./pages/BuySession/BuyTravellerInfo";
 import BuyPayment from "./pages/BuySession/BuyPayment";
@@ -40,7 +41,8 @@ function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/new" element={<AdminOrderNew />} />
           </Route>
-          <Route path="/buy/:slug/:departureId" element={<BuyOneSession />}></Route>
+          <Route path="/buy/:slug/:departureId" element={<BuyTripDetails />}></Route>
+          <Route path="/buy/:slug/:departureId/seats" element={<BuyOneSession />}></Route>
           <Route path="/buy/:slug/:departureId/travellers" element={<BuyTravellerInfo />}></Route>
           <Route path="/buy/:slug/:departureId/payment" element={<BuyPayment />}></Route>
           <Route path="/buy/:slug/:departureId/success" element={<BuySuccess />}></Route>

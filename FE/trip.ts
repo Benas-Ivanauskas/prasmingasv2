@@ -123,14 +123,21 @@ export const mockTrips: Trip[] = [
         images: latgalaPhotos("krastovaizdis", "dvaras", "kraslava"),
       },
     ],
-    inclusions: [
-      "Kelionė autobusu",
-      "Kelionės vadovo paslaugos",
-      "Latgalos valgių degustacija",
-      "Ekskursijos pagal programą",
-      "Nakvynės (4 naktys 3★ viešbučiuose)",
-    ],
-    exclusions: ["Asmeninės išlaidos", "Pietūs", "Įėjimo bilietai į objektus"],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
     travellerMemo: `Į KAINĄ ĮSKAIČIUOTA
 
 • Kelionė turistinės klasės autobusu
@@ -260,6 +267,26 @@ Kelionę organizuoja: VšĮ "Prasmingam gyvenimui"
 Kelionių organizatoriaus pažymėjimo Nr. 17231
 
 Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos filialas`,
+    reviews: [
+      {
+        id: "review-latgala-1",
+        authorName: "Rasa K.",
+        comment:
+          "Nuostabi kelionė! Latgalos gamta ir vietinis maistas tikrai nustebino. Gidė labai šauniai papasakojo apie kiekvieną sustojimą.",
+      },
+      {
+        id: "review-latgala-2",
+        authorName: "Vytautas J.",
+        comment:
+          "Penkios dienos prabėgo greitai, bet įspūdžių liko daug. Nakvynės viešbučiai geri, autobusas patogus.",
+      },
+      {
+        id: "review-latgala-3",
+        authorName: "Giedrė M.",
+        comment:
+          "Rekomenduoju visiems, kas nori pažinti Latviją kitaip — ne tik Rygą. Daugpilio tvirtovė paliko didžiausią įspūdį.",
+      },
+    ],
     departures: [
       {
         id: "departure-latgala-2026-09-26",
@@ -328,6 +355,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteedOverride: false,
         remainingPaymentDays: 5,
         depositPercentage: 30,
+        depositDeadline: "2026-10-15T00:00:00.000Z",
         status: "ACTIVE",
         seats: makeBusSeats("s-lat-2", 53),
         extraOptions: [
@@ -377,8 +405,33 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         imageAlt: "Šiaulių dramos teatras",
       },
     ],
-    inclusions: ["Kelionė autobusu", "Kelionės vadovo paslaugos", "Teatro bilietas"],
-    exclusions: ["Asmeninės išlaidos", "Pietūs"],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
+    reviews: [
+      {
+        id: "review-siauliai-1",
+        authorName: "Indrė P.",
+        comment: "Puiki vienos dienos išvyka su vaikais — šokolado dirbtuvės buvo didžiausias hitas!",
+      },
+      {
+        id: "review-siauliai-2",
+        authorName: "Mindaugas S.",
+        comment: "Spektaklis-detektyvas tikrai originalus formatas, nebuvau to tikėjęsis. Verta kartoti.",
+      },
+    ],
     departures: [
       {
         id: "departure-siauliai-2026-10-03",
@@ -443,8 +496,38 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         imageAlt: "Bistrampolio dvaras",
       },
     ],
-    inclusions: ["Kelionė autobusu", "Teatro bilietas", "Dvaro lankymas"],
-    exclusions: ["Asmeninės išlaidos"],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
+    reviews: [
+      {
+        id: "review-bistrampolis-1",
+        authorName: "Laura V.",
+        comment: "Bistrampolio dvaro istorijos papasakotos labai gyvai, desertai irgi buvo skanūs.",
+      },
+      {
+        id: "review-bistrampolis-2",
+        authorName: "Tomas R.",
+        comment: "Gera vienos dienos kelionė, organizacija be priekaištų.",
+      },
+      {
+        id: "review-bistrampolis-3",
+        authorName: "Eglė N.",
+        comment: "Spektaklis J.Miltinio teatre buvo kelionės akcentas — labai rekomenduoju.",
+      },
+    ],
     departures: [
       {
         id: "departure-bistrampolis-2026-10-04",
@@ -538,16 +621,38 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       },
     ],
 
-    inclusions: [
-      "Kelionė autobusu",
-      "Kelionės vadovo paslaugos",
-      "Ekskursinė programa",
-    ],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
 
-    exclusions: ["Maitinimas", "Asmeninės išlaidos", "Muziejų bilietai"],
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
 
     seoTitle: "Kelionė autobusu į Italiją",
     seoDescription: "Pažintinė kelionė po Veroną ir Gardos ežerą.",
+
+    reviews: [
+      {
+        id: "review-italy-1",
+        authorName: "Jolanta B.",
+        comment: "Gardos ežeras tiesiog nuostabus, Verona irgi paliko puikų įspūdį. Viešbučiai geri.",
+      },
+      {
+        id: "review-italy-2",
+        authorName: "Darius K.",
+        comment: "Ilga kelionė autobusu, bet verta — Šiaurės Italija labai graži šiuo metų laiku.",
+      },
+    ],
 
     departures: [
       {
@@ -657,12 +762,43 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       },
     ],
 
-    inclusions: ["Kelionė autobusu", "Kelionės vadovas", "Ekskursinė programa"],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
 
-    exclusions: ["Maitinimas", "Muziejų bilietai"],
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
 
     seoTitle: "Kelionė autobusu į Prahą",
     seoDescription: "Pažintinė kelionė į Prahą ir Karlovy Varus.",
+
+    reviews: [
+      {
+        id: "review-prague-1",
+        authorName: "Agnė T.",
+        comment: "Praha nuostabi bet kuriuo metų laiku, Karlovy Varai — maloni staigmena su termaliniais šaltiniais.",
+      },
+      {
+        id: "review-prague-2",
+        authorName: "Saulius D.",
+        comment: "Depozito galimybė labai patogi planuojant iš anksto. Kelionė organizuota puikiai.",
+      },
+      {
+        id: "review-prague-3",
+        authorName: "Kristina A.",
+        comment: "Grįžau antrą kartą į šią kelionę — tiek daug ko dar neaplankiau pirmą kartą.",
+      },
+    ],
 
     departures: [
       {
@@ -680,6 +816,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
 
         remainingPaymentDays: 5,
         depositPercentage: 30,
+        depositDeadline: "2027-04-10T00:00:00.000Z",
         status: "ACTIVE",
 
         flightSeatsTotal: null,
@@ -769,12 +906,38 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       },
     ],
 
-    inclusions: ["Skrydžiai", "Pervežimai", "Kelionės vadovo paslaugos"],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
 
-    exclusions: ["Maitinimas", "Muziejų bilietai"],
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
 
     seoTitle: "Kelionė lėktuvu į Barseloną",
     seoDescription: "Pažintinė kelionė lėktuvu į Barseloną.",
+
+    reviews: [
+      {
+        id: "review-barcelona-1",
+        authorName: "Monika L.",
+        comment: "Barselona nuostabi — architektūra, paplūdimiai ir maistas viršijo lūkesčius.",
+      },
+      {
+        id: "review-barcelona-2",
+        authorName: "Rokas P.",
+        comment: "Skrydis ir viešbutis sutvarkyti be priekaištų, gidė papasakojo daug vietinių patarimų.",
+      },
+    ],
 
     departures: [
       {
@@ -874,16 +1037,43 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       },
     ],
 
-    inclusions: [
-      "Apgyvendinimas kajutėje",
-      "Maitinimas laive",
-      "Pramogos laive",
-    ],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
 
-    exclusions: ["Gėrimai", "Ekskursijos krante", "Kelionė iki uosto"],
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
 
     seoTitle: "Viduržemio jūros kruizas",
     seoDescription: "Poilsinė kelionė kruizu po Viduržemio jūrą.",
+
+    reviews: [
+      {
+        id: "review-med-cruise-1",
+        authorName: "Vida Š.",
+        comment: "Pirmas kruizas gyvenime ir iškart puikus — kajutė jauki, maistas gausus, uostai įdomūs.",
+      },
+      {
+        id: "review-med-cruise-2",
+        authorName: "Arūnas G.",
+        comment: "Depozito mokėjimo galimybė labai padėjo, nereikėjo iš karto mokėti visos sumos.",
+      },
+      {
+        id: "review-med-cruise-3",
+        authorName: "Neringa F.",
+        comment: "Genujoje galėjome likti ilgiau — kitaip viskas labai gerai suplanuota.",
+      },
+    ],
 
     departures: [
       {
@@ -905,6 +1095,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
 
         remainingPaymentDays: 10,
         depositPercentage: 30,
+        depositDeadline: "2027-07-01T00:00:00.000Z",
         status: "ACTIVE",
 
         flightSeatsTotal: null,
@@ -1023,16 +1214,38 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
       },
     ],
 
-    inclusions: [
-      "Apgyvendinimas kajutėje",
-      "Maitinimas laive",
-      "Kelionės programa",
-    ],
+    inclusions: `<ul>
+      <li>Kelionė turistinės klasės autobusu</li>
+      <li>Ekskursinė programa</li>
+      <li>Kelionės vadovo paslaugos (lietuvių k.)</li>
+    </ul>`,
 
-    exclusions: ["Ekskursijos krante", "Asmeninės išlaidos"],
+    exclusions: `<ul>
+      <li>Pliaterių pilies kompleksas:<ul><li>Ekskursija ~2 €/asm.</li></ul></li>
+      <li>Latgalos valgių degustacija ~10 €/asm.</li>
+      <li>Olgos Gribulės lėlių kolekcija:<ul><li>bilietas ~4 €/asm.</li></ul></li>
+      <li>Daugpilio tvirtovė:<ul><li>Ekskursija ir bilietas: suaugusiems ~3,60 €/asm.; moksleiviams, studentams ir senjorams ~1,8 €/asm.</li></ul></li>
+      <li>Bažnyčios lankymas – laisva auka</li>
+      <li>Perkant bilietą su nuolaida būtinas pažymėjimas</li>
+      <li>Asmeninės išlaidos</li>
+      <li>Medicininių išlaidų draudimas</li>
+    </ul>`,
 
     seoTitle: "Norvegijos fiordai kruizu",
     seoDescription: "Pažintinė kelionė kruizu po Norvegijos fiordus.",
+
+    reviews: [
+      {
+        id: "review-norway-1",
+        authorName: "Audrius M.",
+        comment: "Fiordai kvapą gniaužiantys, Bergenas labai gražus miestas baigti kelionę.",
+      },
+      {
+        id: "review-norway-2",
+        authorName: "Jurgita K.",
+        comment: "Brangoka kelionė, bet kokybė atitinka kainą — rekomenduoju tiems, kas myli gamtą.",
+      },
+    ],
 
     departures: [
       {

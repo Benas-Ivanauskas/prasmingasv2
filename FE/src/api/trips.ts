@@ -40,7 +40,13 @@ export async function fetchTripBySlug(slug: string): Promise<Trip | undefined> {
 // fetchTrips() has with adminTrips.ts's mockTrips.
 export function lookupDiscountCode(code: string): DiscountCode | undefined {
   const normalized = code.trim().toUpperCase();
-  return mockDiscountCodes.find((d) => d.isActive && d.code.toUpperCase() === normalized);
+  const today = new Date().toISOString().slice(0, 10);
+  return mockDiscountCodes.find(
+    (d) =>
+      d.isActive &&
+      d.code.toUpperCase() === normalized &&
+      (!d.expiresAt || d.expiresAt.slice(0, 10) >= today)
+  );
 }
 
 export function lookupVoucher(code: string): GiftVoucher | undefined {

@@ -7,10 +7,18 @@ import {
   createEmptyTrip,
   slugify,
 } from "../../api/adminTrips";
-import type { Departure, ProgramDay, Trip, TripCategory, TripImage, TripType } from "../../types/trip";
+import type {
+  Departure,
+  ProgramDay,
+  Review,
+  Trip,
+  TripCategory,
+  TripType,
+} from "../../types/trip";
 import AdminDepartureEditor from "./AdminDepartureEditor";
 import { Field } from "./AdminFormFields";
 import RichTextEditor from "../../components/RichText/RichTextEditor";
+import AdminImageUpload from "../../components/Admin/AdminImageUpload";
 import { patchAt, removeAt } from "./adminFormHelpers";
 
 // /admin/trips/new and /admin/trips/:id share this page — the edit route
@@ -224,32 +232,23 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
       </section>
 
       <section className="admin-card">
-        <h3>Nuotraukos</h3>
-        {images.map((img, i) => (
-          <div key={i} className="admin-row">
-            <input
-              placeholder="Nuotraukos nuoroda (URL)"
-              value={img.url}
-              onChange={(e) => set("images", patchAt<TripImage>(images, i, { url: e.target.value }))}
-            />
-            <input
-              placeholder="Aprašymas (alt)"
-              value={img.alt}
-              onChange={(e) => set("images", patchAt<TripImage>(images, i, { alt: e.target.value }))}
-            />
-            <button type="button" className="admin-link is-danger" onClick={() => set("images", removeAt(images, i))}>
-              Pašalinti
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          className="admin-add"
-          onClick={() => set("images", [...images, { url: "", alt: "", sortOrder: images.length }])}
-        >
-          + Pridėti nuotrauką
-        </button>
-        <p className="admin-field-hint">Pirma nuotrauka rodoma kaip viršelis.</p>
+        <h3>Banner nuotrauka</h3>
+        <AdminImageUpload
+          images={trip.bannerImage ? [trip.bannerImage] : []}
+          onChange={(imgs) => set("bannerImage", imgs[0] ?? null)}
+        />
+        <p className="admin-field-hint">
+          Platus formatas — rodoma kaip kelionės puslapio viršelis. Jei nenustatyta,
+          naudojama pagrindinė nuotrauka.
+        </p>
+      </section>
+
+      <section className="admin-card">
+        <h3>Pagrindinė nuotrauka</h3>
+        <AdminImageUpload images={images} onChange={(imgs) => set("images", imgs)} multiple />
+        <p className="admin-field-hint">
+          Rodoma kelionių sąraše, pirkimo lange ir kaip pirma apžvalgos nuotrauka.
+        </p>
       </section>
 
       <section className="admin-card">
@@ -273,14 +272,26 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
                   onChange={(e) => set("programDays", patchAt<ProgramDay>(programDays, i, { title: e.target.value }))}
                 />
               </Field>
-              <Field label="Nuotrauka (URL)">
-                <input
-                  value={p.imageUrl ?? ""}
-                  onChange={(e) =>
-                    set("programDays", patchAt<ProgramDay>(programDays, i, { imageUrl: e.target.value }))
+              <div className="admin-field is-wide">
+                <span className="admin-field-label">Nuotraukos</span>
+                <AdminImageUpload
+                  images={
+                    p.images ??
+                    (p.imageUrl ? [{ url: p.imageUrl, alt: p.imageAlt ?? "", sortOrder: 0 }] : [])
                   }
+                  onChange={(imgs) =>
+                    set(
+                      "programDays",
+                      patchAt<ProgramDay>(programDays, i, {
+                        images: imgs,
+                        imageUrl: undefined,
+                        imageAlt: undefined,
+                      })
+                    )
+                  }
+                  multiple
                 />
-              </Field>
+              </div>
               <div className="admin-field is-wide">
                 <span className="admin-field-label">Aprašymas</span>
                 <RichTextEditor
@@ -337,6 +348,47 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
           value={trip.travellerMemo}
           onChange={(html) => set("travellerMemo", html)}
         />
+      </section>
+
+      <section className="admin-card">
+        <h3>Keliautojų atsiliepimai</h3>
+        {(trip.reviews ?? []).map((r, i) => (
+          <div key={r.id} className="admin-row">
+            <input
+              placeholder="Autoriaus vardas"
+              value={r.authorName}
+              onChange={(e) =>
+                set("reviews", patchAt<Review>(trip.reviews ?? [], i, { authorName: e.target.value }))
+              }
+            />
+            <input
+              placeholder="Atsiliepimo tekstas"
+              value={r.comment}
+              onChange={(e) =>
+                set("reviews", patchAt<Review>(trip.reviews ?? [], i, { comment: e.target.value }))
+              }
+            />
+            <button
+              type="button"
+              className="admin-link is-danger"
+              onClick={() => set("reviews", removeAt(trip.reviews ?? [], i))}
+            >
+              Pašalinti
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="admin-add"
+          onClick={() =>
+            set("reviews", [
+              ...(trip.reviews ?? []),
+              { id: `review-${Date.now()}`, authorName: "", comment: "" },
+            ])
+          }
+        >
+          + Pridėti atsiliepimą
+        </button>
       </section>
 
       <section className="admin-card">

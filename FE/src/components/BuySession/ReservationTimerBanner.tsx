@@ -8,7 +8,10 @@ interface ReservationTimerBannerProps {
   // hold concept, or any booking with no active hold — renders nothing.
   holdExpiresAt: number | undefined;
   secondsLeft: number;
-  seatsPickerUrl: string;
+  // Always Step 1 ("Kelionė") — once the hold expires, Step 1's own choices
+  // (discount code validity, deposit deadline) may be stale too, so the
+  // only safe recovery is a full restart, not just re-picking seats.
+  restartUrl: string;
 }
 
 // Shown on both Step 3 (Keleiviai) and Step 4 (Mokėjimas) — the reservation
@@ -17,7 +20,7 @@ interface ReservationTimerBannerProps {
 export default function ReservationTimerBanner({
   holdExpiresAt,
   secondsLeft,
-  seatsPickerUrl,
+  restartUrl,
 }: ReservationTimerBannerProps) {
   if (!holdExpiresAt) return null;
 
@@ -28,7 +31,7 @@ export default function ReservationTimerBanner({
       <IoTimeOutline aria-hidden="true" />
       {isExpired ? (
         <>
-          Rezervacijos laikas baigėsi — <Link to={seatsPickerUrl}>pasirinkite vietas iš naujo</Link>
+          Rezervacijos laikas baigėsi — <Link to={restartUrl}>pradėkite iš naujo</Link>
         </>
       ) : (
         <>

@@ -150,6 +150,12 @@ export default function AdminDiscounts() {
               value={discount.value}
               onChange={(v) => saveDiscount({ ...discount, value: v ?? 0 })}
             />
+            <input
+              type="date"
+              title="Galioja iki (tuščia = niekada nebaigia galioti)"
+              value={discount.expiresAt ?? ""}
+              onChange={(e) => saveDiscount({ ...discount, expiresAt: e.target.value || null })}
+            />
             <button
               type="button"
               className={`admin-pill ${discount.isActive ? "is-on" : "is-off"}`}
@@ -187,6 +193,14 @@ export default function AdminDiscounts() {
             step={newDiscount.type === "PERCENTAGE" ? 1 : 0.01}
             value={newDiscount.value}
             onChange={(v) => setNewDiscount((prev) => ({ ...prev, value: v ?? 0 }))}
+          />
+          <input
+            type="date"
+            title="Galioja iki (tuščia = niekada nebaigia galioti)"
+            value={newDiscount.expiresAt ?? ""}
+            onChange={(e) =>
+              setNewDiscount((prev) => ({ ...prev, expiresAt: e.target.value || null }))
+            }
           />
         </div>
         {discountError && <p className="admin-field-hint">{discountError}</p>}

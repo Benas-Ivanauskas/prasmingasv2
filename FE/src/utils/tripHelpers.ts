@@ -9,6 +9,23 @@ import type {
   TripImage,
 } from "../types/trip";
 
+// Lithuanian numeral-noun agreement: ends in 1 (not 11) → singular
+// nominative; ends in 2-9 (not 12-19) → plural nominative; everything else
+// (0, 10, 11-19, any ten) → plural genitive. E.g. pluralizeLt(n, "vieta",
+// "vietos", "vietų") → "1 vieta", "6 vietos", "11 vietų", "20 vietų".
+export function pluralizeLt(
+  count: number,
+  singular: string,
+  pluralNominative: string,
+  pluralGenitive: string
+): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return singular;
+  if (mod10 >= 2 && mod10 <= 9 && !(mod100 >= 12 && mod100 <= 19)) return pluralNominative;
+  return pluralGenitive;
+}
+
 // A day's actual photo set — its own `images` if the admin added several,
 // else its single `imageUrl` as a one-photo "gallery", else none. Lets both
 // the Programa tab and the lightbox treat every day the same way regardless
@@ -143,7 +160,10 @@ export interface TripPricing {
 // inline now calls this instead, so formatting (locale, thousands
 // separator, decimal comma) stays consistent everywhere.
 export function formatEuro(value: number, withSpace = true): string {
-  const numStr = value.toLocaleString("lt-LT");
+  const numStr = value.toLocaleString("lt-LT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   return withSpace ? `${numStr} €` : `${numStr}€`;
 }
 
@@ -199,6 +219,79 @@ export function getBookingBaseTotal(
     );
   }
   return getTripPricing(departure).finalCost * travellerCount;
+}
+
+export interface CheckoutTotals {
+  discountAmount: number;
+  discountLabel: string;
+  finalTotal: number;
+  hasDepositOption: boolean;
+  depositAmount: number;
+  remainingAmount: number;
+  payingDeposit: boolean;
+  amountDueNow: number;
+  remainingDueDate?: string;
+}
+
+// Single source of truth for "how much is due right now" — a discount code
+// and a deposit choice (both decided in Step 1 of the buy flow) must affect
+// the price shown on every later step the same way, not just the final
+// payment page. Takes the CURRENT grand total (which keeps changing as
+// seats/extras are picked) so the deposit is always a % of the up-to-date
+// total, never a stale number carried forward from an earlier step.
+export function getCheckoutTotals(
+  grandTotal: number,
+  departure: Departure,
+  appliedDiscount: { type: "PERCENTAGE" | "FIXED"; value: number } | null | undefined,
+  wantsDeposit: boolean | undefined
+): CheckoutTotals {
+  const discountAmount = !appliedDiscount
+    ? 0
+    : appliedDiscount.type === "PERCENTAGE"
+      ? grandTotal * (appliedDiscount.value / 100)
+      : Math.min(appliedDiscount.value, grandTotal);
+  const discountLabel = appliedDiscount
+    ? appliedDiscount.type === "PERCENTAGE"
+      ? `-${appliedDiscount.value}%`
+      : `-${appliedDiscount.value} €`
+    : "";
+  const finalTotal = grandTotal - discountAmount;
+
+  // Compared as date-only strings (not Date objects) so the deadline day
+  // itself still allows a deposit — the cutoff only takes effect the day
+  // AFTER it.
+  const depositPercentage = departure.depositPercentage ?? 0;
+  const isPastDepositDeadline = departure.depositDeadline
+    ? new Date().toISOString().slice(0, 10) > departure.depositDeadline.slice(0, 10)
+    : false;
+  const hasDepositOption = depositPercentage > 0 && !isPastDepositDeadline;
+  const depositAmount = hasDepositOption
+    ? Math.round(finalTotal * (depositPercentage / 100) * 100) / 100
+    : 0;
+  const remainingAmount = finalTotal - depositAmount;
+  const payingDeposit = hasDepositOption && Boolean(wantsDeposit);
+  const amountDueNow = payingDeposit ? depositAmount : finalTotal;
+  const remainingDueDate =
+    payingDeposit && departure.remainingPaymentDays
+      ? formatTripDate(
+          new Date(
+            new Date(departure.date).getTime() -
+              departure.remainingPaymentDays * 24 * 60 * 60 * 1000
+          ).toISOString()
+        )
+      : undefined;
+
+  return {
+    discountAmount,
+    discountLabel,
+    finalTotal,
+    hasDepositOption,
+    depositAmount,
+    remainingAmount,
+    payingDeposit,
+    amountDueNow,
+    remainingDueDate,
+  };
 }
 
 export interface AvailabilityInfo {

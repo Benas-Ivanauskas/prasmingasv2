@@ -8,7 +8,7 @@ import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
-import { downloadConsentDocument } from "../../api/trips";
+import { downloadConsentDocument, lookupDiscountCode } from "../../api/trips";
 import { formatLtPhone, getEmailError, isValidEmail, isValidLtPhone, PHONE_PREFIX } from "../../utils/validation";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
@@ -19,6 +19,7 @@ import {
   getCabinUnitSize,
   getCabinPricing,
   getBookingBaseTotal,
+  getCheckoutTotals,
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
@@ -105,6 +106,8 @@ export default function BuyTravellerInfo() {
 
   const { trip, departure, status } = useTripBySlug(slug, departureId);
   const secondsLeft = useCountdown(seatSelection.holdExpiresAt);
+  const hasHold = Boolean(seatSelection.holdExpiresAt);
+  const isHoldExpired = hasHold && secondsLeft <= 0;
   const [travellers, setTravellers] = useState<TravellerForm[]>(
     () => restoredBooking?.travellers ?? Array.from({ length: travellerCount }, emptyTraveller)
   );
@@ -115,7 +118,7 @@ export default function BuyTravellerInfo() {
         phone: PHONE_PREFIX,
         city: "",
         pickupCity: "",
-        wantsInvoice: false,
+        wantsInvoice: seatSelection.wantsInvoice ?? false,
       }
   );
   // One set of selected extras per traveller — extras like baggage are
@@ -217,6 +220,20 @@ export default function BuyTravellerInfo() {
   const grandTotal = baseTotal + extrasTotal;
   const selectedExtrasCount = travellerExtraIds.reduce((sum, ids) => sum + ids.size, 0);
 
+  // The discount code and deposit choice were decided in Step 1 — applied
+  // here too, recomputed against the CURRENT grand total (base + whichever
+  // extras are picked right now), so picking an extra never just tacks its
+  // price onto an already-fixed deposit figure.
+  const appliedDiscount = seatSelection.discountCode
+    ? lookupDiscountCode(seatSelection.discountCode)
+    : null;
+  const { payingDeposit, amountDueNow, remainingAmount, remainingDueDate } = getCheckoutTotals(
+    grandTotal,
+    departure,
+    appliedDiscount,
+    seatSelection.wantsDeposit
+  );
+
   const handleContinue = () => {
     const bookingState: BookingState = {
       ...seatSelection,
@@ -241,7 +258,7 @@ export default function BuyTravellerInfo() {
       <div className="container">
         <BuyStepper currentStep={3} />
         <Link
-          to={`/buy/${trip.slug}/${departure.id}`}
+          to={`/buy/${trip.slug}/${departure.id}/seats`}
           state={seatSelection}
           className="buy-session-back-link"
         >
@@ -258,7 +275,7 @@ export default function BuyTravellerInfo() {
           <ReservationTimerBanner
             holdExpiresAt={seatSelection.holdExpiresAt}
             secondsLeft={secondsLeft}
-            seatsPickerUrl={`/buy/${trip.slug}/${departure.id}`}
+            restartUrl={`/buy/${trip.slug}/${departure.id}`}
           />
 
           <div className="traveller-card">
@@ -381,17 +398,6 @@ export default function BuyTravellerInfo() {
                 </select>
               </label>
             )}
-
-            <label className="traveller-invoice-option">
-              <input
-                type="checkbox"
-                checked={contact.wantsInvoice}
-                onChange={(e) =>
-                  setContact((prev) => ({ ...prev, wantsInvoice: e.target.checked }))
-                }
-              />
-              Noriu gauti PVM sąskaitą faktūrą
-            </label>
           </div>
 
           {cabinBreakdown.length > 0 && (
@@ -526,9 +532,23 @@ export default function BuyTravellerInfo() {
               ? `Pasirinkta papildomų paslaugų: ${selectedExtrasCount}`
               : "Papildomų paslaugų nepasirinkta"
           }
-          formattedTotal={formatEuro(grandTotal)}
-          isValid={Boolean(isValid)}
+          formattedTotal={formatEuro(amountDueNow)}
+          totalNote={
+            payingDeposit
+              ? `Depozitas — liks sumokėti ${formatEuro(remainingAmount)}${
+                  remainingDueDate
+                    ? ` — ${remainingDueDate} dieną atsiųsime mokėjimo nuorodą el. paštu`
+                    : ""
+                }`
+              : undefined
+          }
+          isValid={Boolean(isValid) && !isHoldExpired}
           onContinue={handleContinue}
+          note={
+            isHoldExpired
+              ? "Rezervacijos laikas baigėsi — pradėkite iš naujo."
+              : undefined
+          }
         />
       </div>
       </div>

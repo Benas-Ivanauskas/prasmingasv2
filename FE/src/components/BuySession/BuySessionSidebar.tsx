@@ -10,6 +10,10 @@ interface BuySessionSidebarProps {
   dateLabel: string;
   selectionSummary?: string;
   formattedTotal: string;
+  // Hides the standalone total line — for pages whose buttonLabel already
+  // states the amount (e.g. "Apmokėti 515,30 €"), so the price isn't shown
+  // twice right next to each other.
+  hideTotalLine?: boolean;
   totalNote?: ReactNode;
   isValid: boolean;
   onContinue: () => void;
@@ -27,6 +31,7 @@ export default function BuySessionSidebar({
   dateLabel,
   selectionSummary,
   formattedTotal,
+  hideTotalLine = false,
   totalNote,
   isValid,
   onContinue,
@@ -63,9 +68,11 @@ export default function BuySessionSidebar({
         {children}
 
         {totalNote && <div className="buy-session-total-note">{totalNote}</div>}
-        <div className="buy-session-total">
-          <span className="buy-session-total-value">{formattedTotal}</span>
-        </div>
+        {!hideTotalLine && (
+          <div className="buy-session-total">
+            <span className="buy-session-total-value">{formattedTotal}</span>
+          </div>
+        )}
 
         <button
           type="button"

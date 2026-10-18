@@ -48,6 +48,23 @@
   margin: 0 0 1.5rem;
 }
 
+.buy-session-flight-fixed-count {
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.buy-session-flight-fixed-count p {
+  margin: 0;
+}
+
+.buy-session-flight-fixed-count p:first-child {
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+}
+
 .buy-session-cruise-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;

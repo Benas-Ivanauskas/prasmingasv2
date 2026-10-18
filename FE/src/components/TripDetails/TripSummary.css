@@ -29,59 +29,6 @@
 }
 
 /* =========================================
-   DATE PICKER
-   ========================================= */
-
-.trip-date-picker {
-  margin-bottom: 1.25rem;
-}
-
-.trip-date-picker-label {
-  display: block;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.trip-date-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.trip-date-option {
-  padding: 7px 16px;
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  background-color: var(--surface) !important;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.trip-date-option:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: var(--text);
-}
-
-.trip-date-option.active {
-  background-color: var(--primary) !important;
-  border-color: var(--primary);
-  color: #ffffff !important;
-  font-weight: 600;
-}
-
-.trip-date-option:disabled {
-  border-color: var(--border-light);
-  color: var(--text-muted);
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* =========================================
    INFO ROW (departure / price) — pickup points moved to their own tab
    ========================================= */
 
@@ -91,8 +38,7 @@
   gap: 1.25rem;
   padding: 1.1rem 0;
   border-top: 1px solid var(--border-light);
-  border-bottom: 1px solid var(--border-light);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .trip-info-item {

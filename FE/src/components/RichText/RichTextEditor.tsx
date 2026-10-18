@@ -97,6 +97,12 @@ export default function RichTextEditor({ value, onChange, minHeight = 140 }: Ric
         {btn(state.ordered, "1. Sąrašas", "Numeruotas sąrašas", () =>
           editor.chain().focus().toggleOrderedList().run()
         )}
+        {btn(false, "→", "Įtraukti (pažeminti sąrašo punktą)", () =>
+          editor.chain().focus().sinkListItem("listItem").run()
+        )}
+        {btn(false, "←", "Iškelti (pakelti sąrašo punktą)", () =>
+          editor.chain().focus().liftListItem("listItem").run()
+        )}
         {btn(state.link, "Nuoroda", "Pridėti nuorodą", setLink)}
         <span className="rte-sep" />
 

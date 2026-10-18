@@ -18,7 +18,7 @@ import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
-import { confirmHold, lookupDiscountCode, lookupVoucher, createOrder } from "../../api/trips";
+import { confirmHold, lookupDiscountCode, createOrder } from "../../api/trips";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import { useCountdown } from "../../hooks/useCountdown";
@@ -28,6 +28,7 @@ import {
   getCabinUnitSize,
   getCabinPricing,
   getBookingBaseTotal,
+  getCheckoutTotals,
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
@@ -69,27 +70,6 @@ export default function BuyPayment() {
 
   const [comment, setComment] = useState(paymentExtras?.comment ?? "");
   const [agreed, setAgreed] = useState(paymentExtras?.agreed ?? false);
-  const [discountInput, setDiscountInput] = useState("");
-  const [discountError, setDiscountError] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState<
-    { code: string; type: "PERCENTAGE" | "FIXED"; value: number } | null
-  >(() => {
-    const code = paymentExtras?.discountCode;
-    if (!code) return null;
-    const discount = lookupDiscountCode(code);
-    return discount ? { code: discount.code, type: discount.type, value: discount.value } : null;
-  });
-  const [voucherInput, setVoucherInput] = useState("");
-  const [voucherError, setVoucherError] = useState("");
-  const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; value: number } | null>(
-    () => {
-      const code = paymentExtras?.voucherCode;
-      if (!code) return null;
-      const voucher = lookupVoucher(code);
-      return voucher ? { code: voucher.code, value: voucher.value } : null;
-    }
-  );
-  const [paymentMethod, setPaymentMethod] = useState<"FULL" | "DEPOSIT">("FULL");
   const secondsLeft = useCountdown(booking?.holdExpiresAt);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
@@ -133,44 +113,20 @@ export default function BuyPayment() {
   // is never just folded invisibly into a single number.
   const baseOriginalTotal = isCruise ? baseTotal : pricing.originalCost * travellerCount;
   const departureDiscountAmount = baseOriginalTotal - baseTotal;
-  const discountAmount = !appliedDiscount
-    ? 0
-    : appliedDiscount.type === "PERCENTAGE"
-      ? grandTotal * (appliedDiscount.value / 100)
-      : Math.min(appliedDiscount.value, grandTotal);
-  const discountLabel = appliedDiscount
-    ? appliedDiscount.type === "PERCENTAGE"
-      ? `-${appliedDiscount.value}%`
-      : `-${appliedDiscount.value} €`
-    : "";
-  const afterDiscountTotal = grandTotal - discountAmount;
-  // A voucher is credited like a partial payment — it can't push the total
-  // below 0, and anything beyond the order's value is just left unused here
-  // (there's no account/balance to carry it over to a future order).
-  const voucherAmount = appliedVoucher ? Math.min(appliedVoucher.value, afterDiscountTotal) : 0;
-  const voucherLeftover = appliedVoucher ? appliedVoucher.value - voucherAmount : 0;
-  const finalTotal = afterDiscountTotal - voucherAmount;
-  // Departure opts into a deposit option (admin-set %) — otherwise checkout
-  // stays "pay the full total now" exactly as before.
-  const depositPercentage = departure.depositPercentage ?? 0;
-  const hasDepositOption = depositPercentage > 0;
-  const depositAmount = hasDepositOption
-    ? Math.round(finalTotal * (depositPercentage / 100) * 100) / 100
-    : 0;
-  const remainingAmount = finalTotal - depositAmount;
-  const payingDeposit = hasDepositOption && paymentMethod === "DEPOSIT";
-  const amountDueNow = payingDeposit ? depositAmount : finalTotal;
-  // Finally gives remainingPaymentDays (admin-set, previously unused) real
-  // purpose — only relevant once a deposit (not the full total) is paid now.
-  const remainingDueDate =
-    payingDeposit && departure.remainingPaymentDays
-      ? formatTripDate(
-          new Date(
-            new Date(departure.date).getTime() -
-              departure.remainingPaymentDays * 24 * 60 * 60 * 1000
-          ).toISOString()
-        )
-      : undefined;
+  // Decided in Step 1 and carried forward untouched — no longer editable
+  // here, just looked up again to compute the final amounts (deposit
+  // choice included — see getCheckoutTotals).
+  const appliedDiscount = booking.discountCode ? lookupDiscountCode(booking.discountCode) : null;
+  const {
+    discountAmount,
+    finalTotal,
+    hasDepositOption,
+    depositAmount,
+    remainingAmount,
+    payingDeposit,
+    amountDueNow,
+    remainingDueDate,
+  } = getCheckoutTotals(grandTotal, departure, appliedDiscount, booking.wantsDeposit);
   // Cruise prices by cabin, with no traveller-to-cabin mapping collected —
   // shown as a one-time breakdown instead of a (misleading) per-traveller price.
   const cabinBreakdown = isCruise
@@ -191,42 +147,14 @@ export default function BuyPayment() {
   // would be misleading there — FLIGHT/BUS always show it.
   const showPriceColumn = !isCruise;
 
-  const handleApplyDiscount = () => {
-    const code = discountInput.trim().toUpperCase();
-    if (!code) return;
-    const discount = lookupDiscountCode(code);
-    if (discount) {
-      setAppliedDiscount({ code: discount.code, type: discount.type, value: discount.value });
-      setDiscountError("");
-    } else {
-      setAppliedDiscount(null);
-      setDiscountError("Nuolaidos kodas neegzistuoja arba nebegalioja.");
-    }
-  };
-
-  const handleApplyVoucher = () => {
-    const code = voucherInput.trim().toUpperCase();
-    if (!code) return;
-    const voucher = lookupVoucher(code);
-    if (voucher) {
-      setAppliedVoucher({ code: voucher.code, value: voucher.value });
-      setVoucherError("");
-    } else {
-      setAppliedVoucher(null);
-      setVoucherError("Kuponas neegzistuoja arba jau panaudotas.");
-    }
-  };
-
   // What "← Atgal" hands back to Step 3 — the booking as received, plus
   // this page's own current fields, so a round trip back here restores
-  // exactly what was typed/applied instead of resetting to blank.
+  // exactly what was typed instead of resetting to blank.
   const backState: BookingState = {
     ...booking,
     paymentExtras: {
       comment,
       agreed,
-      discountCode: appliedDiscount?.code,
-      voucherCode: appliedVoucher?.code,
     },
   };
 
@@ -298,7 +226,7 @@ export default function BuyPayment() {
           <ReservationTimerBanner
             holdExpiresAt={booking.holdExpiresAt}
             secondsLeft={secondsLeft}
-            seatsPickerUrl={`/buy/${trip.slug}/${departure.id}`}
+            restartUrl={`/buy/${trip.slug}/${departure.id}`}
           />
 
           <div className="payment-section">
@@ -471,18 +399,6 @@ export default function BuyPayment() {
                   value={`-${formatEuro(discountAmount)}`}
                 />
               )}
-              {appliedVoucher && (
-                <PaymentInfoRow
-                  label={`Dovanų kuponas (${appliedVoucher.code})`}
-                  value={`-${formatEuro(voucherAmount)}`}
-                />
-              )}
-              {voucherLeftover > 0 && (
-                <PaymentInfoRow
-                  label="Nepanaudota kupono likutis"
-                  value={formatEuro(voucherLeftover)}
-                />
-              )}
             </div>
           </div>
 
@@ -493,36 +409,25 @@ export default function BuyPayment() {
                 Apmokėjimo būdas
               </div>
               <div className="payment-method-options">
-                <label className={`payment-method-option ${!payingDeposit ? "active" : ""}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "FULL"}
-                    onChange={() => setPaymentMethod("FULL")}
-                  />
+                {/* Decided in Step 1 — shown here only as a read-only
+                    summary of what was already chosen, not editable. */}
+                <div className="payment-method-option active">
                   <span className="payment-method-option-text">
                     <span className="payment-method-option-title">
-                      Mokėti visą sumą ({formatEuro(finalTotal)})
+                      {payingDeposit
+                        ? `Mokate depozitą (${formatEuro(depositAmount)})`
+                        : `Mokate visą sumą (${formatEuro(finalTotal)})`}
                     </span>
+                    {payingDeposit && (
+                      <span className="payment-method-option-sub">
+                        Liks sumokėti {formatEuro(remainingAmount)}
+                        {remainingDueDate
+                          ? ` — ${remainingDueDate} dieną atsiųsime mokėjimo nuorodą el. paštu`
+                          : ""}
+                      </span>
+                    )}
                   </span>
-                </label>
-                <label className={`payment-method-option ${payingDeposit ? "active" : ""}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "DEPOSIT"}
-                    onChange={() => setPaymentMethod("DEPOSIT")}
-                  />
-                  <span className="payment-method-option-text">
-                    <span className="payment-method-option-title">
-                      Mokėti depozitą ({formatEuro(depositAmount)})
-                    </span>
-                    <span className="payment-method-option-sub">
-                      Liks sumokėti {formatEuro(remainingAmount)}
-                      {remainingDueDate ? ` iki ${remainingDueDate}` : ""}
-                    </span>
-                  </span>
-                </label>
+                </div>
               </div>
             </div>
           )}
@@ -532,13 +437,6 @@ export default function BuyPayment() {
               <span>Viso keliautojų: {travellerCount}</span>
               <span>Viso: {formatEuro(finalTotal)}</span>
             </div>
-            {payingDeposit && (
-              <p className="payment-deposit-note">
-                Šiandien mokate {formatEuro(depositAmount)}, likusius{" "}
-                {formatEuro(remainingAmount)}
-                {remainingDueDate ? ` reikės sumokėti iki ${remainingDueDate}` : " sumokėsite vėliau"}.
-              </p>
-            )}
           </div>
 
           <div className="payment-section payment-notes">
@@ -585,70 +483,17 @@ export default function BuyPayment() {
           title="Užsakymo suvestinė"
           routeLabel={`${trip.destinationCountry} · ${travellerCount} keliautojai`}
           dateLabel={formatTripDate(departure.date)}
-          totalNote={
-            appliedDiscount || appliedVoucher || payingDeposit ? (
-              <>
-                {appliedDiscount && (
-                  <div>
-                    Nuolaida: {appliedDiscount.code} ({discountLabel})
-                  </div>
-                )}
-                {appliedVoucher && (
-                  <div>
-                    Kuponas: {appliedVoucher.code} (-{formatEuro(voucherAmount)})
-                  </div>
-                )}
-                {payingDeposit && (
-                  <div>
-                    Depozitas — liks sumokėti {formatEuro(remainingAmount)}
-                    {remainingDueDate ? ` iki ${remainingDueDate}` : ""}
-                  </div>
-                )}
-              </>
-            ) : undefined
-          }
           formattedTotal={formatEuro(amountDueNow)}
+          hideTotalLine
           isValid={agreed && !isHoldExpired}
           onContinue={handlePay}
           buttonLabel={`Apmokėti ${formatEuro(amountDueNow)}`}
           note={
             isHoldExpired
-              ? "Rezervacijos laikas baigėsi — grįžkite ir pasirinkite vietas iš naujo."
+              ? "Rezervacijos laikas baigėsi — pradėkite iš naujo."
               : "Apmokėjimas bus vykdomas per Paysera saugią mokėjimo sistemą."
           }
-        >
-          <div className="payment-coupon">
-            <input
-              type="text"
-              value={discountInput}
-              onChange={(e) => {
-                setDiscountInput(e.target.value);
-                setDiscountError("");
-              }}
-              placeholder="Nuolaidos kodas"
-            />
-            <button type="button" onClick={handleApplyDiscount}>
-              Taikyti
-            </button>
-          </div>
-          {discountError && <p className="payment-coupon-error">{discountError}</p>}
-
-          <div className="payment-coupon">
-            <input
-              type="text"
-              value={voucherInput}
-              onChange={(e) => {
-                setVoucherInput(e.target.value);
-                setVoucherError("");
-              }}
-              placeholder="Dovanų kuponas"
-            />
-            <button type="button" onClick={handleApplyVoucher}>
-              Taikyti
-            </button>
-          </div>
-          {voucherError && <p className="payment-coupon-error">{voucherError}</p>}
-        </BuySessionSidebar>
+        />
         </div>
       </div>
 

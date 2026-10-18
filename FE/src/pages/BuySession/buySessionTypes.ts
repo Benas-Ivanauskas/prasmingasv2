@@ -15,10 +15,24 @@ export interface ContactForm {
   wantsInvoice: boolean; // mirrors schema.prisma's Order.wantsInvoice
 }
 
+// Step 1's ("Kelionė") own decisions — date (implicit, via the URL's
+// departureId), traveller count, an optional discount code, whether a
+// deposit is being paid, and whether an invoice is wanted. These travel
+// through every later step via SeatSelectionState below and are never
+// asked for again.
+export interface TripDetailsState {
+  travellerCount: number;
+  discountCode?: string;
+  wantsDeposit: boolean;
+  wantsInvoice: boolean;
+}
+
 // What Step 2 (Vietos) hands off to Step 3 (Keleiviai) via router state — the
 // concrete seats/cabins picked, so later steps can show "which seat" per
 // traveller and (for CRUISE) price by actual cabin type instead of the flat
-// per-person departure cost.
+// per-person departure cost. Also carries Step 1's decisions forward
+// unchanged (see TripDetailsState above) so Step 2 can both read them
+// (required traveller count, FLIGHT's fixed headcount) and pass them on.
 export interface SeatSelectionState {
   seatNumbers: string[]; // ordered seat labels — BUS, or CRUISE's transfer bus
   cabinSelections?: Record<string, number>; // CRUISE only: cabinTypeId -> quantity
@@ -34,6 +48,9 @@ export interface SeatSelectionState {
   // selected instead of resetting to a blank seat map.
   selectedSeatIds?: string[];
   travellerCount?: number;
+  discountCode?: string;
+  wantsDeposit?: boolean;
+  wantsInvoice?: boolean;
 }
 
 // Legal-document acknowledgements collected once per order (not per
@@ -48,12 +65,12 @@ export interface ConsentForm {
 
 // Step 4's own fields — only ever set when round-tripping Step 4 → Step 3 →
 // Step 4 again via the "← Atgal" links, so a trip back to fix a traveller's
-// details doesn't wipe out a comment or an already-applied discount code.
+// details doesn't wipe out a comment. The discount code itself is decided
+// in Step 1 (see SeatSelectionState) and isn't editable here, so it
+// doesn't need a round-trip slot of its own.
 export interface PaymentExtras {
   comment: string;
   agreed: boolean;
-  discountCode?: string;
-  voucherCode?: string;
 }
 
 // What Step 3 (Keleiviai) hands off to Step 4 (Mokėjimas) via router state —

@@ -1,0 +1,159 @@
+.trip-ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.trip-ticket-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--surface) !important;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.trip-ticket-card:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.trip-ticket-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.trip-ticket-card * {
+  background-color: transparent;
+}
+
+.trip-ticket-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.trip-ticket-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.trip-ticket-date svg {
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.trip-ticket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.trip-ticket-meta svg {
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.trip-ticket-availability {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-ticket-availability.sold-out {
+  color: var(--danger) !important;
+  font-weight: 600;
+}
+
+.trip-ticket-guarantee {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--primary) !important;
+  background-color: var(--primary-soft) !important;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.trip-ticket-price-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.trip-ticket-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.trip-ticket-price-original {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: line-through;
+}
+
+.trip-ticket-discount {
+  padding: 1px 8px;
+  border-radius: 9999px;
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.trip-ticket-price-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trip-ticket-action {
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: background-color 0.15s ease;
+}
+
+.trip-ticket-card:hover:not(:disabled) .trip-ticket-action {
+  background-color: var(--primary-dark) !important;
+}
+
+.trip-ticket-card:disabled .trip-ticket-action {
+  background-color: var(--border) !important;
+  color: var(--text-muted) !important;
+}
+
+@media (max-width: 640px) {
+  .trip-ticket-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .trip-ticket-price-action {
+    align-items: flex-start;
+    width: 100%;
+  }
+}

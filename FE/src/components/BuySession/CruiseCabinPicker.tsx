@@ -6,6 +6,7 @@ import {
   getCabinUnitSize,
   getCabinPricing,
   formatEuro,
+  pluralizeLt,
 } from "../../utils/tripHelpers";
 import "./CruiseCabinPicker.css";
 
@@ -87,14 +88,16 @@ export default function CruiseCabinPicker({
                 {soldOut
                   ? "išparduota"
                   : perPlace
-                    ? `liko ${available} vietų`
-                    : `liko ${available} kajučių`}
+                    ? `liko ${available} ${pluralizeLt(available, "vieta", "vietos", "vietų")}`
+                    : `liko ${available} ${pluralizeLt(available, "kajutė", "kajutės", "kajučių")}`}
               </span>
               {quantity > 0 && (
                 <span className="cruise-cabin-total">
                   {perPlace
-                    ? `${quantity} ${quantity === 1 ? "vieta" : "vietos"}`
-                    : `${quantity} kajutė${quantity > 1 ? "s" : ""} · iš viso ${quantity * unitSize} keleiviai`}
+                    ? `${quantity} ${pluralizeLt(quantity, "vieta", "vietos", "vietų")}`
+                    : `${quantity} ${pluralizeLt(quantity, "kajutė", "kajutės", "kajučių")} · iš viso ${
+                        quantity * unitSize
+                      } ${pluralizeLt(quantity * unitSize, "keleivis", "keleiviai", "keleivių")}`}
                 </span>
               )}
             </div>

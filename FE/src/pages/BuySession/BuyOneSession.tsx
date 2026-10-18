@@ -6,16 +6,16 @@ import StatusPage from "../../components/StatusPage/StatusPage";
 import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BusSeatMap from "../../components/BuySession/BusSeatMap";
-import FlightTravellerStepper from "../../components/BuySession/FlightTravellerStepper";
 import CruiseCabinPicker from "../../components/BuySession/CruiseCabinPicker";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
-import { holdSeats, holdFlightSeats, releaseHold } from "../../api/trips";
+import { holdSeats, holdFlightSeats, releaseHold, lookupDiscountCode } from "../../api/trips";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import {
   getTripPricing,
   getCabinTypeLabel,
   getCabinUnitSize,
   getCabinPricing,
+  getCheckoutTotals,
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
@@ -28,17 +28,17 @@ export default function BuyOneSession() {
   const { slug, departureId } = useParams<{ slug: string; departureId: string }>();
   const { trip, departure, status } = useTripBySlug(slug, departureId);
 
-  // Restores the previous selection when arriving via Step 3's "← Atgal"
-  // link — otherwise (arriving fresh from the trip page) these are empty.
+  // Arriving fresh from Step 1 ("Kelionė"), or restored via Step 3's
+  // "← Atgal" link — either way this already carries Step 1's decisions
+  // (traveller count, discount code, deposit/invoice choices).
   const restoredSelection = location.state as SeatSelectionState | null;
+  // Required headcount, decided in Step 1 — never re-asked here. BUS/CRUISE
+  // must select exactly this many seats; FLIGHT has no seats to pick at all,
+  // so this is simply shown as a fixed fact.
+  const travellerCount = restoredSelection?.travellerCount ?? 1;
 
   const [selectedSeatIds, setSelectedSeatIds] = useState<Set<string>>(
     () => new Set(restoredSelection?.selectedSeatIds ?? [])
-  );
-  // FLIGHT only — how many passengers the stepper is set to. Unrelated to
-  // BUS/CRUISE's passengerCount below (derived from actual seats/cabins).
-  const [flightTravellerCount, setFlightTravellerCount] = useState(
-    restoredSelection?.travellerCount ?? 1
   );
   const [cabinSelections, setCabinSelections] = useState<Record<string, number>>(
     () => restoredSelection?.cabinSelections ?? {}
@@ -57,7 +57,9 @@ export default function BuyOneSession() {
       const next = new Set(prev);
       if (next.has(seatId)) {
         next.delete(seatId);
-      } else {
+      } else if (next.size < travellerCount) {
+        // Can't select more seats than the traveller count decided in
+        // Step 1 — clicks beyond that cap are simply ignored.
         next.add(seatId);
       }
       return next;
@@ -83,14 +85,16 @@ export default function BuyOneSession() {
       .map((s) => s.seatNumber)
       .join(", ");
     totalPrice = selectedSeatIds.size * pricing.finalCost;
-    selectionSummary = seatNumbers ? `Pasirinktos vietos: ${seatNumbers}` : "Pasirinkite vietas";
-    isValid = selectedSeatIds.size > 0;
+    selectionSummary = seatNumbers
+      ? `Pasirinktos vietos: ${seatNumbers} (${selectedSeatIds.size}/${travellerCount})`
+      : `Pasirinkite vietas (0/${travellerCount})`;
+    isValid = selectedSeatIds.size === travellerCount;
     passengerCount = selectedSeatIds.size;
   } else if (trip.tripType === "FLIGHT") {
-    totalPrice = flightTravellerCount * pricing.finalCost;
-    selectionSummary = `Keleivių skaičius: ${flightTravellerCount}`;
-    isValid = flightTravellerCount > 0;
-    passengerCount = flightTravellerCount;
+    totalPrice = travellerCount * pricing.finalCost;
+    selectionSummary = `Keleivių skaičius: ${travellerCount}`;
+    isValid = travellerCount > 0;
+    passengerCount = travellerCount;
   } else {
     const cabinSummary = cabinTypes
       .filter((c) => (cabinSelections[c.id] ?? 0) > 0)
@@ -103,17 +107,30 @@ export default function BuyOneSession() {
       0
     );
     selectionSummary = [
-      selectedSeatIds.size > 0 ? `Autobuso vietos: ${selectedSeatIds.size}` : null,
+      `Autobuso vietos: ${selectedSeatIds.size}/${travellerCount}`,
       cabinSummary || null,
     ]
       .filter(Boolean)
-      .join(" · ") || "Pasirinkite kajutę ir autobuso vietas";
+      .join(" · ");
     isValid =
-      totalCabinTravellers > 0 && selectedSeatIds.size === totalCabinTravellers;
+      selectedSeatIds.size === travellerCount && totalCabinTravellers === selectedSeatIds.size;
     passengerCount = totalCabinTravellers;
   }
 
-  const formattedTotal = formatEuro(totalPrice);
+  // The discount code and deposit choice were decided in Step 1 and travel
+  // forward via restoredSelection — applied here too so the price shown
+  // while picking seats/cabins already reflects them, not just the raw
+  // per-seat total.
+  const appliedDiscount = restoredSelection?.discountCode
+    ? lookupDiscountCode(restoredSelection.discountCode)
+    : null;
+  const { payingDeposit, amountDueNow, remainingAmount, remainingDueDate } = getCheckoutTotals(
+    totalPrice,
+    departure,
+    appliedDiscount,
+    restoredSelection?.wantsDeposit
+  );
+  const formattedTotal = formatEuro(amountDueNow);
   const routeLabel = `${trip.destinationCountry} · ${departure.durationDays} dienos`;
   const dateLabel = formatTripDate(departure.date);
 
@@ -132,20 +149,24 @@ export default function BuyOneSession() {
     // passenger count instead, on the exact same TTL/confirm/release lifecycle.
     let hold: Pick<SeatSelectionState, "holdId" | "holdExpiresAt"> = {};
     if (trip.tripType === "FLIGHT") {
-      const result = holdFlightSeats(trip.id, departure.id, flightTravellerCount);
+      const result = holdFlightSeats(trip.id, departure.id, travellerCount);
       hold = { holdId: result.holdId, holdExpiresAt: result.expiresAt };
     } else if (selectedSeatIds.size > 0) {
       const result = holdSeats(trip.id, departure.id, Array.from(selectedSeatIds));
       hold = { holdId: result.holdId, holdExpiresAt: result.expiresAt };
     }
     // Carried forward so later steps can show which seat each traveller got
-    // and (for CRUISE) price by the actual cabin types picked here.
+    // and (for CRUISE) price by the actual cabin types picked here — plus
+    // Step 1's own decisions, passed through untouched.
     const seatSelectionState: SeatSelectionState = {
       seatNumbers: seats
         .filter((s) => selectedSeatIds.has(s.id))
         .map((s) => s.seatNumber),
       selectedSeatIds: Array.from(selectedSeatIds),
-      travellerCount: flightTravellerCount,
+      travellerCount,
+      discountCode: restoredSelection?.discountCode,
+      wantsDeposit: restoredSelection?.wantsDeposit,
+      wantsInvoice: restoredSelection?.wantsInvoice,
       ...(trip.tripType === "CRUISE" ? { cabinSelections } : {}),
       ...hold,
     };
@@ -160,7 +181,11 @@ export default function BuyOneSession() {
 
       <div className="container">
         <BuyStepper currentStep={2} />
-        <Link to={`/trips/${trip.slug}`} className="buy-session-back-link">
+        <Link
+          to={`/buy/${trip.slug}/${departure.id}`}
+          state={restoredSelection}
+          className="buy-session-back-link"
+        >
           ← Grįžti į kelionę
         </Link>
         <h1 className="buy-session-title">Pasirinkite vietas</h1>
@@ -182,12 +207,14 @@ export default function BuyOneSession() {
             )}
 
             {trip.tripType === "FLIGHT" && (
-              <FlightTravellerStepper
-                count={flightTravellerCount}
-                min={1}
-                max={Math.max(0, (departure.flightSeatsTotal ?? 0) - (departure.flightSeatsTaken ?? 0))}
-                onChange={setFlightTravellerCount}
-              />
+              <div className="buy-session-flight-fixed-count">
+                <p>
+                  Keleivių skaičius: <strong>{travellerCount}</strong>
+                </p>
+                <p className="buy-session-subtitle">
+                  Keleivių skaičius jau pasirinktas ankstesniame žingsnyje.
+                </p>
+              </div>
             )}
 
             {trip.tripType === "CRUISE" && (
@@ -215,6 +242,15 @@ export default function BuyOneSession() {
             dateLabel={dateLabel}
             selectionSummary={selectionSummary}
             formattedTotal={formattedTotal}
+            totalNote={
+              payingDeposit
+                ? `Depozitas — liks sumokėti ${formatEuro(remainingAmount)}${
+                    remainingDueDate
+                      ? ` — ${remainingDueDate} dieną atsiųsime mokėjimo nuorodą el. paštu`
+                      : ""
+                  }`
+                : undefined
+            }
             isValid={isValid}
             onContinue={handleContinue}
           />

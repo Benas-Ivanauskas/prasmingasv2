@@ -36,6 +36,7 @@ export function createEmptyDiscountCode(): DiscountCode {
     type: "PERCENTAGE",
     value: 0,
     isActive: true,
+    expiresAt: null,
   };
 }
 
