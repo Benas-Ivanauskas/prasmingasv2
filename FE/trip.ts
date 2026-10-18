@@ -944,7 +944,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         id: "departure-barcelona-2027-06-08",
         date: "2027-06-08T00:00:00.000Z",
 
-        pickupPoints: [],
+        pickupPoints: [{ city: "Vilniaus oro uostas" }],
 
         durationDays: 5,
         cost: 699,

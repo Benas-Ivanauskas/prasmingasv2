@@ -139,33 +139,38 @@ export default function AdminDepartureEditor({
               </select>
             </Field>
           </div>
-
-          <h5>Išvykimo vietos</h5>
-          {pickupPoints.map((p, i) => (
-            <div key={i} className="admin-row">
-              <input
-                placeholder="Miestas"
-                value={p.city}
-                onChange={(e) => onChange({ pickupPoints: patchAt(pickupPoints, i, { city: e.target.value }) })}
-              />
-              <button
-                type="button"
-                className="admin-link is-danger"
-                onClick={() => onChange({ pickupPoints: removeAt(pickupPoints, i) })}
-              >
-                Pašalinti
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="admin-add"
-            onClick={() => onChange({ pickupPoints: [...pickupPoints, { city: "" }] })}
-          >
-            + Pridėti išvykimo vietą
-          </button>
         </>
       )}
+
+      <h5>Išvykimo vietos</h5>
+      {tripType === "FLIGHT" && (
+        <p className="admin-field-hint">
+          Pvz. iš kurio oro uosto išskrendama — skrydžiams paprastai užtenka vienos vietos.
+        </p>
+      )}
+      {pickupPoints.map((p, i) => (
+        <div key={i} className="admin-row">
+          <input
+            placeholder={tripType === "FLIGHT" ? "Oro uostas" : "Miestas"}
+            value={p.city}
+            onChange={(e) => onChange({ pickupPoints: patchAt(pickupPoints, i, { city: e.target.value }) })}
+          />
+          <button
+            type="button"
+            className="admin-link is-danger"
+            onClick={() => onChange({ pickupPoints: removeAt(pickupPoints, i) })}
+          >
+            Pašalinti
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="admin-add"
+        onClick={() => onChange({ pickupPoints: [...pickupPoints, { city: "" }] })}
+      >
+        + Pridėti išvykimo vietą
+      </button>
 
       {tripType === "FLIGHT" && (
         <>
