@@ -1,32 +1,46 @@
-import { mockDiscountCodes, mockVouchers } from "../../discounts";
-import type { DiscountCode, GiftVoucher } from "../types/discount";
+import type { DiscountCode } from "../types/discount";
 
-// Admin-side CRUD for discount codes/vouchers. Placeholder data source: it
-// mutates the same in-memory arrays api/trips.ts reads for the public
-// checkout lookup, so changes show up there immediately but are lost on a
-// page reload. Swap each function's body for real API calls once the
-// backend exists — callers already treat these as async.
+// Realus BE kvietimas (ne mock duomenys) — Fazė 3 admin pusė. Sesija
+// laikoma httpOnly cookie, tad visur `credentials: "include"`.
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
+async function parseErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    return body?.error?.message ?? "Įvyko klaida";
+  } catch {
+    return "Įvyko klaida";
+  }
+}
 
 export async function adminListDiscountCodes(): Promise<DiscountCode[]> {
-  return mockDiscountCodes;
+  const res = await fetch(`${API_URL}/api/admin/discounts`, { credentials: "include" });
+  if (!res.ok) throw new Error(await parseErrorMessage(res));
+  return res.json();
 }
 
 // Returns an error message when the code can't be saved, otherwise null.
-export async function adminSaveDiscountCode(discount: DiscountCode): Promise<string | null> {
-  const codeTaken = mockDiscountCodes.some(
-    (d) => d.code === discount.code && d.id !== discount.id
-  );
-  if (codeTaken) return "Nuolaidos kodas su tokiu pavadinimu jau egzistuoja.";
-
-  const index = mockDiscountCodes.findIndex((d) => d.id === discount.id);
-  if (index >= 0) mockDiscountCodes[index] = discount;
-  else mockDiscountCodes.push(discount);
+// `isNew` renka POST (sukurti) vs PUT /:id (redaguoti) — tas pats pattern'as
+// kaip adminTrips.ts'o adminSaveTrip (id visada užpildytas, net naujam
+// kodui, tad vien iš jo buvimo negalima patikimai spręsti create/update).
+export async function adminSaveDiscountCode(discount: DiscountCode, isNew = false): Promise<string | null> {
+  const url = isNew ? `${API_URL}/api/admin/discounts` : `${API_URL}/api/admin/discounts/${discount.id}`;
+  const res = await fetch(url, {
+    method: isNew ? "POST" : "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(discount),
+  });
+  if (!res.ok) return parseErrorMessage(res);
   return null;
 }
 
 export async function adminDeleteDiscountCode(id: string): Promise<void> {
-  const index = mockDiscountCodes.findIndex((d) => d.id === id);
-  if (index >= 0) mockDiscountCodes.splice(index, 1);
+  const res = await fetch(`${API_URL}/api/admin/discounts/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res));
 }
 
 export function createEmptyDiscountCode(): DiscountCode {
@@ -37,33 +51,5 @@ export function createEmptyDiscountCode(): DiscountCode {
     value: 0,
     isActive: true,
     expiresAt: null,
-  };
-}
-
-export async function adminListVouchers(): Promise<GiftVoucher[]> {
-  return mockVouchers;
-}
-
-export async function adminSaveVoucher(voucher: GiftVoucher): Promise<string | null> {
-  const codeTaken = mockVouchers.some((v) => v.code === voucher.code && v.id !== voucher.id);
-  if (codeTaken) return "Kuponas su tokiu kodu jau egzistuoja.";
-
-  const index = mockVouchers.findIndex((v) => v.id === voucher.id);
-  if (index >= 0) mockVouchers[index] = voucher;
-  else mockVouchers.push(voucher);
-  return null;
-}
-
-export async function adminDeleteVoucher(id: string): Promise<void> {
-  const index = mockVouchers.findIndex((v) => v.id === id);
-  if (index >= 0) mockVouchers.splice(index, 1);
-}
-
-export function createEmptyVoucher(): GiftVoucher {
-  return {
-    id: `voucher-${Date.now()}`,
-    code: "",
-    value: 0,
-    isActive: true,
   };
 }

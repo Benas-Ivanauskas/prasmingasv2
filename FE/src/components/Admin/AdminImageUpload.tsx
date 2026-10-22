@@ -2,17 +2,27 @@ import { useRef, useState } from "react";
 import type { TripImage } from "../../types/trip";
 import "./AdminImageUpload.css";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB — base64 is a mock-only stand-in
-// for real server storage, so a hard cap keeps a session from bloating on a
-// stray full-resolution camera photo.
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB — atitinka BE middleware/upload.ts ribą
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
+async function uploadFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_URL}/api/admin/media/upload`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
   });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error?.message ?? "Nepavyko įkelti nuotraukos");
+  }
+
+  const { url } = await res.json();
+  return url;
 }
 
 interface AdminImageUploadProps {
@@ -51,8 +61,12 @@ export default function AdminImageUpload({
         setError(`${file.name} per didelis (maks. 5MB).`);
         continue;
       }
-      const url = await readFileAsDataUrl(file);
-      accepted.push({ url, alt: "", sortOrder: 0 });
+      try {
+        const url = await uploadFile(file);
+        accepted.push({ url, alt: "", sortOrder: 0 });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : `Nepavyko įkelti ${file.name}.`);
+      }
     }
     if (accepted.length === 0) return;
 

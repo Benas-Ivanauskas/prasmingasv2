@@ -54,6 +54,26 @@ function getRowCapacity(rowNumber: number) {
 // the label always matches whatever row the seat actually renders in.
 const SEAT_LETTERS = ["A", "B", "C", "D", "E", "F", "G"];
 
+// Seat array order isn't guaranteed to match seatNumber order once seats
+// round-trip through a real DB (e.g. Postgres has no inherent row order
+// without an explicit ORDER BY, and seats added during a later resize get
+// inserted after existing ones) — buildBusSeatMap/resizeSeats both assume
+// array index == visual position, so sort by the actual row+letter label
+// first instead of trusting whatever order the array arrived in.
+function parseSeatNumber(seatNumber: string): [number, string] {
+  const match = seatNumber.match(/^(\d+)([A-Za-z]*)$/);
+  if (!match) return [Number.MAX_SAFE_INTEGER, seatNumber];
+  return [Number(match[1]), match[2]];
+}
+
+export function sortBySeatNumber<T extends { seatNumber: string }>(seats: T[]): T[] {
+  return [...seats].sort((a, b) => {
+    const [rowA, letterA] = parseSeatNumber(a.seatNumber);
+    const [rowB, letterB] = parseSeatNumber(b.seatNumber);
+    return rowA !== rowB ? rowA - rowB : letterA.localeCompare(letterB);
+  });
+}
+
 export function generateBusSeatLabels(totalSeats: number): string[] {
   const labels: string[] = [];
   let cursor = 0;
@@ -85,7 +105,8 @@ export function generateBusSeatLabels(totalSeats: number): string[] {
   return labels;
 }
 
-export function buildBusSeatMap(seats: Seat[]): BusMapRow[] {
+export function buildBusSeatMap(unsortedSeats: Seat[]): BusMapRow[] {
+  const seats = sortBySeatNumber(unsortedSeats);
   const rows: BusMapRow[] = [];
   let cursor = 0;
   let rowNumber = 1;

@@ -4,12 +4,8 @@ import {
   adminSaveDiscountCode,
   adminDeleteDiscountCode,
   createEmptyDiscountCode,
-  adminListVouchers,
-  adminSaveVoucher,
-  adminDeleteVoucher,
-  createEmptyVoucher,
 } from "../../api/adminDiscounts";
-import type { DiscountCode, DiscountType, GiftVoucher } from "../../types/discount";
+import type { DiscountCode, DiscountType } from "../../types/discount";
 import { NumberInput } from "./AdminFormFields";
 
 const TYPE_LABELS: Record<DiscountType, string> = {
@@ -17,38 +13,67 @@ const TYPE_LABELS: Record<DiscountType, string> = {
   FIXED: "Suma (€)",
 };
 
+// Nuolaidos kodas negali būti Aktyvus be galiojimo datos — priešingu atveju
+// jis liktų aktyvus neribotą laiką be jokios kontrolės. Taikoma vienoje
+// vietoje (saveDiscount), tad galioja visiems keitimams: toggle, datos
+// keitimui/išvalymui, naujo kodo pridėjimui.
+function assertActiveHasExpiry(discount: Pick<DiscountCode, "isActive" | "expiresAt">): string | null {
+  if (discount.isActive && !discount.expiresAt) {
+    return "Nuolaidos kodas negali būti aktyvus be galiojimo datos. Pasirinkite datą arba pažymėkite kaip neaktyvų.";
+  }
+  return null;
+}
+
+// Grynai vizualus žymėjimas — DB isActive NEKEIČIAMA automatiškai (jokio
+// cron'o). Realus kodo veikimas checkout metu jau ir taip tikrina galiojimą
+// dinamiškai (žr. BE discount.service.ts validateDiscountCode) nepriklausomai
+// nuo šio isActive lauko — tai tik padeda adminui iškart matyti sąraše.
+function isExpired(discount: Pick<DiscountCode, "expiresAt">): boolean {
+  if (!discount.expiresAt) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return discount.expiresAt.slice(0, 10) < today;
+}
+
 export default function AdminDiscounts() {
   const [discounts, setDiscounts] = useState<DiscountCode[]>([]);
-  const [vouchers, setVouchers] = useState<GiftVoucher[]>([]);
   const [newDiscount, setNewDiscount] = useState(createEmptyDiscountCode);
-  const [newVoucher, setNewVoucher] = useState(createEmptyVoucher);
   const [discountError, setDiscountError] = useState("");
-  const [voucherError, setVoucherError] = useState("");
 
   const reloadDiscounts = () => adminListDiscountCodes().then((list) => setDiscounts([...list]));
-  const reloadVouchers = () => adminListVouchers().then((list) => setVouchers([...list]));
 
   useEffect(() => {
     let cancelled = false;
     adminListDiscountCodes().then((list) => {
       if (!cancelled) setDiscounts([...list]);
     });
-    adminListVouchers().then((list) => {
-      if (!cancelled) setVouchers([...list]);
-    });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const saveDiscount = async (discount: DiscountCode) => {
-    const error = await adminSaveDiscountCode(discount);
+  const saveDiscount = async (discount: DiscountCode, isNew = false) => {
+    const validationError = assertActiveHasExpiry(discount);
+    if (validationError) {
+      setDiscountError(validationError);
+      return;
+    }
+    // Optimistic local update FIRST — the date/type/value inputs and the
+    // Aktyvus/Neaktyvus toggle all call saveDiscount directly with no local
+    // state change of their own (unlike `code`, which edits onChange then
+    // saves onBlur). Without this, the controlled <input type="date">'s
+    // `value` stays bound to the OLD discounts state for the whole async
+    // round-trip, so React re-renders with the stale value right after the
+    // native date picker fires onChange — visually "snapping back" as if
+    // the pick never happened, even though nothing was actually rejected.
+    if (!isNew) {
+      setDiscounts((prev) => prev.map((d) => (d.id === discount.id ? discount : d)));
+    }
+    const error = await adminSaveDiscountCode(discount, isNew);
     if (error) {
       setDiscountError(error);
-      reloadDiscounts();
+      reloadDiscounts(); // revert the optimistic update since the save failed
     } else {
       setDiscountError("");
-      reloadDiscounts();
     }
   };
 
@@ -67,7 +92,12 @@ export default function AdminDiscounts() {
       setDiscountError("Įveskite nuolaidos kodą.");
       return;
     }
-    const error = await adminSaveDiscountCode({ ...newDiscount, code });
+    const validationError = assertActiveHasExpiry(newDiscount);
+    if (validationError) {
+      setDiscountError(validationError);
+      return;
+    }
+    const error = await adminSaveDiscountCode({ ...newDiscount, code }, true);
     if (error) {
       setDiscountError(error);
       return;
@@ -77,48 +107,12 @@ export default function AdminDiscounts() {
     reloadDiscounts();
   };
 
-  const saveVoucher = async (voucher: GiftVoucher) => {
-    const error = await adminSaveVoucher(voucher);
-    if (error) {
-      setVoucherError(error);
-      reloadVouchers();
-    } else {
-      setVoucherError("");
-      reloadVouchers();
-    }
-  };
-
-  const toggleVoucherActive = (voucher: GiftVoucher) =>
-    saveVoucher({ ...voucher, isActive: !voucher.isActive });
-
-  const removeVoucher = async (voucher: GiftVoucher) => {
-    if (!window.confirm(`Ištrinti kuponą „${voucher.code}“?`)) return;
-    await adminDeleteVoucher(voucher.id);
-    reloadVouchers();
-  };
-
-  const addVoucher = async () => {
-    const code = newVoucher.code.trim().toUpperCase();
-    if (!code) {
-      setVoucherError("Įveskite kupono kodą.");
-      return;
-    }
-    const error = await adminSaveVoucher({ ...newVoucher, code });
-    if (error) {
-      setVoucherError(error);
-      return;
-    }
-    setVoucherError("");
-    setNewVoucher(createEmptyVoucher());
-    reloadVouchers();
-  };
-
   return (
     <>
       <div className="admin-page-head">
         <div>
-          <h1>Nuolaidos ir kuponai</h1>
-          <p>Tvarkykite nuolaidų kodus ir dovanų kuponus, naudojamus apmokėjimo žingsnyje.</p>
+          <h1>Nuolaidos</h1>
+          <p>Tvarkykite nuolaidų kodus, naudojamus apmokėjimo žingsnyje.</p>
         </div>
       </div>
 
@@ -152,7 +146,7 @@ export default function AdminDiscounts() {
             />
             <input
               type="date"
-              title="Galioja iki (tuščia = niekada nebaigia galioti)"
+              title="Galioja iki (privaloma, jei kodas Aktyvus)"
               value={discount.expiresAt ?? ""}
               onChange={(e) => saveDiscount({ ...discount, expiresAt: e.target.value || null })}
             />
@@ -163,6 +157,11 @@ export default function AdminDiscounts() {
             >
               {discount.isActive ? "Aktyvus" : "Neaktyvus"}
             </button>
+            {discount.isActive && isExpired(discount) && (
+              <span className="admin-pill is-off" title="Galiojimo data praėjusi — kodas nebeveikia pirkimo metu">
+                Pasibaigęs
+              </span>
+            )}
             <button
               type="button"
               className="admin-link is-danger"
@@ -196,7 +195,7 @@ export default function AdminDiscounts() {
           />
           <input
             type="date"
-            title="Galioja iki (tuščia = niekada nebaigia galioti)"
+            title="Galioja iki (privaloma, jei kodas Aktyvus)"
             value={newDiscount.expiresAt ?? ""}
             onChange={(e) =>
               setNewDiscount((prev) => ({ ...prev, expiresAt: e.target.value || null }))
@@ -206,63 +205,6 @@ export default function AdminDiscounts() {
         {discountError && <p className="admin-field-hint">{discountError}</p>}
         <button type="button" className="admin-add" onClick={addDiscount}>
           + Pridėti nuolaidos kodą
-        </button>
-      </section>
-
-      <section className="admin-card">
-        <h3>Dovanų kuponai</h3>
-
-        {vouchers.map((voucher) => (
-          <div className="admin-row" key={voucher.id}>
-            <input
-              value={voucher.code}
-              placeholder="Kodas"
-              onChange={(e) =>
-                setVouchers((prev) =>
-                  prev.map((v) => (v.id === voucher.id ? { ...v, code: e.target.value } : v))
-                )
-              }
-              onBlur={() => saveVoucher({ ...voucher, code: voucher.code.trim().toUpperCase() })}
-            />
-            <NumberInput
-              min={0}
-              step={0.01}
-              value={voucher.value}
-              onChange={(v) => saveVoucher({ ...voucher, value: v ?? 0 })}
-            />
-            <button
-              type="button"
-              className={`admin-pill ${voucher.isActive ? "is-on" : "is-off"}`}
-              onClick={() => toggleVoucherActive(voucher)}
-            >
-              {voucher.isActive ? "Aktyvus" : "Neaktyvus"}
-            </button>
-            <button
-              type="button"
-              className="admin-link is-danger"
-              onClick={() => removeVoucher(voucher)}
-            >
-              Ištrinti
-            </button>
-          </div>
-        ))}
-
-        <div className="admin-row">
-          <input
-            value={newVoucher.code}
-            placeholder="Naujas kodas (pvz. DOVANA30)"
-            onChange={(e) => setNewVoucher((prev) => ({ ...prev, code: e.target.value }))}
-          />
-          <NumberInput
-            min={0}
-            step={0.01}
-            value={newVoucher.value}
-            onChange={(v) => setNewVoucher((prev) => ({ ...prev, value: v ?? 0 }))}
-          />
-        </div>
-        {voucherError && <p className="admin-field-hint">{voucherError}</p>}
-        <button type="button" className="admin-add" onClick={addVoucher}>
-          + Pridėti kuponą
         </button>
       </section>
     </>

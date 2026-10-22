@@ -16,7 +16,7 @@ import "./MainCard.css";
 type CategoryFilter = "ALL" | TripType | "GUARANTEED";
 type SortOption = "default" | "price-asc" | "price-desc" | "date-asc";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 20;
 
 interface MainCardProps {
   searchFilters?: TripSearchFilters | null;

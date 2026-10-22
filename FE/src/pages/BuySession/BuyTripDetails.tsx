@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -38,14 +38,25 @@ export default function BuyTripDetails() {
   const [discountError, setDiscountError] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<
     { code: string; type: "PERCENTAGE" | "FIXED"; value: number } | null
-  >(() => {
-    const code = restoredSelection?.discountCode;
-    if (!code) return null;
-    const discount = lookupDiscountCode(code);
-    return discount ? { code: discount.code, type: discount.type, value: discount.value } : null;
-  });
+  >(null);
   const [wantsDeposit, setWantsDeposit] = useState(restoredSelection?.wantsDeposit ?? false);
   const [wantsInvoice, setWantsInvoice] = useState(restoredSelection?.wantsInvoice ?? false);
+
+  // Restauruoja anksčiau pritaikytą nuolaidos kodą (atėjus iš Step 2
+  // "← Atgal") — lookup dabar realus BE kvietimas, tad vyksta asinchroniškai
+  // po mount'o, ne sinchroniniame useState inicializatoriuje.
+  useEffect(() => {
+    let cancelled = false;
+    const discountCode = restoredSelection?.discountCode;
+    if (discountCode) {
+      lookupDiscountCode(discountCode).then((d) => {
+        if (!cancelled && d) setAppliedDiscount({ code: discountCode, type: d.type, value: d.value });
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
   if (!trip) return <NotFound />;
@@ -72,12 +83,12 @@ export default function BuyTripDetails() {
     remainingDueDate,
   } = getCheckoutTotals(grandTotal, departure, appliedDiscount, wantsDeposit);
 
-  const handleApplyDiscount = () => {
+  const handleApplyDiscount = async () => {
     const code = discountInput.trim().toUpperCase();
     if (!code) return;
-    const discount = lookupDiscountCode(code);
+    const discount = await lookupDiscountCode(code);
     if (discount) {
-      setAppliedDiscount({ code: discount.code, type: discount.type, value: discount.value });
+      setAppliedDiscount({ code, type: discount.type, value: discount.value });
       setDiscountError("");
     } else {
       setAppliedDiscount(null);
@@ -158,7 +169,9 @@ export default function BuyTripDetails() {
                       +
                     </button>
                   </div>
-                  <span className="buy-trip-count-hint">Laisvų vietų: {freeSeatCount}</span>
+                  <span className="buy-trip-count-hint">
+                    Laisvų vietų: {Math.max(0, freeSeatCount - travellerCount)}
+                  </span>
                 </div>
               </div>
             </div>

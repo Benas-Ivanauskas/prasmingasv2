@@ -20,12 +20,16 @@ export default function AdminHome() {
           <p>Peržiūrėti užsakymus, generuoti sąskaitas, atšaukti keliones</p>
         </Link>
         <Link to="/admin/discounts" className="admin-section-card">
-          <h3>Nuolaidos ir kuponai</h3>
-          <p>Tvarkyti nuolaidų kodus ir dovanų kuponus</p>
+          <h3>Nuolaidos</h3>
+          <p>Tvarkyti nuolaidų kodus</p>
         </Link>
         <Link to="/admin/newsletter" className="admin-section-card">
           <h3>Naujienlaiškio eksportas</h3>
           <p>Atsisiųsti prenumeratorių sąrašą CSV formatu</p>
+        </Link>
+        <Link to="/admin/audit-log" className="admin-section-card">
+          <h3>Veiksmų žurnalas</h3>
+          <p>Kas ir kada sukūrė/redagavo/ištrynė keliones ir nuolaidų kodus</p>
         </Link>
       </div>
     </>

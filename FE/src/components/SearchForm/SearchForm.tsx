@@ -12,9 +12,9 @@ import "./SearchForm.css";
 
 // Helpers for formatted date strings (YYYY-MM-DD)
 const getTodayFormatted = () => new Date().toISOString().split("T")[0];
-const getFutureDateFormatted = (daysAhead: number) => {
+const getFutureMonthFormatted = (monthsAhead: number) => {
   const d = new Date();
-  d.setDate(d.getDate() + daysAhead);
+  d.setMonth(d.getMonth() + monthsAhead);
   return d.toISOString().split("T")[0];
 };
 
@@ -23,11 +23,11 @@ interface SearchFormProps {
 }
 
 export default function SearchForm({ onSearch }: SearchFormProps) {
-  const [tripType, setTripType] = useState<TripType>("FLIGHT");
-  const [category, setCategory] = useState<TripCategory>("SIGHTSEEING");
+  const [tripType, setTripType] = useState<TripType>("BUS");
+  const [category, setCategory] = useState<TripCategory | "">("");
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState(getTodayFormatted());
-  const [endDate, setEndDate] = useState(getFutureDateFormatted(7));
+  const [endDate, setEndDate] = useState(getFutureMonthFormatted(2));
   const [price, setPrice] = useState(2500);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,7 +35,7 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
 
     const filters: TripSearchFilters = {
       tripType,
-      category,
+      category: category || undefined,
       destination,
       startDate,
       endDate,
@@ -68,10 +68,12 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
 
             {/* Select travel type */}
             <select
-              onChange={(e) => setCategory(e.target.value as TripCategory)}
+              onChange={(e) => setCategory(e.target.value as TripCategory | "")}
               value={category}
               className="search-input-group travel-type-select"
+              aria-label="Pasirinkite kelionės tipą"
             >
+              <option value="">Pasirinkite kelionės tipą</option>
               <option value="SIGHTSEEING">Pažintinės</option>
               <option value="LEISURE">Poilsinės</option>
             </select>
@@ -93,15 +95,6 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
               <div className="filter-control trip-type-options">
                 <button
                   type="button"
-                  className={`trip-type-btn ${tripType === "FLIGHT" ? "active" : ""}`}
-                  onClick={() => setTripType("FLIGHT")}
-                >
-                  <IoAirplaneOutline className="trip-icon" />
-                  <span className="trip-btn-label">Lėktuvu</span>
-                </button>
-
-                <button
-                  type="button"
                   className={`trip-type-btn ${tripType === "BUS" ? "active" : ""}`}
                   onClick={() => setTripType("BUS")}
                 >
@@ -116,6 +109,15 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
                 >
                   <IoBoatOutline className="trip-icon" />
                   <span className="trip-btn-label">Kruizas</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`trip-type-btn ${tripType === "FLIGHT" ? "active" : ""}`}
+                  onClick={() => setTripType("FLIGHT")}
+                >
+                  <IoAirplaneOutline className="trip-icon" />
+                  <span className="trip-btn-label">Lėktuvu</span>
                 </button>
               </div>
             </div>

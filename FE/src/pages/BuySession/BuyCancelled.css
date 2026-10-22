@@ -1,0 +1,7 @@
+/* .success-icon defaults to --primary (green check) — wrong tone for a
+   cancellation; this page reuses the same card shell but needs its own
+   icon color. */
+.cancelled-icon {
+  background-color: var(--danger-soft, #fdecea) !important;
+  color: var(--danger) !important;
+}

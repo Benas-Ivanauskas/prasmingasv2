@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   IoMapOutline,
   IoCallOutline,
@@ -18,7 +18,8 @@ import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
-import { confirmHold, lookupDiscountCode, createOrder } from "../../api/trips";
+import { checkoutOrder, lookupDiscountCode } from "../../api/trips";
+import type { DiscountValidation } from "../../types/discount";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import { useCountdown } from "../../hooks/useCountdown";
@@ -33,7 +34,6 @@ import {
   formatEuro,
 } from "../../utils/tripHelpers";
 import type { BookingState } from "./buySessionTypes";
-import type { BuySuccessState } from "./BuySuccess";
 import "./BuyOneSession.css";
 import "./BuyPayment.css";
 
@@ -59,7 +59,6 @@ function PaymentInfoRow({
 export default function BuyPayment() {
   const { slug, departureId } = useParams<{ slug: string; departureId: string }>();
   const location = useLocation();
-  const navigate = useNavigate();
   const booking = (location.state as BookingState | null) ?? null;
   const { trip, departure, status } = useTripBySlug(slug, departureId);
 
@@ -71,6 +70,20 @@ export default function BuyPayment() {
   const [comment, setComment] = useState(paymentExtras?.comment ?? "");
   const [agreed, setAgreed] = useState(paymentExtras?.agreed ?? false);
   const secondsLeft = useCountdown(booking?.holdExpiresAt);
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidation | null>(null);
+  const [checkoutError, setCheckoutError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (booking?.discountCode) {
+      lookupDiscountCode(booking.discountCode).then((d) => {
+        if (!cancelled) setAppliedDiscount(d ?? null);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [booking?.discountCode]);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
   if (!trip) return <NotFound />;
@@ -114,9 +127,9 @@ export default function BuyPayment() {
   const baseOriginalTotal = isCruise ? baseTotal : pricing.originalCost * travellerCount;
   const departureDiscountAmount = baseOriginalTotal - baseTotal;
   // Decided in Step 1 and carried forward untouched — no longer editable
-  // here, just looked up again to compute the final amounts (deposit
-  // choice included — see getCheckoutTotals).
-  const appliedDiscount = booking.discountCode ? lookupDiscountCode(booking.discountCode) : null;
+  // here, just resolved again (async, in appliedDiscount state above) to
+  // compute the final amounts (deposit choice included — see
+  // getCheckoutTotals).
   const {
     discountAmount,
     finalTotal,
@@ -159,47 +172,41 @@ export default function BuyPayment() {
   };
 
   const handlePay = async () => {
-    if (isHoldExpired) return;
-    // Turns the held seats permanent (TAKEN) instead of leaving them to
-    // expire — the swap point for a real "confirm order" endpoint later.
-    if (booking.holdId) {
-      confirmHold(booking.holdId);
+    if (isHoldExpired || !booking.holdId) return;
+    setCheckoutError("");
+
+    try {
+      // Serveris pats perskaičiuoja kainą, lock'ina vietas/kajutes/bilietus
+      // atominėje transakcijoje ir sukuria realų Order — confirmHold()/
+      // createOrder() mock'ai čia nebenaudojami (Fazė 5).
+      const { redirectUrl } = await checkoutOrder({
+        departureId: departure.id,
+        holdId: booking.holdId,
+        travellers: booking.travellers.map((t) => ({
+          firstName: t.firstName,
+          lastName: t.lastName,
+          birthDate: t.birthDate,
+          personalCode: t.personalCode,
+          passportNumber: t.passportNumber,
+          passportExpiry: t.passportExpiry,
+          extraIds: t.extraIds,
+        })),
+        seatIds: booking.selectedSeatIds,
+        cabinSelections: booking.cabinSelections,
+        flightCount: isFlight ? travellerCount : undefined,
+        contact: { email: booking.contact.email, phone: booking.contact.phone },
+        pickupCity: booking.contact.pickupCity || undefined,
+        wantsInvoice: booking.contact.wantsInvoice,
+        wantsDeposit: Boolean(booking.wantsDeposit),
+        discountCode: booking.discountCode,
+        userComment: comment || undefined,
+      });
+      // Realus išėjimas iš SPA — klientas nukreipiamas į Paysera, ne
+      // client-side react-router navigacija.
+      window.location.href = redirectUrl;
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Nepavyko sukurti užsakymo");
     }
-
-    const firstTraveller = booking.travellers[0];
-    const order = await createOrder({
-      tripId: trip.id,
-      departureId: departure.id,
-      tripTitle: trip.title,
-      clientName: firstTraveller
-        ? `${firstTraveller.firstName} ${firstTraveller.lastName}`.trim()
-        : booking.contact.email,
-      phone: booking.contact.phone,
-      email: booking.contact.email,
-      note: comment || undefined,
-      travellerCount,
-      seatIds: booking.selectedSeatIds,
-      totalAmount: finalTotal,
-      depositAmount: payingDeposit ? depositAmount : undefined,
-      paymentStatus: payingDeposit ? "DEPOSIT_PAID" : "FULLY_PAID",
-      createdByAdmin: false,
-    });
-
-    const successState: BuySuccessState = {
-      orderNumber: order.orderNumber,
-      email: booking.contact.email,
-      travellerCount,
-      seatNumbers: booking.seatNumbers,
-      pickupCity: booking.contact.pickupCity || undefined,
-      paymentStatus: order.paymentStatus,
-      depositAmount: payingDeposit ? depositAmount : undefined,
-      remainingAmount: payingDeposit ? remainingAmount : undefined,
-      remainingDueDate,
-    };
-    navigate(`/buy/${trip.slug}/${departure.id}/success`, {
-      state: successState,
-      replace: true,
-    });
   };
 
   return (
@@ -395,7 +402,7 @@ export default function BuyPayment() {
               )}
               {appliedDiscount && (
                 <PaymentInfoRow
-                  label={`Nuolaidos kodas (${appliedDiscount.code})`}
+                  label={`Nuolaidos kodas (${booking.discountCode})`}
                   value={`-${formatEuro(discountAmount)}`}
                 />
               )}
@@ -491,7 +498,7 @@ export default function BuyPayment() {
           note={
             isHoldExpired
               ? "Rezervacijos laikas baigėsi — pradėkite iš naujo."
-              : "Apmokėjimas bus vykdomas per Paysera saugią mokėjimo sistemą."
+              : checkoutError || "Apmokėjimas bus vykdomas per Paysera saugią mokėjimo sistemą."
           }
         />
         </div>

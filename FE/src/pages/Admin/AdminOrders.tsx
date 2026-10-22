@@ -1,18 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { adminListOrders, adminCancelOrder } from "../../api/adminOrders";
+import {
+  adminListOrders,
+  adminCancelOrder,
+  adminUpdateOrderPaymentStatus,
+  adminSendRemainingPaymentLink,
+} from "../../api/adminOrders";
 import { downloadOrderInvoicePdf } from "../../api/trips";
+import Pagination from "../../components/MainCards/Pagination";
 import type { Order, OrderPaymentStatus, OrderStatus } from "../../types/order";
 
-const PAYMENT_LABELS: Record<OrderPaymentStatus, string> = {
-  DEPOSIT_PAID: "Depozitas apmokėtas",
-  FULLY_PAID: "Pilnas mokėjimas",
-};
+const ORDERS_PER_PAGE = 40;
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  ACTIVE: "Aktyvus",
-  COMPLETED: "Užbaigtas",
+  PENDING_PAYMENT: "Dar neapmokėta",
+  DEPOSIT_PAID: "Depozitas apmokėtas",
+  FULLY_PAID: "Pilnai apmokėta",
   CANCELLED: "Atšauktas",
+  EXPIRED: "Nebegalioja",
 };
 
 export default function AdminOrders() {
@@ -25,6 +30,8 @@ export default function AdminOrders() {
 
   const [lookupInput, setLookupInput] = useState("");
   const [lookupError, setLookupError] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const reload = () => adminListOrders().then((list) => setOrders([...list]));
 
@@ -56,17 +63,75 @@ export default function AdminOrders() {
     });
   }, [orders, nameFilter, orderNumberFilter, dateFrom, dateTo]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE));
+  const pagedOrders = useMemo(() => {
+    const start = (currentPage - 1) * ORDERS_PER_PAGE;
+    return filteredOrders.slice(start, start + ORDERS_PER_PAGE);
+  }, [filteredOrders, currentPage]);
+
   const clearFilters = () => {
     setNameFilter("");
     setOrderNumberFilter("");
     setDateFrom("");
     setDateTo("");
+    setCurrentPage(1);
   };
 
   const cancelOrder = async (order: Order) => {
     if (!window.confirm(`Atšaukti užsakymą „${order.orderNumber}“?`)) return;
-    await adminCancelOrder(order.id);
-    reload();
+    try {
+      await adminCancelOrder(order.id);
+      reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Nepavyko atšaukti užsakymo.");
+    }
+  };
+
+  // Vieta/kajutė jau užimta nuo sukūrimo (žr. AdminOrderNew.tsx) — šitas
+  // veiksmas tik patvirtina, kad pinigai realiai įkrito, niekaip
+  // nepaliečia rezervacijos.
+  const markPaid = async (order: Order, status: Exclude<OrderPaymentStatus, "PENDING_PAYMENT">) => {
+    let depositAmount: number | undefined;
+    if (status === "DEPOSIT_PAID") {
+      const input = window.prompt(
+        `Įveskite sumokėtą depozito sumą (€) užsakymui „${order.orderNumber}“:`,
+        String(order.totalAmount)
+      );
+      if (input === null) return;
+      const parsed = Number(input.replace(",", "."));
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        window.alert("Neteisinga suma.");
+        return;
+      }
+      depositAmount = parsed;
+    }
+    try {
+      await adminUpdateOrderPaymentStatus(order.id, status, depositAmount);
+      reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Nepavyko atnaujinti mokėjimo būsenos.");
+    }
+  };
+
+  const sendRemainingLink = async (order: Order) => {
+    try {
+      const result = await adminSendRemainingPaymentLink(order.id);
+      if (result.sent) {
+        window.alert("Laiškas išsiųstas.");
+      } else {
+        try {
+          await navigator.clipboard.writeText(result.redirectUrl);
+        } catch {
+          // clipboard API gali būti nepasiekiamas (pvz. http/senas naršyklės leidimas) — nefatalu.
+        }
+        window.alert(
+          "Laiško išsiųsti nepavyko (SMTP dar nesukonfigūruotas?). Nuoroda nukopijuota — persiųskite rankiniu būdu."
+        );
+      }
+      reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Nepavyko sukurti likusio mokėjimo nuorodos.");
+    }
   };
 
   const handleLookupDownload = () => {
@@ -84,7 +149,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <>
+    <div className="admin-orders-page">
       <div className="admin-page-head">
         <div>
           <h1>Užsakymai</h1>
@@ -129,7 +194,10 @@ export default function AdminOrders() {
             <input
               value={nameFilter}
               placeholder="Ieškoti kliento…"
-              onChange={(e) => setNameFilter(e.target.value)}
+              onChange={(e) => {
+                setNameFilter(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </label>
           <label className="admin-field">
@@ -137,16 +205,33 @@ export default function AdminOrders() {
             <input
               value={orderNumberFilter}
               placeholder="PVZ: ORD-123"
-              onChange={(e) => setOrderNumberFilter(e.target.value)}
+              onChange={(e) => {
+                setOrderNumberFilter(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </label>
           <label className="admin-field">
             <span className="admin-field-label">Data nuo</span>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => {
+                setDateFrom(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
           </label>
           <label className="admin-field">
             <span className="admin-field-label">Data iki</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => {
+                setDateTo(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
           </label>
           <div className="admin-filter-actions">
             <button type="button" className="admin-btn-ghost" onClick={clearFilters}>
@@ -165,7 +250,6 @@ export default function AdminOrders() {
               <th>Klientas</th>
               <th>Telefonas</th>
               <th>Pastaba</th>
-              <th>Mokėjimo būsena</th>
               <th>Būsena</th>
               <th>Sukurta</th>
               <th>Sukurta administratoriaus</th>
@@ -174,9 +258,9 @@ export default function AdminOrders() {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map((order, i) => (
+            {pagedOrders.map((order, i) => (
               <tr key={order.id}>
-                <td>{i + 1}</td>
+                <td>{(currentPage - 1) * ORDERS_PER_PAGE + i + 1}</td>
                 <td>
                   <strong>{order.orderNumber}</strong>
                   <span className="admin-muted">{order.tripTitle}</span>
@@ -186,15 +270,23 @@ export default function AdminOrders() {
                 <td>{order.note || "—"}</td>
                 <td>
                   <span
-                    className={`admin-pill ${order.paymentStatus === "FULLY_PAID" ? "is-on" : "is-off"}`}
+                    className={`admin-pill ${
+                      order.status === "CANCELLED" || order.status === "EXPIRED" ? "is-off" : "is-on"
+                    }`}
                   >
-                    {PAYMENT_LABELS[order.paymentStatus]}
-                  </span>
-                </td>
-                <td>
-                  <span className={`admin-pill ${order.status === "CANCELLED" ? "is-off" : "is-on"}`}>
                     {STATUS_LABELS[order.status]}
                   </span>
+                  {order.status === "DEPOSIT_PAID" && (
+                    <div className="admin-muted">
+                      {order.remainingPaymentStatus == null &&
+                        "Likusio mokėjimo nuoroda dar nesiųsta"}
+                      {order.remainingPaymentStatus === "PENDING" &&
+                        "Likusio mokėjimo nuoroda išsiųsta — laukiama apmokėjimo"}
+                      {(order.remainingPaymentStatus === "FAILED" ||
+                        order.remainingPaymentStatus === "CANCELLED") &&
+                        "Paskutinis bandymas nepavyko — pabandykite dar kartą"}
+                    </div>
+                  )}
                 </td>
                 <td>{order.createdAt.slice(0, 10)}</td>
                 <td>{order.createdByAdmin ? "✓" : "—"}</td>
@@ -208,20 +300,41 @@ export default function AdminOrders() {
                   </button>
                 </td>
                 <td className="admin-actions">
-                  <button
-                    type="button"
-                    className="admin-link is-danger"
-                    disabled={order.status === "CANCELLED"}
-                    onClick={() => cancelOrder(order)}
-                  >
-                    Atšaukti
-                  </button>
+                  <div>
+                    {order.status === "PENDING_PAYMENT" && (
+                      <>
+                        <button type="button" className="admin-link" onClick={() => markPaid(order, "FULLY_PAID")}>
+                          Pažymėti: pilnai apmokėta
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-link"
+                          onClick={() => markPaid(order, "DEPOSIT_PAID")}
+                        >
+                          Pažymėti: depozitas apmokėtas
+                        </button>
+                      </>
+                    )}
+                    {order.status === "DEPOSIT_PAID" && (
+                      <button type="button" className="admin-link" onClick={() => sendRemainingLink(order)}>
+                        Siųsti likusio mokėjimo nuorodą
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="admin-link is-danger"
+                      disabled={order.status === "CANCELLED" || order.status === "EXPIRED"}
+                      onClick={() => cancelOrder(order)}
+                    >
+                      Atšaukti
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
             {filteredOrders.length === 0 && (
               <tr>
-                <td colSpan={11} className="admin-empty">
+                <td colSpan={10} className="admin-empty">
                   Užsakymų nerasta.
                 </td>
               </tr>
@@ -229,6 +342,18 @@ export default function AdminOrders() {
           </tbody>
         </table>
       </div>
-    </>
+
+      <div className="admin-card admin-pagination-card">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredOrders.length}
+          itemsPerPage={ORDERS_PER_PAGE}
+          itemLabel="užsakymų"
+          ariaLabel="Užsakymų puslapiai"
+          onPageChange={setCurrentPage}
+        />
+      </div>
+    </div>
   );
 }

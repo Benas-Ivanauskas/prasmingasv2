@@ -1,48 +1,77 @@
-import { mockTrips } from "../../trip";
 import type { Departure, Seat, Trip } from "../types/trip";
-import { generateBusSeatLabels } from "../components/BuySession/busSeatLayout";
+import { generateBusSeatLabels, sortBySeatNumber } from "../components/BuySession/busSeatLayout";
 
-// Admin-side trip CRUD. Placeholder data source: it mutates the same
-// in-memory `mockTrips` array that api/trips.ts serves, so changes show up
-// on the public site immediately but are lost on a page reload. Swap each
-// function's body for real `POST/PUT/DELETE /api/admin/trips` calls once the
-// backend exists (and protect them with the admin session) — callers already
-// treat these as async.
+// Realus BE kvietimas (ne mock duomenys) — Fazė 2 admin pusė. Sesija
+// laikoma httpOnly cookie, tad visur `credentials: "include"`.
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 export const BUS_SIZES = [48, 49, 52, 53] as const;
 
+async function parseErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    return body?.error?.message ?? "Įvyko klaida";
+  } catch {
+    return "Įvyko klaida";
+  }
+}
+
 export async function adminListTrips(): Promise<Trip[]> {
-  return mockTrips;
+  const res = await fetch(`${API_URL}/api/admin/trips`, { credentials: "include" });
+  if (!res.ok) throw new Error(await parseErrorMessage(res));
+  return res.json();
 }
 
 export async function adminGetTrip(id: string): Promise<Trip | undefined> {
-  return mockTrips.find((t) => t.id === id);
+  const res = await fetch(`${API_URL}/api/admin/trips/${id}`, { credentials: "include" });
+  if (res.status === 404) return undefined;
+  if (!res.ok) throw new Error(await parseErrorMessage(res));
+  return res.json();
 }
 
 // Returns an error message when the trip can't be saved, otherwise null.
-export async function adminSaveTrip(trip: Trip): Promise<string | null> {
-  const slugTaken = mockTrips.some((t) => t.slug === trip.slug && t.id !== trip.id);
-  if (slugTaken) return "Kelionė su tokiu adresu (slug) jau egzistuoja.";
-
-  const index = mockTrips.findIndex((t) => t.id === trip.id);
-  if (index >= 0) mockTrips[index] = trip;
-  else mockTrips.push(trip);
+// `isNew` renka POST (sukurti) vs PUT /:id (redaguoti) — BŪTINA perduoti iš
+// callerio (žr. AdminTripForm.tsx), nes trip.id visada užpildytas (net
+// naujai kelionei createEmptyTrip() priskiria laikiną client-side id), tad
+// vien iš trip.id buvimo negalima patikimai spręsti, ar tai create, ar update.
+// `force` — leidžia pašalinti jau parduotą vietą/kajutę/išvykimą (admin
+// patvirtino įspėjamąjį pranešimą prieš tai, žr. AdminTripForm.tsx). Be jo BE
+// atmestų tokį pašalinimą su 409.
+export async function adminSaveTrip(trip: Trip, isNew = false, force = false): Promise<string | null> {
+  const base = isNew ? `${API_URL}/api/admin/trips` : `${API_URL}/api/admin/trips/${trip.id}`;
+  const url = !isNew && force ? `${base}?force=true` : base;
+  const res = await fetch(url, {
+    method: isNew ? "POST" : "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(trip),
+  });
+  if (!res.ok) return parseErrorMessage(res);
   return null;
 }
 
 export async function adminDeleteTrip(id: string): Promise<void> {
-  const index = mockTrips.findIndex((t) => t.id === id);
-  if (index >= 0) mockTrips.splice(index, 1);
+  const res = await fetch(`${API_URL}/api/admin/trips/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res));
 }
 
 // Rebuilds a departure's bus seat list at a new size, keeping the status of
 // seats that still exist (so resizing never frees an already-taken seat).
+// `previous` is sorted by seatNumber first — its array order isn't
+// guaranteed to match label order once seats round-trip through the real
+// DB (see busSeatLayout.ts's sortBySeatNumber), and this function matches
+// old-to-new purely by array index, so an unsorted `previous` would copy
+// the wrong seat's id/status into the wrong new position.
 export function resizeSeats(departureId: string, previous: Seat[] | undefined, count: number): Seat[] {
+  const sortedPrevious = previous ? sortBySeatNumber(previous) : undefined;
   const labels = generateBusSeatLabels(count);
   return Array.from({ length: count }, (_, i) => ({
-    id: previous?.[i]?.id ?? `${departureId}-seat-${i + 1}`,
+    id: sortedPrevious?.[i]?.id ?? `${departureId}-seat-${i + 1}`,
     seatNumber: labels[i],
-    status: previous?.[i]?.status ?? ("FREE" as const),
+    status: sortedPrevious?.[i]?.status ?? ("FREE" as const),
   }));
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { IoDocumentTextOutline, IoDownloadOutline } from "react-icons/io5";
 import Header from "../../components/Header/Header";
@@ -8,7 +8,9 @@ import NotFound from "../NotFound/NotFound";
 import BuyStepper from "../../components/BuySession/BuyStepper";
 import BuySessionSidebar from "../../components/BuySession/BuySessionSidebar";
 import ReservationTimerBanner from "../../components/BuySession/ReservationTimerBanner";
+import TravellerFields from "../../components/BuySession/TravellerFields";
 import { downloadConsentDocument, lookupDiscountCode } from "../../api/trips";
+import type { DiscountValidation } from "../../types/discount";
 import { formatLtPhone, getEmailError, isValidEmail, isValidLtPhone, PHONE_PREFIX } from "../../utils/validation";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
@@ -138,6 +140,19 @@ export default function BuyTravellerInfo() {
         agreedAirCarriage: false,
       }
   );
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidation | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (seatSelection.discountCode) {
+      lookupDiscountCode(seatSelection.discountCode).then((d) => {
+        if (!cancelled) setAppliedDiscount(d ?? null);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [seatSelection.discountCode]);
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
   if (!trip) return <NotFound />;
@@ -221,12 +236,10 @@ export default function BuyTravellerInfo() {
   const selectedExtrasCount = travellerExtraIds.reduce((sum, ids) => sum + ids.size, 0);
 
   // The discount code and deposit choice were decided in Step 1 — applied
-  // here too, recomputed against the CURRENT grand total (base + whichever
-  // extras are picked right now), so picking an extra never just tacks its
-  // price onto an already-fixed deposit figure.
-  const appliedDiscount = seatSelection.discountCode
-    ? lookupDiscountCode(seatSelection.discountCode)
-    : null;
+  // here too (resolved async above, in the appliedDiscount state),
+  // recomputed against the CURRENT grand total (base + whichever extras are
+  // picked right now), so picking an extra never just tacks its price onto
+  // an already-fixed deposit figure.
   const { payingDeposit, amountDueNow, remainingAmount, remainingDueDate } = getCheckoutTotals(
     grandTotal,
     departure,
@@ -417,91 +430,30 @@ export default function BuyTravellerInfo() {
           )}
 
           {travellers.map((traveller, index) => (
-            <div key={index} className="traveller-card">
-              <h3>
-                {index + 1}. Keleivis
-                {seatSelection.seatNumbers[index] && (
-                  <span className="traveller-seat-badge">
-                    Vieta Nr. {seatSelection.seatNumbers[index]}
-                  </span>
-                )}
-              </h3>
-
-              {!isCruise && (
-                <div className="traveller-price-row">
-                  <span className="traveller-price-label">Kaina</span>
-                  {pricing.hasDiscount && (
-                    <del className="traveller-price-original">
-                      {pricing.formattedOriginalPrice}
-                    </del>
-                  )}
-                  <span className="traveller-price-final">{pricing.formattedFinalPrice}</span>
-                  {pricing.hasDiscount && (
-                    <span className="traveller-price-discount">-{pricing.discount}%</span>
-                  )}
-                </div>
-              )}
-
-              <div className="traveller-fields">
-                <label>
-                  Vardas *
-                  <input
-                    type="text"
-                    value={traveller.firstName}
-                    onChange={(e) => updateTraveller(index, "firstName", e.target.value)}
-                  />
-                </label>
-                <label>
-                  Pavardė *
-                  <input
-                    type="text"
-                    value={traveller.lastName}
-                    onChange={(e) => updateTraveller(index, "lastName", e.target.value)}
-                  />
-                </label>
-                <label>
-                  Gimimo data *
-                  <input
-                    type="date"
-                    value={traveller.birthDate}
-                    onChange={(e) => updateTraveller(index, "birthDate", e.target.value)}
-                  />
-                </label>
-                <label>
-                  Asmens kodas
-                  <input
-                    type="text"
-                    value={traveller.personalCode}
-                    onChange={(e) => updateTraveller(index, "personalCode", e.target.value)}
-                  />
-                </label>
-
-                {isFlight && (
-                  <>
-                    <label>
-                      Paso numeris *
-                      <input
-                        type="text"
-                        value={traveller.passportNumber}
-                        onChange={(e) =>
-                          updateTraveller(index, "passportNumber", e.target.value)
-                        }
-                      />
-                    </label>
-                    <label>
-                      Paso galiojimo data *
-                      <input
-                        type="date"
-                        value={traveller.passportExpiry}
-                        onChange={(e) =>
-                          updateTraveller(index, "passportExpiry", e.target.value)
-                        }
-                      />
-                    </label>
-                  </>
-                )}
-              </div>
-
+            <TravellerFields
+              key={index}
+              index={index}
+              traveller={traveller}
+              isFlight={isFlight}
+              onChange={(field, value) => updateTraveller(index, field, value)}
+              seatLabel={seatSelection.seatNumbers[index]}
+              headerExtra={
+                !isCruise && (
+                  <div className="traveller-price-row">
+                    <span className="traveller-price-label">Kaina</span>
+                    {pricing.hasDiscount && (
+                      <del className="traveller-price-original">
+                        {pricing.formattedOriginalPrice}
+                      </del>
+                    )}
+                    <span className="traveller-price-final">{pricing.formattedFinalPrice}</span>
+                    {pricing.hasDiscount && (
+                      <span className="traveller-price-discount">-{pricing.discount}%</span>
+                    )}
+                  </div>
+                )
+              }
+            >
               {extras.length > 0 && (
                 <div className="traveller-extras">
                   <span className="traveller-extras-label">Papildomos paslaugos</span>
@@ -518,7 +470,7 @@ export default function BuyTravellerInfo() {
                   ))}
                 </div>
               )}
-            </div>
+            </TravellerFields>
           ))}
         </div>
 

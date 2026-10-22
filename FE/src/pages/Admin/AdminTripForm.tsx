@@ -56,6 +56,10 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
   const [slugTouched, setSlugTouched] = useState(!isNew);
   const [errors, setErrors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  // Pažymima true, kai admin patvirtino įspėjamąjį pranešimą apie jau
+  // parduotos vietos/išvykimo pašalinimą — BE atmestų tokį pašalinimą be
+  // šio patvirtinimo (žr. api/adminTrips.ts adminSaveTrip `force` parametrą).
+  const [forceSave, setForceSave] = useState(false);
 
   const set = <K extends keyof Trip>(key: K, value: Trip[K]) =>
     setTrip((prev) => ({ ...prev, [key]: value }));
@@ -65,6 +69,23 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
 
   const updateDeparture = (index: number, patch: Partial<Departure>) =>
     set("departures", patchAt(trip.departures, index, patch));
+
+  const departureHasBookings = (d: Departure) =>
+    (d.seats ?? []).some((s) => s.status === "HELD" || s.status === "TAKEN") ||
+    (d.cabinTypes ?? []).some((c) => c.takenUnits > 0) ||
+    (d.flightSeatsTaken ?? 0) > 0;
+
+  const removeDeparture = (index: number) => {
+    const departure = trip.departures[index];
+    if (departureHasBookings(departure)) {
+      const confirmed = window.confirm(
+        "Šiame išvykime yra parduotų vietų/bilietų. Pašalinus, susiję užsakymai neteks vietos informacijos (bet PATYS užsakymai nebus automatiškai atšaukti ar grąžinti pinigai). Ar tikrai norite tęsti?",
+      );
+      if (!confirmed) return;
+      setForceSave(true);
+    }
+    set("departures", removeAt(trip.departures, index));
+  };
 
   const validate = (t: Trip): string[] => {
     const list: string[] = [];
@@ -111,7 +132,7 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
     }
 
     setSaving(true);
-    const error = await adminSaveTrip(cleaned);
+    const error = await adminSaveTrip(cleaned, isNew, forceSave);
     setSaving(false);
     if (error) {
       setErrors([error]);
@@ -403,7 +424,7 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
             tripType={trip.tripType}
             canRemove={trip.departures.length > 1}
             onChange={(patch) => updateDeparture(i, patch)}
-            onRemove={() => set("departures", removeAt(trip.departures, i))}
+            onRemove={() => removeDeparture(i)}
           />
         ))}
         <button

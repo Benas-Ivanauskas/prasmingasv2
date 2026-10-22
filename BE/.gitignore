@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.example
+*.log
+uploads/
+BACKEND_IMPLEMENTATION_PLAN.md
+docker-compose.yml

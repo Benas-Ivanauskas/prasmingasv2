@@ -1,11 +1,8 @@
-export interface TravellerForm {
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  personalCode: string; // optional
-  passportNumber: string; // FLIGHT only, required there
-  passportExpiry: string; // FLIGHT only, required there
-}
+// Moved to types/order.ts so Order itself can reference it (a multi-
+// traveller order stores every traveller's own data) — re-exported here so
+// existing imports from this file keep working unchanged.
+import type { TravellerForm } from "../../types/order";
+export type { TravellerForm };
 
 export interface ContactForm {
   email: string;

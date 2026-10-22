@@ -8,13 +8,16 @@ export interface DiscountCode {
   isActive: boolean;
   // ISO date string (YYYY-MM-DD) — the code stops working the day AFTER
   // this date, same inclusive-deadline-day convention as Departure's own
-  // depositDeadline. Unset/null = never expires.
+  // depositDeadline. Null only while `isActive` is false — AdminDiscounts.tsx
+  // blocks saving `isActive: true` with no expiresAt (every active code must
+  // have an expiry; admin decision, not a Prisma/DB-level constraint).
   expiresAt?: string | null;
 }
 
-export interface GiftVoucher {
-  id: string;
-  code: string;
+// Vieša /api/discounts/validate atsakymo forma — sąmoningai siaura (be
+// id/code/isActive/expiresAt), kad nebūtų galima išvardinti/atpažinti kodų
+// per atsakymo turinį.
+export interface DiscountValidation {
+  type: DiscountType;
   value: number;
-  isActive: boolean;
 }

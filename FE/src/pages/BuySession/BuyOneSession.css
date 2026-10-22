@@ -65,6 +65,15 @@
   font-size: 1.05rem;
 }
 
+.hold-error {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--danger-soft, #fdecea) !important;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
 .buy-session-cruise-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1,18 +1,32 @@
 import { useState, type FormEvent } from "react";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
+import { login, AuthError } from "../../api/auth";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import "./Login.css";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO(BE): POST /api/auth/login once the auth endpoint exists.
-    console.log("TODO(BE): log in", email);
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await login(email, password);
+      navigate("/admin");
+    } catch (err) {
+      setError(err instanceof AuthError ? err.message : "Nepavyko prisijungti");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -58,8 +72,10 @@ export default function Login() {
                 </div>
               </label>
 
-              <button type="submit" className="btn-primary login-submit">
-                Prisijungti
+              {error && <p className="login-error">{error}</p>}
+
+              <button type="submit" className="btn-primary login-submit" disabled={isSubmitting}>
+                {isSubmitting ? "Jungiamasi…" : "Prisijungti"}
               </button>
             </form>
 

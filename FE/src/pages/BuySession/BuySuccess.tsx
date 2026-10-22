@@ -1,35 +1,23 @@
-import { Link, Navigate, useLocation, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import {
   IoCheckmark,
   IoCalendarOutline,
   IoPeopleOutline,
   IoLocationOutline,
   IoMailOutline,
+  IoTimeOutline,
+  IoCloseCircleOutline,
 } from "react-icons/io5";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import StatusPage from "../../components/StatusPage/StatusPage";
 import NotFound from "../NotFound/NotFound";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
-import type { OrderPaymentStatus } from "../../types/order";
+import { fetchOrderById, type OrderStatusResponse } from "../../api/trips";
 import { formatEuro } from "../../utils/tripHelpers";
 import "./BuySuccess.css";
-
-// What Step 4 hands over after a successful "Apmokėti". With a real backend
-// this is replaced by the confirmed order fetched via the payment provider's
-// return URL (order id in the query), not router state.
-export interface BuySuccessState {
-  orderNumber: string;
-  email: string;
-  travellerCount: number;
-  seatNumbers: string[];
-  pickupCity?: string;
-  paymentStatus: OrderPaymentStatus;
-  // Only set when paymentStatus is DEPOSIT_PAID.
-  depositAmount?: number;
-  remainingAmount?: number;
-  remainingDueDate?: string;
-}
+import "./BuyCancelled.css"; // .cancelled-icon — reused for CANCELLED/EXPIRED here too
 
 const MONTHS_GENITIVE = [
   "sausio",
@@ -76,17 +64,115 @@ function travellersLabel(count: number): string {
   return `${count} keleiviai`;
 }
 
+// accepturl kelias atgalia tikrą naršyklės redirect'ą (ne react-router
+// navigate), tad orderId ateina iš URL query, ne router state — tai jau
+// dingsta tokio tipo navigacijoje.
+const POLL_INTERVAL_MS = 2000;
+const MAX_POLL_ATTEMPTS = 5;
+
 export default function BuySuccess() {
   const { slug, departureId } = useParams<{ slug: string; departureId: string }>();
-  const location = useLocation();
-  const order = (location.state as BuySuccessState | null) ?? null;
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get("orderId");
   const { trip, departure, status } = useTripBySlug(slug, departureId);
 
-  // Opened directly (no order handed over) — nothing to confirm.
-  if (!order) return <Navigate to="/" replace />;
+  const [order, setOrder] = useState<OrderStatusResponse | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  // Liko PENDING_PAYMENT net po kelių bandymų — webhook'as dar nespėjo (arba,
+  // lokalioje dev aplinkoje, niekad nespės, nes Paysera nepasiekia
+  // localhost — žr. BACKEND_IMPLEMENTATION_PLAN.md Fazė 6).
+  const [stillPending, setStillPending] = useState(false);
+
+  useEffect(() => {
+    if (!orderId) return;
+    let cancelled = false;
+    let attempt = 0;
+
+    const poll = async () => {
+      const result = await fetchOrderById(orderId);
+      if (cancelled) return;
+      if (!result) {
+        setNotFound(true);
+        return;
+      }
+      if (result.status === "PENDING_PAYMENT" && attempt < MAX_POLL_ATTEMPTS) {
+        attempt += 1;
+        setTimeout(poll, POLL_INTERVAL_MS);
+        return;
+      }
+      setOrder(result);
+      setStillPending(result.status === "PENDING_PAYMENT");
+    };
+
+    poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  // Atidaryta tiesiogiai, be orderId — nėra ko patvirtinti.
+  if (!orderId) return <Navigate to="/" replace />;
+  if (notFound) return <NotFound />;
 
   if (status === "loading") return <StatusPage message="Kraunama..." />;
   if (!trip || !departure) return <NotFound />;
+
+  if (!order) {
+    return <StatusPage message="Tikriname mokėjimo būseną..." />;
+  }
+
+  if (stillPending) {
+    return (
+      <>
+        <Header />
+        <section className="success-page">
+          <div className="container">
+            <div className="success-card">
+              <div className="success-icon" aria-hidden="true">
+                <IoTimeOutline />
+              </div>
+              <h1 className="success-title">Laukiame mokėjimo patvirtinimo</h1>
+              <p className="success-text">
+                Užsakymas <strong>{order.orderNumber}</strong> gautas, bet mokėjimo patvirtinimas
+                iš Paysera dar neatkeliavo. Tai gali užtrukti kelias minutes — patvirtinimą
+                atsiųsime el. paštu {order.email}, kai tik gausime.
+              </p>
+              <Link to="/" className="btn-primary success-cta">
+                Grįžti į pagrindinį
+              </Link>
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </>
+    );
+  }
+
+  if (order.status === "CANCELLED" || order.status === "EXPIRED") {
+    return (
+      <>
+        <Header />
+        <section className="success-page">
+          <div className="container">
+            <div className="success-card">
+              <div className="success-icon cancelled-icon" aria-hidden="true">
+                <IoCloseCircleOutline />
+              </div>
+              <h1 className="success-title">Užsakymas neapmokėtas</h1>
+              <p className="success-text">
+                Užsakymas <strong>{order.orderNumber}</strong> buvo atšauktas arba pasibaigė jo
+                galiojimo laikas.
+              </p>
+              <Link to={`/buy/${trip.slug}/${departure.id}`} className="btn-primary success-cta">
+                ← Pasirinkti vietas iš naujo
+              </Link>
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </>
+    );
+  }
 
   const placeParts = [
     order.pickupCity,
@@ -131,7 +217,7 @@ export default function BuySuccess() {
               <span className="success-order-number">{order.orderNumber}</span>
             </div>
 
-            {order.paymentStatus === "DEPOSIT_PAID" && (
+            {order.status === "DEPOSIT_PAID" && (
               <p className="success-text">
                 Sumokėjote depozitą {formatEuro(order.depositAmount ?? 0)}. Likusią sumą{" "}
                 {formatEuro(order.remainingAmount ?? 0)}

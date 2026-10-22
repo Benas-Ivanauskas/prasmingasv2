@@ -42,7 +42,7 @@ export default function FlightTravellerStepper({
         </button>
       </div>
 
-      <span className="flight-stepper-hint">Laisvų vietų: {max}</span>
+      <span className="flight-stepper-hint">Laisvų vietų: {Math.max(0, max - count)}</span>
     </div>
   );
 }

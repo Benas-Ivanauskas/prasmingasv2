@@ -1,0 +1,456 @@
+// Prasmingas — pilna DB schema perrašymui nuo nulio
+// Paprastumo principas: TEISINGUMĄ užtikrina DB constraints/transakcijos, ne background jobs.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────────────────────
+
+enum AdminRole {
+  ADMIN   // pilnas priėjimas, įsk. vartotojų valdymą
+  MANAGER // užsakymai/nuolaidos/eksportai, ne destruktyvūs veiksmai
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(MANAGER)
+  createdAt    DateTime  @default(now())
+
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      Admin    @relation(fields: [adminId], references: [id])
+  action     String   // "order.cancel", "order.manual_create", "discount.create", "payment.manual_confirm"...
+  entityType String   // "Order", "Discount", "Trip"...
+  entityId   String
+  payload    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([adminId])
+}
+
+// ─────────────────────────────────────────────────────────
+// KELIONIŲ KATALOGAS
+// ─────────────────────────────────────────────────────────
+
+enum TripType {
+  BUS
+  FLIGHT
+  CRUISE
+}
+
+enum TripCategory {
+  SIGHTSEEING // pazintines
+  LEISURE     // poilsines
+}
+
+model Trip {
+  id                 String       @id @default(cuid())
+  slug               String       @unique
+  title              String
+  shortDescription   String       // rodoma sąraše/kortelėje
+  description        String       // pilnas aprašymas trip detail puslapyje — Postgres TEXT neriboja dydžio
+  tripType           TripType
+  category           TripCategory
+  destinationCountry String       // filtravimui/SEO, pvz. "Italija"; vidaus kelionėms — "Lietuva" (ne null, žr. FE mock duomenis)
+  filterTags         String[]     // "lietuvoje", "uzsienyje", "kaledines", "kruizines", "garantuotos"...
+  invoiceName        String       // trumpas pavadinimas sąskaitoms, pvz. "TAU", "KEN"
+  nextInvoiceNumber  Int          @default(1) // atomic increment sąskaitų numeracijai (žr. InvoiceService)
+  isActive           Boolean      @default(true)
+
+  images             Json         @default("[]") // [{ url, alt, sortOrder }] — @vercel/blob URL'ai
+  // { url, alt, sortOrder } arba null — platus/panoraminis formatas TIK /trips/:slug
+  // viršeliui (TripHero); kai null, FE naudoja images[0] kaip atsarginį variantą.
+  bannerImage        Json?
+  // [{ day: 1, title, description, imageUrl?, imageAlt?, images?: [{url,alt,sortOrder}] }] —
+  // images (kelios nuotraukos/dieną) naudojama "Programa" skirtuko galerijai ir pilnai
+  // apžvalgos+programos lightbox sekai (žr. FE ProgramDay/TripPage.tsx).
+  programDays        Json         @default("[]")
+  // FE RichText/RichTextEditor priima arba String (HTML iš admin rich-text redaktoriaus),
+  // arba string[] (senas, prieš-rich-text turinys) — Json, ne String[], kad abu variantai
+  // tilptų be migracijos.
+  inclusions         Json         @default("[]") // "kas įskaičiuota"
+  exclusions         Json         @default("[]") // "kas neįskaičiuota"
+  // Laisvo teksto blokas "Atmintinė" skirtukui (išvykimo vietos/laikai, sutarties sąlygos,
+  // apmokėjimo instrukcijos, organizatoriaus info ir pan.) — ne kiekviena kelionė turi.
+  travellerMemo      String?
+  badgeTag           String?      // pvz. "Paskutinė minutė!", rodoma kortelėje/trip page
+
+  seoTitle           String?
+  seoDescription     String?
+
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  departures         Departure[]
+  reviews            Review[]
+
+  @@index([tripType, isActive])
+  @@index([destinationCountry])
+}
+
+// Atsiliepimai kelionės puslapyje ("Atsiliepimai" skirtukas) — tik autorius +
+// tekstas, be reitingo/žvaigždučių ir be moderavimo (sąmoningas sprendimas,
+// žr. FE Review tipą) — visi admino įvesti atsiliepimai iškart rodomi viešai.
+model Review {
+  id         String   @id @default(cuid())
+  tripId     String
+  trip       Trip     @relation(fields: [tripId], references: [id])
+  authorName String
+  comment    String
+  createdAt  DateTime @default(now())
+
+  @@index([tripId])
+}
+
+enum DepartureStatus {
+  ACTIVE
+  DONE
+  ARCHIVED
+}
+
+model Departure {
+  id                   String          @id @default(cuid())
+  tripId               String
+  trip                 Trip            @relation(fields: [tripId], references: [id])
+  date                 DateTime
+  pickupPoints         Json         @default("[]") // [{ city }] — BUS/CRUISE: keli išvykimo taškai; FLIGHT: paprastai viena vieta (oro uostas). Trip page "Išvykimo vietos" skirtukas rodomas tik kai šis masyvas netuščias.
+  durationDays         Int
+  cost                 Decimal         @db.Decimal(10, 2) // bazinė kaina bus/flight; kruizui nenaudojama tiesiogiai
+  discount             Decimal?        @db.Decimal(10, 2) // visada procentas (pvz. 20 = 20%) — žr. FE getTripPricing, nėra atskiro "fiksuota suma" varianto šiam laukui
+  // "Garantuota kelionė" ženklas pagrindiniame puslapyje/kortelėje. isGuaranteed = TRUE, jei
+  // (parduota_vietų / bendras_vietų * 100) >= guaranteeThreshold, ARBA guaranteedOverride = true
+  // (adminas gali rankiniu būdu pažymėti kaip garantuotą nepriklausomai nuo užpildymo %).
+  guaranteeThreshold   Int?            // procentas (0-100), nuo kada laikoma "garantuota" automatiškai
+  guaranteedOverride   Boolean         @default(false)
+  remainingPaymentDays Int             @default(5) // kiek dienų prieš kelionę siųsti likusio mokėjimo priminimą (taip pat naudojama depozito likučio terminui skaičiuoti, žr. depositPercentage)
+  // e.g. 30 = siūloma 30% depozito galimybė checkout metu; null/0 = tik pilnas apmokėjimas.
+  depositPercentage    Int?
+  // Paskutinė diena (imtinai), kada checkout dar leidžia rinktis depozitą — po šios datos
+  // tik pilnas apmokėjimas, net jei depositPercentage vis dar nustatytas. null = be termino
+  // (depozitas leidžiamas visada, kol yra vietų). PRIVALO būti patikrinta IR serverio pusėje
+  // checkout endpoint'e (Fazė 5) — ne tik FE, kuris tik slepia/rodo mygtuką.
+  depositDeadline      DateTime?
+  status               DepartureStatus @default(ACTIVE)
+  createdAt            DateTime        @default(now())
+
+  // Tik FLIGHT tipui — skrydžiui NĖRA konkrečių vietų (Seat), tik bendras bilietų skaičiaus baseinas.
+  // Abu skaičiai keičiasi TIK checkout metu (Order sukūrimo transakcijoje) — niekad naršymo/formos pildymo metu.
+  flightSeatsTotal Int?
+  flightSeatsTaken Int  @default(0)
+
+  seats          Seat[]
+  cabinTypes     CabinType[]
+  extraOptions   ExtraOption[]
+  orders         Order[]
+
+  @@index([tripId, date])
+  @@index([status, date])
+}
+
+// ─────────────────────────────────────────────────────────
+// TALPA — vietos (bus/cruise) ir kajutės (cruise)
+// ─────────────────────────────────────────────────────────
+
+enum SeatStatus {
+  FREE
+  HELD    // priskirta Order, kuris dar laukia Paysera webhook patvirtinimo (checkout metu, ne naršymo)
+  TAKEN   // apmokėta
+  BLOCKED // adminas rankiniu būdu rezervavo gidui/personalui — niekad nesiūloma viešai, bet NĖRA tikras užsakymas (admin gali laisvai perjungti atgal į FREE)
+}
+
+// Laikina "kažkas dabar žiūri šitą vietą" būsena NEGYVENA čia — ji gyvena TIK Redis
+// (`hold:<departureId>:<seatId>` raktas su 15min TTL), kad viešas užimtumas niekada
+// nekistų vien dėl to, kad kažkas atidarė formą. Seat.status keičiasi tik checkout metu.
+model Seat {
+  id            String     @id @default(cuid())
+  departureId   String
+  departure     Departure  @relation(fields: [departureId], references: [id])
+  seatNumber    String     // pvz. "12A"
+  status        SeatStatus @default(FREE)
+  travellerId   String?    @unique
+  traveller     Traveller? @relation(fields: [travellerId], references: [id])
+
+  // travellerId @unique garantuoja, kad vienas keleivis nesusietas su keliomis
+  // vietomis, bet NEGARANTUOJA, kad ta vieta priklauso to paties Traveller/Order
+  // užsakytam Departure — tai DB constraint'u neišreiškiama (skirtingos lentelės).
+  // PRIVALO būti patikrinta checkout transakcijoje (Fazė 5): kiekvieno pateikto
+  // seatId.departureId === užsakymo departureId, prieš susiejant su Traveller.
+  @@unique([departureId, seatNumber])
+  @@index([departureId, status])
+}
+
+enum CabinTypeName {
+  QUAD
+  DOUBLE
+  TRIPLE
+}
+
+model CabinType {
+  id             String        @id @default(cuid())
+  departureId    String
+  departure      Departure     @relation(fields: [departureId], references: [id])
+  type           CabinTypeName
+  pricePerPerson Decimal       @db.Decimal(10, 2) // full (pre-discount) kaina
+  discount       Decimal?      @db.Decimal(10, 2) // % — šios konkrečios kajutės nuolaida, atskirai nuo Departure.discount
+  totalUnits     Int           // bendras vietų/kajučių skaičius šio tipo
+  takenUnits     Int           @default(0) // atnaujinama tik checkout transakcijoje kartu su Order sukūrimu
+
+  travellers     Traveller[]
+
+  @@unique([departureId, type])
+}
+
+model ExtraOption {
+  id          String    @id @default(cuid())
+  departureId String
+  departure   Departure @relation(fields: [departureId], references: [id])
+  name        String    // pvz. "Bagažas", "Pietūs laive"
+  price       Decimal   @db.Decimal(10, 2)
+  sortOrder   Int       @default(0) // iki 5 per departure, UI eiliškumui
+}
+
+// ─────────────────────────────────────────────────────────
+// UŽSAKYMAS IR MOKĖJIMAI
+//
+// Pastaba dėl "rezervacijų": atskiro Reservation modelio čia SĄMONINGAI nėra.
+// Naršymo fazės laikina vietos "laikymo" būsena gyvena TIK Redis (raktas
+// `hold:<departureId>:<seatId>` su 15min TTL), niekad neliesdama Postgres/viešo užimtumo skaičiaus.
+// Realus, patikimas užrakinimas įvyksta VIENOJE transakcijoje čia — checkout metu
+// (POST /api/orders/checkout), kartu sukuriant Order+Traveller ir pažymint
+// Seat.status='HELD' / CabinType.takenUnits++ / Departure.flightSeatsTaken++.
+// Jei Order lieka PENDING_PAYMENT per ilgai (žmogus paliko Paysera pusiaukelėje),
+// paprastas node-cron jį pažymi EXPIRED ir atlaisvina vietas/kajutes/bilietus.
+// ─────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  DEPOSIT_PAID
+  FULLY_PAID
+  CANCELLED
+  EXPIRED
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique // žmogui skaitomas, pvz. "PR-2026-00042"
+  departureId   String
+  departure     Departure   @relation(fields: [departureId], references: [id])
+  status        OrderStatus @default(PENDING_PAYMENT)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  // Užšaldyta kainos skaidymo "nuotrauka" TIKSLIAI tuo momentu, kai užsakymas sukurtas
+  // (checkout transakcijoje) — nes Departure.cost/CabinType.pricePerPerson/Discount.value
+  // yra redaguojami laukai, ir admino vėlesnis kainos/nuolaidos pakeitimas NETURI pakeisti,
+  // ką jau apmokėjęs klientas realiai matys peržiūrėdamas savo užsakymą. Kartą įrašyta —
+  // niekada nebeperskaičiuojama, nebeatnaujinama. Pvz.:
+  // { baseUnitPrice, departureDiscountPercent, discountCodeAmount, voucherAmount,
+  //   extrasTotal, cabinBreakdown?: [{ type, qty, unitPrice }] }
+  priceSnapshot Json
+  wantsInvoice  Boolean     @default(false)
+  userComment   String?
+  discountId    String?
+  discount      Discount?   @relation(fields: [discountId], references: [id])
+  // Atskiras mechanizmas nuo Discount — ne promo taisyklė, o iš anksto apmokėtas
+  // balansas, kredituojamas prie sumos kaip dalinis apmokėjimas (žr. Voucher modelį žemiau).
+  voucherId     String?
+  voucher       Voucher?    @relation(fields: [voucherId], references: [id])
+  userEmail     String
+  userPhone     String?
+
+  // Visa grupė vienu užsakymu išvyksta iš to paties taško (BUS/CRUISE) — pasirenkama vieną kartą Buy1,
+  // ne kiekvienam keleiviui atskirai. Nukopijuojama nuo Departure.pickupPoints pasirinkimo momentu
+  // (snapshot, kad vėliau pakeitus Departure sąrašą senų užsakymų duomenys nepasikeistų).
+  pickupCity    String?
+  pickupTime    String?
+
+  // Dokumentų/el.laiško siuntimo idempotency + retry žymė (tas pats principas kaip dabartinės
+  // sistemos "documentsSent" flag). SVARBU: žymima true TIK PO sėkmingo generavimo+išsiuntimo,
+  // ne prieš bandant — kitaip laikina klaida (pvz. Puppeteer crash) amžinai užblokuotų retry.
+  // Webhook'as bando sinchroniškai iškart; jei nepavyksta, lieka false ir paprastas node-cron
+  // (kas 15-30 min) suranda apmokėtus užsakymus su documentsSent=false ir bando dar kartą.
+  documentsSent          Boolean @default(false)
+  documentAttempts       Int     @default(0) // po ~5 nesėkmingų bandymų retry sustoja, Sentry alert + admin rankinis veiksmas
+  remainingDocumentsSent Boolean @default(false) // tas pats principas likusios sumos sąskaitai
+  // PVM sąskaita faktūra (DocumentType.VAT_INVOICE) siunčiama NE apmokėjimo metu, o kitą
+  // dieną po kelionės (Departure.date + durationDays) pabaigos — paslauga laikoma "parduota"
+  // tik ją realiai suteikus. Atskiras flag'as nuo documentsSent, nes tai kitas, vėlesnis cron'as.
+  vatInvoiceSent         Boolean @default(false)
+  // Idempotency žymė likusio mokėjimo nuorodos (A variantas — nauja Paysera sesija, ne
+  // auto-nuskaičiavimas) siuntimui: cron'as siunčia TIK KARTĄ, kai pasiekiamas
+  // Departure.remainingPaymentDays terminas; null = dar nesiųsta.
+  remainingPaymentLinkSentAt DateTime?
+
+  travellers    Traveller[]
+  payments      Payment[]
+  documents     Document[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([status])
+  @@index([departureId])
+  @@index([userEmail])
+}
+
+enum PaymentType {
+  DEPOSIT
+  REMAINING
+  FULL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id])
+  type            PaymentType
+  provider        String        @default("paysera")
+  providerOrderId String        @unique // pvz. "ord_<orderId>_deposit" — webhook idempotency raktas
+  amount          Decimal       @db.Decimal(10, 2)
+  status          PaymentStatus @default(PENDING)
+  paidAt          DateTime?
+  rawCallback     Json?         // pilnas Paysera callback payload, audit/debug tikslais
+  createdAt       DateTime      @default(now())
+
+  @@index([orderId])
+}
+
+// Kiekvienas gaunamas Paysera callback įrašomas ČIA PIRMIAUSIA, prieš bandant susieti su Payment —
+// taip nedingsta pėdsakas, jei parašas neteisingas, orderid nežinomas, arba apdorojimas numeta klaidą.
+model WebhookLog {
+  id               String    @id @default(cuid())
+  provider         String    @default("paysera")
+  providerOrderId  String?   // null, jei net neišsiskaitė iš payload
+  signatureValid   Boolean
+  payload          Json
+  matchedPaymentId String?
+  processedAt      DateTime?
+  error            String?
+  createdAt        DateTime  @default(now())
+
+  @@index([providerOrderId])
+  @@index([createdAt])
+}
+
+model Traveller {
+  id             String     @id @default(cuid())
+  orderId        String
+  order          Order      @relation(fields: [orderId], references: [id])
+  firstName      String
+  lastName       String
+  birthDate      DateTime
+  personalCode   String?
+  passportNumber String?    // tik skrydžiams
+  passportExpiry DateTime?  // tik skrydžiams
+  cabinTypeId    String?    // tik kruizui
+  cabinType      CabinType? @relation(fields: [cabinTypeId], references: [id])
+  cabinIndex     Int?       // kelinta kajutė iš eilės (grupavimui Buy2 UI)
+  // Pasirinktos papildomos paslaugos — SNAPSHOT (name+price), NE vien ExtraOption.id
+  // nuoroda. Priežastis ta pati, kaip Order.priceSnapshot: ExtraOption.price/name yra
+  // redaguojami, o admino vėlesnis pakeitimas (ar ištrynimas) neturi tyliai pakeisti,
+  // ką jau apmokėjęs keleivis užsisakė. Pvz.: { extras: [{ extraOptionId, name, price }] }
+  extras         Json       @default("{}")
+  seat           Seat?
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────
+// NUOLAIDOS
+// ─────────────────────────────────────────────────────────
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Discount {
+  id        String       @id @default(cuid())
+  code      String       @unique // visada uppercase aplikacijos lygyje
+  type      DiscountType
+  value     Decimal      @db.Decimal(10, 2)
+  isActive  Boolean      @default(true)
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+
+  orders    Order[]
+}
+
+// Dovanų kuponas — iš anksto apmokėtas/padovanotas € balansas, kredituojamas prie
+// užsakymo sumos kaip dalinis apmokėjimas. SĄMONINGAI atskiras modelis nuo Discount:
+// tai ne promo taisyklė (% ar fiksuota nuolaida), o realus balansas su savo verte.
+model Voucher {
+  id        String    @id @default(cuid())
+  code      String    @unique // visada uppercase aplikacijos lygyje
+  value     Decimal   @db.Decimal(10, 2)
+  isActive  Boolean   @default(true)
+  // Vienkartinio panaudojimo žymė — null = dar neišnaudotas. Nepanaudotas likutis
+  // (jei kuponas vertas daugiau nei užsakymo suma) NĖRA pernešamas į kitą užsakymą
+  // (sąmoningas sprendimas, žr. FE BuyPayment komentarą) — todėl pakanka laiko žymos,
+  // ne atskiro balanso/judėjimų modelio. Checkout transakcija (Fazė 5/7) PRIVALO
+  // patikrinti usedAt === null IR jį nustatyti TOJE PAČIOJE transakcijoje, kitaip
+  // dvi lygiagrečios užklaidos galėtų abi "panaudoti" tą patį kuponą.
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  orders    Order[]
+}
+
+// ─────────────────────────────────────────────────────────
+// DOKUMENTAI
+// ─────────────────────────────────────────────────────────
+
+enum DocumentType {
+  CONTRACT
+  ADVANCE_INVOICE
+  DEPOSIT_INVOICE
+  REMAINING_INVOICE
+  VAT_INVOICE
+  TRIP_PROGRAM
+}
+
+model Document {
+  id        String       @id @default(cuid())
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id])
+  type      DocumentType
+  number    String?      @unique // sąskaitos numeris, jei taikoma šiam tipui — turi būti unikalus
+  // (Postgres @unique leidžia bet kiek NULL reikšmių, tad tipams be numerio, pvz.
+  // TRIP_PROGRAM, tai netrukdo). Numeris rezervuojamas tik Trip.nextInvoiceNumber
+  // atominiu increment TOJE PAČIOJE transakcijoje kaip šio įrašo sukūrimas (Fazė 6).
+  fileUrl   String       // @vercel/blob URL sugeneruoto PDF
+  sentAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────
+// NAUJIENLAIŠKIS
+// ─────────────────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+}

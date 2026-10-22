@@ -90,6 +90,22 @@
   margin-top: 0.4rem;
 }
 
+.login-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.login-error {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
   .login-page {
     padding: 1.5rem 0 3rem;

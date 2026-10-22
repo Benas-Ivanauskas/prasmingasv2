@@ -7,6 +7,10 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   totalItems?: number;
   itemsPerPage?: number;
+  // Genitive plural noun for the "X–Y iš Z ..." info line — defaults keep
+  // this component's original trip-listing wording unchanged.
+  itemLabel?: string;
+  ariaLabel?: string;
 }
 
 export default function Pagination({
@@ -15,6 +19,8 @@ export default function Pagination({
   onPageChange,
   totalItems,
   itemsPerPage,
+  itemLabel = "kelionių",
+  ariaLabel = "Kelionių puslapiai",
 }: PaginationProps) {
   if (totalPages <= 1 && !totalItems) {
     return null;
@@ -53,10 +59,10 @@ export default function Pagination({
   const pages = getPageNumbers();
 
   return (
-    <nav className="pagination-wrapper" aria-label="Kelionių puslapiai">
+    <nav className="pagination-wrapper" aria-label={ariaLabel}>
       {totalItems !== undefined && (
         <div className="pagination-info">
-          Rodoma <strong>{startItem}–{endItem}</strong> iš <strong>{totalItems}</strong> kelionių
+          Rodoma <strong>{startItem}–{endItem}</strong> iš <strong>{totalItems}</strong> {itemLabel}
         </div>
       )}
 

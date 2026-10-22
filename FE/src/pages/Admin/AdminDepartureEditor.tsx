@@ -1,6 +1,7 @@
 import type { CabinTypeName, Departure, DepartureStatus, TripType } from "../../types/trip";
 import { BUS_SIZES, resizeSeats } from "../../api/adminTrips";
 import { getCabinTypeLabel } from "../../utils/tripHelpers";
+import BusSeatMap from "../../components/BuySession/BusSeatMap";
 import { Field, NumberInput } from "./AdminFormFields";
 import { patchAt, removeAt } from "./adminFormHelpers";
 
@@ -33,6 +34,18 @@ export default function AdminDepartureEditor({
   const cabinTypes = d.cabinTypes ?? [];
   const extraOptions = d.extraOptions ?? [];
   const busSize = d.seats?.length ?? 0;
+
+  // Leidžia adminui pažymėti/atžymėti FREE↔BLOCKED vietas (gidui/personalui) —
+  // HELD/TAKEN niekada nepaliečiamos čia (tikras užsakymas, apsaugota BE pusėje).
+  const toggleSeatBlocked = (seatId: string) => {
+    const seats = d.seats ?? [];
+    const next = seats.map((s) => {
+      if (s.id !== seatId) return s;
+      if (s.status === "HELD" || s.status === "TAKEN") return s;
+      return { ...s, status: s.status === "BLOCKED" ? ("FREE" as const) : ("BLOCKED" as const) };
+    });
+    onChange({ seats: next });
+  };
 
   return (
     <div className="admin-sub-card">
@@ -139,6 +152,21 @@ export default function AdminDepartureEditor({
               </select>
             </Field>
           </div>
+
+          {(d.seats?.length ?? 0) > 0 && (
+            <>
+              <h5>Gidui/personalui rezervuotos vietos</h5>
+              <p className="admin-field-hint">
+                Paspauskite vietą, kad pažymėtumėte ją gidui/personalui (niekad nesiūloma viešai) arba atžymėtumėte atgal.
+              </p>
+              <BusSeatMap
+                seats={d.seats ?? []}
+                selectedSeatIds={new Set()}
+                onToggleSeat={toggleSeatBlocked}
+                adminMode
+              />
+            </>
+          )}
         </>
       )}
 
@@ -184,6 +212,11 @@ export default function AdminDepartureEditor({
               />
             </Field>
           </div>
+          <p className="admin-field-hint">
+            Parduota/laikoma: <strong>{d.flightSeatsTaken ?? 0}</strong>
+            {typeof d.flightSeatsTotal === "number" ? ` iš ${d.flightSeatsTotal}` : ""} — atnaujinama tik
+            pirkimo metu, čia tik peržiūrai.
+          </p>
         </>
       )}
 
@@ -224,6 +257,9 @@ export default function AdminDepartureEditor({
                 value={c.totalUnits}
                 onChange={(v) => onChange({ cabinTypes: patchAt(cabinTypes, i, { totalUnits: v ?? 0 }) })}
               />
+              <span className="admin-muted" title="Parduota — atnaujinama tik pirkimo metu, čia tik peržiūrai">
+                Parduota: <strong>{c.takenUnits}</strong>
+              </span>
               <button
                 type="button"
                 className="admin-link is-danger"
@@ -234,7 +270,9 @@ export default function AdminDepartureEditor({
             </div>
           ))}
           {cabinTypes.length > 0 && (
-            <p className="admin-field-hint">Stulpeliai: tipas · kaina € · nuolaida % · viso vietų/kajučių</p>
+            <p className="admin-field-hint">
+              Stulpeliai: tipas · kaina € · nuolaida % · viso vietų/kajučių · parduota (peržiūrai)
+            </p>
           )}
           <button
             type="button"

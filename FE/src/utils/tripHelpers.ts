@@ -127,7 +127,7 @@ export function matchesSearchFilters(
   const { trip, departure } = entry;
 
   if (trip.tripType !== filters.tripType) return false;
-  if (trip.category !== filters.category) return false;
+  if (filters.category && trip.category !== filters.category) return false;
 
   const query = filters.destination.trim().toLowerCase();
   if (query) {

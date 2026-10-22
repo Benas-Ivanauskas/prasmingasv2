@@ -36,10 +36,32 @@
   color: #ffffff;
 }
 
+.admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.admin-logout-btn {
+  background: transparent !important;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .admin-main {
   max-width: 1100px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
+}
+
+/* Užsakymų lentelė turi 11 stulpelių — 1100px per siaura, priverčia
+   .admin-table-wrap'o overflow-x:auto scroll'inti į šoną. Platesnis
+   max-width TIK šiam puslapiui (žymima .admin-orders-page), ne visiems
+   admin puslapiams. */
+.admin-main:has(.admin-orders-page) {
+  max-width: 1500px;
 }
 
 .admin-page-head {
@@ -315,6 +337,16 @@
 .admin-errors li,
 .admin-errors strong {
   background-color: transparent !important;
+}
+
+/* Pagination.tsx's own wrapper adds margin-top/border-top meant to separate
+   it from content directly above within the same section (e.g. Home's card
+   grid) — redundant/doubled once it's inside its own .admin-card, which
+   already has a full border + padding. */
+.admin-pagination-card .pagination-wrapper {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 /* TABLE */

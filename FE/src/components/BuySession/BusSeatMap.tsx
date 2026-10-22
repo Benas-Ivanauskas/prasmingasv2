@@ -6,28 +6,60 @@ interface BusSeatMapProps {
   seats: Seat[];
   selectedSeatIds: Set<string>;
   onToggleSeat: (seatId: string) => void;
+  // Admin "pažymėti gidui" režimas: paspaudus FREE/BLOCKED vietą tiesiog
+  // perjungia jos status'ą (onToggleSeat callback'as tą ir daro admin pusėje)
+  // vietoj pasirinkimo pirkimui. HELD/TAKEN visada neliečiami — tikras
+  // užsakymas, nepriklausomai nuo režimo.
+  adminMode?: boolean;
 }
 
-export default function BusSeatMap({ seats, selectedSeatIds, onToggleSeat }: BusSeatMapProps) {
+export default function BusSeatMap({ seats, selectedSeatIds, onToggleSeat, adminMode }: BusSeatMapProps) {
   const rows = buildBusSeatMap(seats);
 
   const renderSeat = (seat: Seat) => {
+    const isHeld = seat.status === "HELD";
+    const isTaken = seat.status === "TAKEN";
+    const isBlocked = seat.status === "BLOCKED";
+
+    if (adminMode) {
+      const isDisabled = isHeld || isTaken;
+      let stateLabel = "";
+      if (isBlocked) stateLabel = ", rezervuota gidui";
+      else if (isHeld) stateLabel = ", rezervuota";
+      else if (isTaken) stateLabel = ", užimta";
+
+      return (
+        <button
+          key={seat.id}
+          type="button"
+          className={`bus-seat ${isBlocked ? "blocked" : ""} ${isHeld ? "held" : ""} ${isTaken ? "taken" : ""}`}
+          disabled={isDisabled}
+          onClick={() => onToggleSeat(seat.id)}
+          aria-pressed={isBlocked}
+          aria-label={`Vieta ${seat.seatNumber}${stateLabel}`}
+        >
+          {seat.seatNumber}
+        </button>
+      );
+    }
+
     const isSelected = selectedSeatIds.has(seat.id);
-    const isHeld = seat.status === "HELD" && !isSelected;
-    const isTaken = seat.status === "TAKEN" && !isSelected;
-    const isDisabled = isHeld || isTaken;
+    const isHeldDisabled = isHeld && !isSelected;
+    const isTakenDisabled = isTaken && !isSelected;
+    const isDisabled = isHeldDisabled || isTakenDisabled || isBlocked;
 
     let stateLabel = "";
-    if (isHeld) stateLabel = ", rezervuota";
-    else if (isTaken) stateLabel = ", užimta";
+    if (isBlocked) stateLabel = ", neprieinama";
+    else if (isHeldDisabled) stateLabel = ", rezervuota";
+    else if (isTakenDisabled) stateLabel = ", užimta";
 
     return (
       <button
         key={seat.id}
         type="button"
-        className={`bus-seat ${isSelected ? "selected" : ""} ${isHeld ? "held" : ""} ${
-          isTaken ? "taken" : ""
-        }`}
+        className={`bus-seat ${isSelected ? "selected" : ""} ${isHeldDisabled ? "held" : ""} ${
+          isTakenDisabled ? "taken" : ""
+        } ${isBlocked ? "blocked" : ""}`}
         disabled={isDisabled}
         onClick={() => onToggleSeat(seat.id)}
         aria-pressed={isSelected}
@@ -84,14 +116,19 @@ export default function BusSeatMap({ seats, selectedSeatIds, onToggleSeat }: Bus
         <span className="bus-seat-legend-item">
           <span className="bus-seat-swatch" /> Laisva
         </span>
-        <span className="bus-seat-legend-item">
-          <span className="bus-seat-swatch selected" /> Pasirinkta
-        </span>
+        {!adminMode && (
+          <span className="bus-seat-legend-item">
+            <span className="bus-seat-swatch selected" /> Pasirinkta
+          </span>
+        )}
         <span className="bus-seat-legend-item">
           <span className="bus-seat-swatch held" /> Rezervuota
         </span>
         <span className="bus-seat-legend-item">
           <span className="bus-seat-swatch taken" /> Užimta
+        </span>
+        <span className="bus-seat-legend-item">
+          <span className="bus-seat-swatch blocked" /> {adminMode ? "Gidui/personalui" : "Neprieinama"}
         </span>
       </div>
     </div>

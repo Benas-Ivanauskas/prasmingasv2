@@ -1,19 +1,16 @@
 import { mockTrips } from "../../trip";
-import { mockDiscountCodes, mockVouchers } from "../../discounts";
-import { mockOrders } from "../../orders";
 import type { Trip } from "../types/trip";
-import type { DiscountCode, GiftVoucher } from "../types/discount";
+import type { DiscountValidation } from "../types/discount";
 import type { Order } from "../types/order";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 // Cached at module scope (not per-component) so repeated mounts of MainCard
 // — e.g. navigating away and back — reuse the same fetch instead of
 // re-requesting.
 let cachedTrips: Promise<Trip[]> | null = null;
 
-// Placeholder data source. Swap this function's body for a real
-// `fetch("/api/trips").then(r => r.json())` once the backend exists —
-// callers already treat this as async and cached, so nothing else needs
-// to change.
+// Realus BE kvietimas (ne mock duomenys) — Fazė 2.
 export function fetchTrips(): Promise<Trip[]> {
   // Runs on every call (not just cache misses) so a hold that expired since
   // the last read is reflected immediately — a real TTL-backed store (e.g.
@@ -21,62 +18,113 @@ export function fetchTrips(): Promise<Trip[]> {
   purgeExpiredHolds();
 
   if (!cachedTrips) {
-    cachedTrips = Promise.resolve(mockTrips);
+    cachedTrips = fetch(`${API_URL}/api/trips`).then((res) => {
+      if (!res.ok) throw new Error("Nepavyko gauti kelionių sąrašo");
+      return res.json();
+    });
   }
   return cachedTrips;
 }
 
-// Used by TripPage for the /trips/:slug route. Swap this for a real
-// `fetch(`/api/trips/${slug}`)` later — a dedicated detail endpoint avoids
-// shipping the whole catalog just to load one trip.
+// Dedikuotas detalės endpoint'as — nesiunčia viso katalogo vienai kelionei
+// parodyti.
 export async function fetchTripBySlug(slug: string): Promise<Trip | undefined> {
-  const trips = await fetchTrips();
-  return trips.find((trip) => trip.slug === slug);
+  const res = await fetch(`${API_URL}/api/trips/${slug}`);
+  if (res.status === 404) return undefined;
+  if (!res.ok) throw new Error("Nepavyko gauti kelionės");
+  return res.json();
 }
 
-// Checkout's Step 4 "Nuolaidos kodas"/"Dovanų kuponas" lookups — read the
-// same arrays api/adminDiscounts.ts edits, so an admin toggling a code
-// inactive (or deleting it) takes effect here immediately, same relationship
-// fetchTrips() has with adminTrips.ts's mockTrips.
-export function lookupDiscountCode(code: string): DiscountCode | undefined {
+// Checkout's Step 1 "Nuolaidos kodas" lookup — realus BE kvietimas.
+// Atsakymas sąmoningai siauras (be code/id/isActive) — žr. types/discount.ts
+// DiscountValidation komentarą.
+export async function lookupDiscountCode(code: string): Promise<DiscountValidation | undefined> {
   const normalized = code.trim().toUpperCase();
-  const today = new Date().toISOString().slice(0, 10);
-  return mockDiscountCodes.find(
-    (d) =>
-      d.isActive &&
-      d.code.toUpperCase() === normalized &&
-      (!d.expiresAt || d.expiresAt.slice(0, 10) >= today)
-  );
+  if (!normalized) return undefined;
+  const res = await fetch(`${API_URL}/api/discounts/validate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: normalized }),
+  });
+  if (!res.ok) return undefined;
+  return res.json();
 }
 
-export function lookupVoucher(code: string): GiftVoucher | undefined {
-  const normalized = code.trim().toUpperCase();
-  return mockVouchers.find((v) => v.isActive && v.code.toUpperCase() === normalized);
+// ─────────────────────────────────────────────────────────
+// CHECKOUT (Fazė 5) — realus BE kvietimas.
+// ─────────────────────────────────────────────────────────
+export interface CheckoutTraveller {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  personalCode?: string;
+  passportNumber?: string; // FLIGHT privalomas
+  passportExpiry?: string; // FLIGHT privalomas
+  extraIds: string[];
 }
 
-// Reusable order-number generator (checkout used to inline a one-off
-// `PR-${...}` literal) — BE will return the real number once a payment
-// provider confirms; this just needs to look plausible for the mock flow.
-export function generateOrderNumber(): string {
-  return `ORD${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
+export interface CheckoutRequestBody {
+  departureId: string;
+  holdId: string;
+  travellers: CheckoutTraveller[];
+  seatIds?: string[];
+  cabinSelections?: Record<string, number>;
+  flightCount?: number;
+  contact: { email: string; phone: string };
+  pickupCity?: string;
+  pickupTime?: string;
+  wantsInvoice: boolean;
+  wantsDeposit: boolean;
+  discountCode?: string;
+  userComment?: string;
 }
 
-// The real persistence call checkout was missing — until now, "Apmokėti"
-// only logged to the console and navigated away, so nothing survived a
-// refresh and no admin view of "what was purchased" could exist. Swap this
-// for a real `POST /api/orders` once the backend exists.
-export async function createOrder(
-  input: Omit<Order, "id" | "orderNumber" | "createdAt" | "status">
-): Promise<Order> {
-  const order: Order = {
-    ...input,
-    id: `order-${Date.now()}`,
-    orderNumber: generateOrderNumber(),
-    createdAt: new Date().toISOString(),
-    status: "ACTIVE",
-  };
-  mockOrders.push(order);
-  return order;
+export interface CheckoutResponse {
+  orderId: string;
+  orderNumber: string;
+  redirectUrl: string;
+}
+
+export async function checkoutOrder(body: CheckoutRequestBody): Promise<CheckoutResponse> {
+  const res = await fetch(`${API_URL}/api/orders/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "Nepavyko sukurti užsakymo");
+  }
+  return res.json();
+}
+
+// Kviečiama cancelurl puslapio (BuyCancelled.tsx) prisijungimo metu — fire
+// ir pamiršk, klaida čia nekritinė (jei nepavyks, PENDING_PAYMENT užsakymas
+// vis tiek savaime taps EXPIRED per Fazės 8 cron'ą).
+export async function cancelPendingOrder(orderId: string): Promise<void> {
+  await fetch(`${API_URL}/api/orders/${orderId}/cancel-pending`, { method: "POST" });
+}
+
+export interface OrderStatusResponse {
+  orderNumber: string;
+  status: string; // OrderStatus — PENDING_PAYMENT/DEPOSIT_PAID/FULLY_PAID/CANCELLED/EXPIRED
+  email: string;
+  travellerCount: number;
+  seatNumbers: string[];
+  pickupCity: string | null;
+  depositAmount: number | null;
+  remainingAmount: number | null;
+  remainingDueDate: string | null;
+}
+
+// Naudojama BuySuccess.tsx'o — orderId ateina iš URL query param'o (realus
+// Paysera accepturl redirect, ne router state, kuris dingsta per tikrą
+// naršyklės navigaciją).
+export async function fetchOrderById(orderId: string): Promise<OrderStatusResponse | undefined> {
+  const res = await fetch(`${API_URL}/api/orders/${orderId}`);
+  if (res.status === 404) return undefined;
+  if (!res.ok) throw new Error("Nepavyko gauti užsakymo");
+  return res.json();
 }
 
 // No backend yet to actually render one — BE will need to generate the PVM
@@ -85,7 +133,7 @@ export async function createOrder(
 // needs a single combined invoice. Swap this for a real
 // `GET /api/orders/:id/invoice.pdf` later; the caller already awaits it.
 export async function downloadOrderInvoicePdf(order: Order): Promise<void> {
-  if (order.paymentStatus === "DEPOSIT_PAID") {
+  if (order.status === "DEPOSIT_PAID") {
     console.log(
       "TODO(BE): generate and download BOTH deposit and final-payment invoice PDFs for order",
       order.orderNumber
@@ -126,12 +174,10 @@ export async function downloadConsentDocument(documentKey: string): Promise<void
 // purgeExpiredHolds(), same as a real TTL-backed store would do — no
 // background timer needed on the client).
 //
-// Swap holdSeats/holdFlightSeats/confirmHold/releaseHold for real
-// `POST .../hold`, `POST .../hold/:id/confirm`, `DELETE .../hold/:id` calls
-// later — callers already treat these as the only place holds are
-// created/resolved, so nothing else needs to change.
-const HOLD_TTL_MS = 15 * 60 * 1000;
-
+// holdSeats/holdFlightSeats/releaseHold are now real BE calls (Fazė 4) —
+// confirmHold stays mock below (Fazė 5 territory, see its own comment).
+// activeHolds is never populated anymore, so confirmHold is now permanently
+// a no-op — kept only until Fazė 5 wires a real equivalent (see its comment).
 interface CapacityHold {
   tripId: string;
   departureId: string;
@@ -140,7 +186,6 @@ interface CapacityHold {
   expiresAt: number;
 }
 
-let holdCounter = 0;
 const activeHolds = new Map<string, CapacityHold>();
 
 // FLIGHT holds don't touch flightSeatsTaken until confirmed, so releasing
@@ -171,50 +216,48 @@ export interface HoldResult {
   expiresAt: number;
 }
 
-// Purges first (so a just-expired hold's seats read as FREE again before
-// this one checks them), then registers the new hold.
-function createHold(
-  tripId: string,
+// Real BE calls (Fazė 4) — departureId alone identifies the departure via
+// its Postgres FK, no tripId needed. Can reject with 409 if someone else
+// grabbed the same seat(s)/cabin(s)/the last ticket between page load and click.
+async function postHold(
   departureId: string,
-  seatIds: string[],
-  flightCount: number
-): HoldResult {
-  purgeExpiredHolds();
-  const holdId = `hold-${++holdCounter}`;
-  const expiresAt = Date.now() + HOLD_TTL_MS;
-  activeHolds.set(holdId, { tripId, departureId, seatIds, flightCount, expiresAt });
-  return { holdId, expiresAt };
+  body: { seatIds: string[]; cabinSelections?: Record<string, number> } | { flightCount: number }
+): Promise<HoldResult> {
+  const res = await fetch(`${API_URL}/api/departures/${departureId}/hold`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "Nepavyko rezervuoti pasirinkimo");
+  }
+  return res.json();
 }
 
-// Mutates the shared mock data in place, marking the given seats HELD (only
-// if currently FREE), and starts their TTL countdown.
-export function holdSeats(tripId: string, departureId: string, seatIds: string[]): HoldResult {
-  const result = createHold(tripId, departureId, seatIds, 0);
-
-  const trip = mockTrips.find((t) => t.id === tripId);
-  const departure = trip?.departures.find((d) => d.id === departureId);
-  for (const seat of departure?.seats ?? []) {
-    if (seat.status === "FREE" && seatIds.includes(seat.id)) {
-      seat.status = "HELD";
-    }
-  }
-
-  return result;
+// cabinSelections (CRUISE only) is held TOGETHER with seatIds, in the same
+// atomic hold/holdId — released as one unit too, see releaseHold.
+export function holdSeats(
+  departureId: string,
+  seatIds: string[],
+  cabinSelections?: Record<string, number>
+): Promise<HoldResult> {
+  return postHold(departureId, cabinSelections && Object.keys(cabinSelections).length > 0 ? { seatIds, cabinSelections } : { seatIds });
 }
 
 // FLIGHT's equivalent of holdSeats — reserves a passenger count instead of
 // specific seats (there are none), on the same TTL.
-export function holdFlightSeats(
-  tripId: string,
-  departureId: string,
-  count: number
-): HoldResult {
-  return createHold(tripId, departureId, [], count);
+export function holdFlightSeats(departureId: string, count: number): Promise<HoldResult> {
+  return postHold(departureId, { flightCount: count });
 }
 
-// Called once payment is confirmed — turns the hold permanent instead of
-// leaving it to expire: seats become TAKEN, a FLIGHT count gets added to
-// flightSeatsTaken.
+// SĄMONINGAI PALIEKAMA MOCK (Fazė 4 scope boundary) — realus atitikmuo
+// (Seat.status='TAKEN'/flightSeatsTaken++) priklauso Fazės 5 checkout
+// transakcijai, kurios dar nėra. activeHolds nebepildomas (holdSeats/
+// holdFlightSeats dabar realūs BE kvietimai), tad šis žemiau visada ras
+// tuščia ir tyliai nieko nedarys — jau ir taip nebeveikianti būsena
+// (mockTrips viešas /trips/:slug nebeskaito nuo Fazė 2), tik formalizuota.
+// PRIVALOMA grįžti čia Fazėje 5 — žr. BACKEND_IMPLEMENTATION_PLAN.md.
 export function confirmHold(holdId: string): void {
   const hold = activeHolds.get(holdId);
   if (!hold) return;
@@ -234,11 +277,7 @@ export function confirmHold(holdId: string): void {
   activeHolds.delete(holdId);
 }
 
-// Called if the user explicitly backs out — releases the hold right away
-// instead of making it wait out the TTL.
-export function releaseHold(holdId: string): void {
-  const hold = activeHolds.get(holdId);
-  if (!hold) return;
-  releaseHoldCapacity(hold);
-  activeHolds.delete(holdId);
+// Real BE call (Fazė 4) — fire-and-forget from callers that back out early.
+export async function releaseHold(holdId: string): Promise<void> {
+  await fetch(`${API_URL}/api/holds/${holdId}`, { method: "DELETE" });
 }

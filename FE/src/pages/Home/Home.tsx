@@ -9,6 +9,11 @@ import type { TripSearchFilters } from "../../types/trip";
 
 export default function Home() {
   const [searchFilters, setSearchFilters] = useState<TripSearchFilters | null>(null);
+  // Bumping this forces SearchForm to remount, resetting its own internal
+  // state (tripType/category/destination/dates/price) back to defaults —
+  // SearchForm only reports filters up on submit, it doesn't listen for
+  // external resets, so a fresh instance is the simplest way to clear it.
+  const [searchFormKey, setSearchFormKey] = useState(0);
   const location = useLocation();
 
   // "Paieška" in the nav links here as /#search-form (from any page), so
@@ -23,8 +28,14 @@ export default function Home() {
     <>
       <Header />
       <Banner />
-      <SearchForm onSearch={setSearchFilters} />
-      <MainCard searchFilters={searchFilters} onClearSearch={() => setSearchFilters(null)} />
+      <SearchForm key={searchFormKey} onSearch={setSearchFilters} />
+      <MainCard
+        searchFilters={searchFilters}
+        onClearSearch={() => {
+          setSearchFilters(null);
+          setSearchFormKey((k) => k + 1);
+        }}
+      />
       <Footer />
     </>
   );

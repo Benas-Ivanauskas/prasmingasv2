@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { adminListTrips } from "../../api/adminTrips";
 import { adminCreateManualOrder } from "../../api/adminOrders";
-import { holdSeats, holdFlightSeats, confirmHold } from "../../api/trips";
+import { holdSeats, holdFlightSeats } from "../../api/trips";
 import BusSeatMap from "../../components/BuySession/BusSeatMap";
 import FlightTravellerStepper from "../../components/BuySession/FlightTravellerStepper";
 import CruiseCabinPicker from "../../components/BuySession/CruiseCabinPicker";
+import TravellerFields from "../../components/BuySession/TravellerFields";
 import { NumberInput } from "./AdminFormFields";
 import type { Trip } from "../../types/trip";
-import type { OrderPaymentStatus } from "../../types/order";
+import type { OrderPaymentStatus, TravellerForm } from "../../types/order";
 import {
   getTripPricing,
   getCabinUnitSize,
@@ -16,12 +17,23 @@ import {
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
+import { getEmailError } from "../../utils/validation";
 import "../BuySession/BuyOneSession.css";
 
 const PAYMENT_LABELS: Record<OrderPaymentStatus, string> = {
+  PENDING_PAYMENT: "Dar neapmokėta",
   DEPOSIT_PAID: "Depozitas apmokėtas",
   FULLY_PAID: "Pilnas mokėjimas",
 };
+
+const emptyTraveller = (): TravellerForm => ({
+  firstName: "",
+  lastName: "",
+  birthDate: "",
+  personalCode: "",
+  passportNumber: "",
+  passportExpiry: "",
+});
 
 export default function AdminOrderNew() {
   const navigate = useNavigate();
@@ -34,13 +46,21 @@ export default function AdminOrderNew() {
   const [selectedSeatIds, setSelectedSeatIds] = useState<Set<string>>(new Set());
   const [flightTravellerCount, setFlightTravellerCount] = useState(1);
   const [cabinSelections, setCabinSelections] = useState<Record<string, number>>({});
+  // Indexed by passengerCount below, which is derived (seats/stepper/cabin
+  // picks) and can change as admin adjusts the selection — grown lazily in
+  // updateTraveller rather than kept in exact sync via an effect.
+  const [travellers, setTravellers] = useState<TravellerForm[]>([]);
 
   const [clientName, setClientName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [totalAmountOverride, setTotalAmountOverride] = useState<number | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<OrderPaymentStatus>("FULLY_PAID");
+  // Vieta/kajutė užimama IŠKART, nepriklausomai nuo šio pasirinkimo (žr.
+  // handleSubmit) — admin dažniausiai užfiksuoja vietą TELEFONU sutarus,
+  // o pinigai įkrenta vėliau, tad "dar neapmokėta" yra saugesnis numatytasis
+  // pasirinkimas nei tvirtinti apmokėjimą, kurio dar nebuvo.
+  const [paymentStatus, setPaymentStatus] = useState<OrderPaymentStatus>("PENDING_PAYMENT");
   const [depositAmount, setDepositAmount] = useState(0);
   const [error, setError] = useState("");
 
@@ -62,6 +82,7 @@ export default function AdminOrderNew() {
     setFlightTravellerCount(1);
     setCabinSelections({});
     setTotalAmountOverride(null);
+    setTravellers([]);
   };
 
   const selectTrip = (id: string) => {
@@ -104,11 +125,17 @@ export default function AdminOrderNew() {
       computedTotal = flightTravellerCount * pricing.finalCost;
       selectionValid = flightTravellerCount > 0;
     } else {
+      // CRUISE: the real headcount is the bus seats picked (cabins only
+      // ALLOCATE those same people into cabins, they don't define who
+      // exists) — using totalCabinTravellers here instead made passengerCount
+      // (and so the Keleiviai section below) stay at 0 right after picking
+      // seats, until cabins were ALSO fully allocated, which looked like the
+      // seat selection had vanished.
       const totalCabinTravellers = cabinTypes.reduce(
         (sum, c) => sum + (cabinSelections[c.id] ?? 0) * getCabinUnitSize(c.type),
         0
       );
-      passengerCount = totalCabinTravellers;
+      passengerCount = selectedSeatIds.size;
       computedTotal = cabinTypes.reduce(
         (sum, c) =>
           sum +
@@ -120,6 +147,23 @@ export default function AdminOrderNew() {
   }
 
   const totalAmount = totalAmountOverride ?? computedTotal;
+  const isFlight = trip?.tripType === "FLIGHT";
+
+  // Rendered (not stored) length always matches the current passengerCount —
+  // entries beyond travellers' current length just show as blank until typed into.
+  const displayedTravellers = Array.from(
+    { length: passengerCount },
+    (_, i) => travellers[i] ?? emptyTraveller()
+  );
+
+  const updateTraveller = (index: number, field: keyof TravellerForm, value: string) => {
+    setTravellers((prev) => {
+      const next = [...prev];
+      while (next.length <= index) next.push(emptyTraveller());
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
 
   const handleSubmit = async () => {
     if (!trip || !departure) {
@@ -134,38 +178,78 @@ export default function AdminOrderNew() {
       setError("Įveskite kliento vardą.");
       return;
     }
-
-    // Marks the chosen seats/flight count TAKEN immediately — an admin
-    // confirming a manual sale, not a customer reservation in progress, so
-    // this skips the public flow's 15-minute hold/TTL step entirely.
-    let seatIds: string[] | undefined;
-    let flightCount: number | undefined;
-
-    if (trip.tripType === "FLIGHT") {
-      const result = holdFlightSeats(trip.id, departure.id, flightTravellerCount);
-      confirmHold(result.holdId);
-      flightCount = flightTravellerCount;
-    } else {
-      seatIds = Array.from(selectedSeatIds);
-      const result = holdSeats(trip.id, departure.id, seatIds);
-      confirmHold(result.holdId);
+    if (!phone.trim()) {
+      setError("Įveskite kliento telefono numerį.");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Įveskite kliento el. paštą.");
+      return;
+    }
+    const emailError = getEmailError(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+    const incompleteIndex = displayedTravellers.findIndex(
+      (t) =>
+        !t.firstName.trim() ||
+        !t.lastName.trim() ||
+        !t.birthDate.trim() ||
+        (isFlight && (!t.passportNumber.trim() || !t.passportExpiry.trim()))
+    );
+    if (incompleteIndex !== -1) {
+      setError(`Užpildykite ${incompleteIndex + 1}. keleivio duomenis.`);
+      return;
     }
 
-    await adminCreateManualOrder({
-      tripId: trip.id,
-      departureId: departure.id,
-      tripTitle: trip.title,
-      clientName: clientName.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      note: note.trim() || undefined,
-      travellerCount: passengerCount,
-      seatIds,
-      flightCount,
-      totalAmount,
-      depositAmount: paymentStatus === "DEPOSIT_PAID" ? depositAmount : undefined,
-      paymentStatus,
-    });
+    // Realus Redis hold (Fazė 4), lygiai kaip viešam checkout'ui — serveris
+    // pats patikrina/atlaisvina `holdId` kurdamas užsakymą, apsaugai nuo
+    // lenktynių su kitu admin skirtuku ar realiu klientu.
+    let seatIds: string[] | undefined;
+    let flightCount: number | undefined;
+    let cabinsToHold: Record<string, number> | undefined;
+    let holdId: string;
+
+    try {
+      if (trip.tripType === "FLIGHT") {
+        const result = await holdFlightSeats(departure.id, flightTravellerCount);
+        holdId = result.holdId;
+        flightCount = flightTravellerCount;
+      } else {
+        seatIds = Array.from(selectedSeatIds);
+        cabinsToHold =
+          trip.tripType === "CRUISE"
+            ? Object.fromEntries(Object.entries(cabinSelections).filter(([, qty]) => qty > 0))
+            : undefined;
+        const result = await holdSeats(departure.id, seatIds, cabinsToHold);
+        holdId = result.holdId;
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nepavyko rezervuoti pasirinkimo");
+      return;
+    }
+
+    try {
+      await adminCreateManualOrder({
+        departureId: departure.id,
+        holdId,
+        clientName: clientName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        note: note.trim() || undefined,
+        travellers: displayedTravellers,
+        seatIds,
+        cabinSelections: cabinsToHold,
+        flightCount,
+        totalAmountOverride: totalAmountOverride ?? undefined,
+        depositAmount: paymentStatus === "DEPOSIT_PAID" ? depositAmount : undefined,
+        paymentStatus,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nepavyko sukurti užsakymo");
+      return;
+    }
 
     navigate("/admin/orders");
   };
@@ -186,8 +270,8 @@ export default function AdminOrderNew() {
         <h3>Kelionė</h3>
         <div className="admin-grid">
           <label className="admin-field">
-            <span className="admin-field-label">Kelionė</span>
-            <select value={tripId} onChange={(e) => selectTrip(e.target.value)}>
+            <span className="admin-field-label">Kelionė *</span>
+            <select value={tripId} onChange={(e) => selectTrip(e.target.value)} required>
               <option value="">Pasirinkite…</option>
               {trips.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -197,11 +281,12 @@ export default function AdminOrderNew() {
             </select>
           </label>
           <label className="admin-field">
-            <span className="admin-field-label">Išvykimas</span>
+            <span className="admin-field-label">Išvykimas *</span>
             <select
               value={departureId}
               onChange={(e) => selectDeparture(e.target.value)}
               disabled={!trip}
+              required
             >
               <option value="">Pasirinkite…</option>
               {trip?.departures.map((d) => (
@@ -259,20 +344,39 @@ export default function AdminOrderNew() {
         </section>
       )}
 
+      {trip && departure && passengerCount > 0 && (
+        <section className="admin-card">
+          <h3>Keleiviai</h3>
+          {displayedTravellers.map((traveller, index) => (
+            <TravellerFields
+              key={index}
+              index={index}
+              traveller={traveller}
+              isFlight={Boolean(isFlight)}
+              onChange={(field, value) => updateTraveller(index, field, value)}
+            />
+          ))}
+        </section>
+      )}
+
       <section className="admin-card">
         <h3>Kliento duomenys</h3>
+        <p className="admin-field-hint">
+          Kontaktinis asmuo (su kuriuo bendraujama) — gali, bet nebūtinai sutaps su kuriuo nors iš
+          aukščiau įvestų keleivių.
+        </p>
         <div className="admin-grid">
           <label className="admin-field">
-            <span className="admin-field-label">Kliento vardas</span>
-            <input value={clientName} onChange={(e) => setClientName(e.target.value)} />
+            <span className="admin-field-label">Kliento vardas *</span>
+            <input value={clientName} onChange={(e) => setClientName(e.target.value)} required />
           </label>
           <label className="admin-field">
-            <span className="admin-field-label">Telefonas</span>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <span className="admin-field-label">Telefonas *</span>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
           </label>
           <label className="admin-field">
-            <span className="admin-field-label">El. paštas</span>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} />
+            <span className="admin-field-label">El. paštas *</span>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} required />
           </label>
           <label className="admin-field is-wide">
             <span className="admin-field-label">Pastaba</span>
@@ -283,6 +387,10 @@ export default function AdminOrderNew() {
 
       <section className="admin-card">
         <h3>Mokėjimas</h3>
+        <p className="admin-field-hint">
+          Vieta/kajutė bus užimta iš karto, nepriklausomai nuo mokėjimo būsenos — atsilaisvins tik
+          atšaukus užsakymą. "Dar neapmokėta" užsakymus vėliau pažymėsite apmokėtais sąraše.
+        </p>
         <div className="admin-grid">
           <label className="admin-field">
             <span className="admin-field-label">Bendra suma (€)</span>
@@ -299,6 +407,7 @@ export default function AdminOrderNew() {
               value={paymentStatus}
               onChange={(e) => setPaymentStatus(e.target.value as OrderPaymentStatus)}
             >
+              <option value="PENDING_PAYMENT">{PAYMENT_LABELS.PENDING_PAYMENT}</option>
               <option value="FULLY_PAID">{PAYMENT_LABELS.FULLY_PAID}</option>
               <option value="DEPOSIT_PAID">{PAYMENT_LABELS.DEPOSIT_PAID}</option>
             </select>

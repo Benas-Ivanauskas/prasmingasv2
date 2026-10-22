@@ -50,6 +50,10 @@ export default function CruiseCabinPicker({
         // `unitSize` travellers later in the flow.
         const quantity = selections[cabin.id] ?? 0;
         const available = Math.max(0, cabin.totalUnits - cabin.takenUnits);
+        // Shown count must reflect what THIS user already picked in the
+        // stepper, not just server stock — otherwise "liko 6" never moves
+        // as they click +, even though they've already claimed some.
+        const remaining = Math.max(0, available - quantity);
         const unitSize = getCabinUnitSize(cabin.type);
         const perPlace = cabin.type === "QUAD";
         const beds = perPlace ? 1 : getCabinCapacity(cabin.type);
@@ -88,8 +92,8 @@ export default function CruiseCabinPicker({
                 {soldOut
                   ? "išparduota"
                   : perPlace
-                    ? `liko ${available} ${pluralizeLt(available, "vieta", "vietos", "vietų")}`
-                    : `liko ${available} ${pluralizeLt(available, "kajutė", "kajutės", "kajučių")}`}
+                    ? `liko ${remaining} ${pluralizeLt(remaining, "vieta", "vietos", "vietų")}`
+                    : `liko ${remaining} ${pluralizeLt(remaining, "kajutė", "kajutės", "kajučių")}`}
               </span>
               {quantity > 0 && (
                 <span className="cruise-cabin-total">

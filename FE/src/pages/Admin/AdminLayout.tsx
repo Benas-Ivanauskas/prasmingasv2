@@ -1,10 +1,15 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { logout } from "../../api/auth";
 import "./Admin.css";
 
-// Separate shell from the public site (no Header/Footer). Nothing protects
-// these routes yet, so the backend/auth step needs to gate /admin/* before
-// this goes anywhere public.
 export default function AdminLayout() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
   return (
     <div className="admin-shell">
       <header className="admin-topbar">
@@ -12,9 +17,14 @@ export default function AdminLayout() {
           <Link to="/admin" className="admin-brand">
             Prasmingas · Administravimas
           </Link>
-          <Link to="/" className="admin-topbar-link">
-            ← Į svetainę
-          </Link>
+          <div className="admin-topbar-actions">
+            <Link to="/" className="admin-topbar-link">
+              ← Į svetainę
+            </Link>
+            <button type="button" className="admin-topbar-link admin-logout-btn" onClick={handleLogout}>
+              Atsijungti
+            </button>
+          </div>
         </div>
       </header>
       <main className="admin-main">

@@ -16,7 +16,7 @@ export interface PickupPoint {
 export interface Seat {
   id: string;
   seatNumber: string;
-  status: "FREE" | "HELD" | "TAKEN";
+  status: "FREE" | "HELD" | "TAKEN" | "BLOCKED"; // BLOCKED = adminas rezervavo gidui/personalui, niekad viešai nesiūloma
 }
 
 export interface CabinType {
@@ -127,7 +127,8 @@ export interface Review {
 // the client-side filtering in tripHelpers.ts.
 export interface TripSearchFilters {
   tripType: TripType;
-  category: TripCategory;
+  // Optional — by default nothing is selected in SearchForm, meaning "any category".
+  category?: TripCategory;
   destination: string;
   startDate: string;
   endDate: string;
