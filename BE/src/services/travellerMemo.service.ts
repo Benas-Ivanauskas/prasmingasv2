@@ -90,16 +90,34 @@ function buildMemoHtml(trip: {
 </html>`;
 }
 
-// Viešas (be auth) — klientas šį dokumentą turi galėti atsisiųsti Step 3
-// metu, PRIEŠ bet kokį prisijungimą. Tyčia nekuriame jokio DB įrašo/cache'o
-// šiam PDF — generuojama kaskart iš naujo (greitas, nebrangus Puppeteer
-// kvietimas), kad visada atspindėtų NAUJAUSIĄ admin'o redaguotą turinį, ne
-// pasenusią versiją.
-export async function generateTravellerMemoPdf(tripSlug: string, departureId: string): Promise<Buffer> {
+async function getTripOrThrow(tripSlug: string) {
   const trip = await prisma.trip.findUnique({ where: { slug: tripSlug } });
   if (!trip) {
     throw new ApiError(404, "Kelionė nerasta");
   }
+  return trip;
+}
+
+// Viešas (be auth), be jokio DB įrašo/cache'o — generuojama kaskart iš
+// naujo (greitas, nebrangus Puppeteer kvietimas), kad visada atspindėtų
+// NAUJAUSIĄ admin'o redaguotą turinį, ne pasenusią versiją. Visas turinys
+// (shortDescription/programDays/inclusions/exclusions/travellerMemo) yra
+// TRIP, NE Departure lygio — tad TAS PATS dokumentas tinka abiem vietoms:
+//
+//   generateTripProgramPdf   — /trips/:slug puslapio "Atsisiųsti programą"
+//                               mygtukas, be jokio konkretaus išvykimo.
+//   generateTravellerMemoPdf — Step 3 ("Keleiviai") sutikimo langas,
+//                               PAPILDOMAI patikrina departureId egzistuoja
+//                               tam Trip'ui (apsauga nuo klaidingo URL),
+//                               bet pats PDF turinys identiškas.
+export async function generateTripProgramPdf(tripSlug: string): Promise<Buffer> {
+  const trip = await getTripOrThrow(tripSlug);
+  const html = buildMemoHtml(trip);
+  return renderHtmlToPdf(html);
+}
+
+export async function generateTravellerMemoPdf(tripSlug: string, departureId: string): Promise<Buffer> {
+  const trip = await getTripOrThrow(tripSlug);
 
   const departure = await prisma.departure.findFirst({ where: { id: departureId, tripId: trip.id } });
   if (!departure) {

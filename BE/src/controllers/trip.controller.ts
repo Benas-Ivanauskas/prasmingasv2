@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { ApiError } from "../middleware/errorHandler.js";
 import { getPublicTripBySlug, listPublicTrips, type TripListFilters } from "../services/trip.service.js";
-import { generateTravellerMemoPdf } from "../services/travellerMemo.service.js";
+import { generateTravellerMemoPdf, generateTripProgramPdf } from "../services/travellerMemo.service.js";
 
 const listQuerySchema = z.object({
   tripType: z.enum(["BUS", "FLIGHT", "CRUISE"]).optional(),
@@ -36,6 +36,17 @@ export async function getTripBySlug(req: Request, res: Response) {
   }
 
   res.json(trip);
+}
+
+export async function downloadTripProgram(req: Request, res: Response) {
+  const pdf = await generateTripProgramPdf(req.params.slug as string);
+  res
+    .status(200)
+    .set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'attachment; filename="keliones-programa.pdf"',
+    })
+    .send(pdf);
 }
 
 export async function downloadTravellerMemo(req: Request, res: Response) {

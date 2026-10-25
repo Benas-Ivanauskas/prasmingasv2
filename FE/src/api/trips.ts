@@ -143,12 +143,11 @@ export async function downloadOrderInvoicePdf(order: Order): Promise<void> {
   }
 }
 
-// No backend yet to actually render one — BE will need to generate the PDF
-// (trip title/program/dates etc.) and serve it from a real file/URL. Swap
-// this for a real `GET /api/trips/:id/program.pdf` (or a signed URL from
-// a POST that kicks off generation) later; the caller already awaits it.
-export async function downloadTripProgramPdf(tripId: string): Promise<void> {
-  console.log("TODO(BE): generate and download trip program PDF for", tripId);
+// Real BE call (Puppeteer-rendered, travellerMemo.service.ts) — same
+// document/content as Step 3's "Keliautojo atmintinė" (trip-level data,
+// not departure-specific), reused here by trip slug alone.
+export async function downloadTripProgramPdf(tripSlug: string): Promise<void> {
+  window.open(`${API_URL}/api/trips/${tripSlug}/program.pdf`, "_blank", "noopener,noreferrer");
 }
 
 // The three legal documents linked from Step 3's consent checkboxes

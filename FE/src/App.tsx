@@ -4,6 +4,7 @@ import Home from "./pages/Home/Home";
 import TripPage from "./pages/TripPage/TripPage";
 import Contacts from "./pages/Contacts/Contacts";
 import About from "./pages/About/About";
+import Terms from "./pages/Terms/Terms";
 import Login from "./pages/Login/Login";
 import RequireAuth from "./components/Admin/RequireAuth";
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -33,6 +34,7 @@ function App() {
           <Route path="/trips/:slug" element={<TripPage />}></Route>
           <Route path="/contacts" element={<Contacts />}></Route>
           <Route path="/about" element={<About />}></Route>
+          <Route path="/organizuotos-turistines-keliones-salygos" element={<Terms />}></Route>
           <Route path="/login" element={<Login />}></Route>
           <Route element={<RequireAuth />}>
             <Route path="/admin" element={<AdminLayout />}>

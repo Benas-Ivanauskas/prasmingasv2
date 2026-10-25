@@ -53,7 +53,7 @@ export default function TripSidebar({
         <button
           type="button"
           className="trip-pdf-cta"
-          onClick={() => downloadTripProgramPdf(trip.id)}
+          onClick={() => downloadTripProgramPdf(trip.slug)}
         >
           <IoDownloadOutline aria-hidden="true" />
           Atsisiųsti kelionės programą (PDF)
