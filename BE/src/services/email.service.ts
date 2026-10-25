@@ -33,7 +33,10 @@ export interface PaymentConfirmationEmailInput {
   to: string;
   subject: string;
   introText: string;
-  items: { label: string; value: string }[];
+  // subItems (pvz. kelių kajučių tipų suvestinė CRUISE užsakymams) rodomas
+  // kaip įdėtinis <ul> po šio <li> antrašte, o ne viena kableliais atskirta
+  // eilutė — value tada ignoruojamas.
+  items: { label: string; value: string; subItems?: string[] }[];
   outroParagraphs?: string[];
 }
 
@@ -41,8 +44,20 @@ export interface PaymentConfirmationEmailInput {
 // REMAINING, žr. documents.service.ts) — jie skiriasi tik subject/introText/
 // items/outroParagraphs reikšmėmis.
 export async function sendPaymentConfirmationEmail(input: PaymentConfirmationEmailInput): Promise<void> {
-  const itemsText = input.items.map((i) => `${i.label}: ${i.value}`).join("\n");
-  const itemsHtml = input.items.map((i) => `<li>${i.label}: <strong>${i.value}</strong></li>`).join("");
+  const itemsText = input.items
+    .map((i) =>
+      i.subItems && i.subItems.length > 0
+        ? `${i.label}:\n${i.subItems.map((s) => `  - ${s}`).join("\n")}`
+        : `${i.label}: ${i.value}`,
+    )
+    .join("\n");
+  const itemsHtml = input.items
+    .map((i) =>
+      i.subItems && i.subItems.length > 0
+        ? `<li>${i.label}:<ul>${i.subItems.map((s) => `<li>${s}</li>`).join("")}</ul></li>`
+        : `<li>${i.label}: <strong>${i.value}</strong></li>`,
+    )
+    .join("");
   const outroText = (input.outroParagraphs ?? []).join("\n\n");
   const outroHtml = (input.outroParagraphs ?? []).map((p) => `<p>${p}</p>`).join("");
   const signature = 'Pagarbiai,\nVšĮ „Prasmingam gyvenimui“ komanda';

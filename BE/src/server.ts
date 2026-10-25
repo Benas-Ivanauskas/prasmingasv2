@@ -26,7 +26,7 @@ cron.schedule("*/15 * * * *", () => {
 });
 
 // Fazė 8 — automatinis likusio mokėjimo priminimas pagal kiekvienos Departure
-// remainingPaymentDays terminą, kas 15 min. Žr. jobs/sendRemainingPaymentReminders.job.ts.
-cron.schedule("*/15 * * * *", () => {
+// remainingPaymentDays terminą, kas 5 min. Žr. jobs/sendRemainingPaymentReminders.job.ts.
+cron.schedule("*/5 * * * *", () => {
   sendRemainingPaymentReminders().catch((err) => logger.error({ err }, "sendRemainingPaymentReminders cron nepavyko"));
 });

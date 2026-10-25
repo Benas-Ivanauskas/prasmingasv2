@@ -20,9 +20,12 @@ function getCabinTypeLabel(type: CabinTypeName): string {
   }
 }
 
-function formatCabinBreakdown(cabinBreakdown: Array<{ type: string; qty: number }> | null | undefined): string | null {
+// Grąžina po vieną eilutę kiekvienam kajutės tipui — sendPaymentConfirmationEmail
+// juos rodo kaip įdėtinį <ul> po "Jums rezervuota(-os)" antrašte, ne vieną
+// kableliais atskirtą eilutę (sunkiau skaitoma, kai kajučių tipų daugiau nei 1).
+function formatCabinBreakdown(cabinBreakdown: Array<{ type: string; qty: number }> | null | undefined): string[] | null {
   if (!cabinBreakdown || cabinBreakdown.length === 0) return null;
-  return cabinBreakdown.map((c) => `${c.qty} x ${getCabinTypeLabel(c.type as CabinTypeName)}`).join(", ");
+  return cabinBreakdown.map((c) => `${c.qty} x ${getCabinTypeLabel(c.type as CabinTypeName)}`);
 }
 
 interface PriceSnapshot {
@@ -60,7 +63,7 @@ export async function generateAndSendForOrder(orderId: string, paymentType: Paym
 
   let subject: string;
   let introText: string;
-  let items: { label: string; value: string }[];
+  let items: { label: string; value: string; subItems?: string[] }[];
   let outroParagraphs: string[] = [];
 
   if (paymentType === "FULL") {
@@ -72,7 +75,7 @@ export async function generateAndSendForOrder(orderId: string, paymentType: Paym
       { label: "Data", value: dateText },
       { label: "Suma", value: `${toNumber(order.totalAmount).toFixed(2)} €` },
     ];
-    if (cabinInfo) items.push({ label: "Jums rezervuota(-os)", value: cabinInfo });
+    if (cabinInfo) items.push({ label: "Jums rezervuota(-os)", value: "", subItems: cabinInfo });
     outroParagraphs = ["Jei turite kokių nors klausimų, nedvejodami susisiekite su mumis.", "Geros kelionės!"];
   } else if (paymentType === "DEPOSIT") {
     const depositAmount = thisPayment ? toNumber(thisPayment.amount) : (snapshot.depositAmount ?? 0);
@@ -85,7 +88,7 @@ export async function generateAndSendForOrder(orderId: string, paymentType: Paym
       { label: "Data", value: dateText },
       { label: "Sumokėta avanso suma", value: `${depositAmount.toFixed(2)} €` },
     ];
-    if (cabinInfo) items.push({ label: "Jums rezervuota(-os)", value: cabinInfo });
+    if (cabinInfo) items.push({ label: "Jums rezervuota(-os)", value: "", subItems: cabinInfo });
     items.push({ label: "Likusi suma", value: `${remainingAmount.toFixed(2)} €` });
     items.push({ label: "Likusią sumą reikia sumokėti iki", value: dueDateText });
     outroParagraphs = [
@@ -104,7 +107,7 @@ export async function generateAndSendForOrder(orderId: string, paymentType: Paym
       { label: "Sumokėtas avansas", value: `${(snapshot.depositAmount ?? 0).toFixed(2)} €` },
       { label: "Sumokėta likusi suma", value: `${thisPaymentAmount.toFixed(2)} €` },
     ];
-    if (cabinInfo) items.push({ label: "Jums rezervuota(-os)", value: cabinInfo });
+    if (cabinInfo) items.push({ label: "Jums rezervuota(-os)", value: "", subItems: cabinInfo });
   }
 
   // documentAttempts skaičiuojamas TIK FULL/DEPOSIT šakai (schema.prisma turi
