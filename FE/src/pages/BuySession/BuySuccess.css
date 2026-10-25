@@ -35,6 +35,22 @@
   font-size: 2.6rem;
 }
 
+/* "Laukiame mokėjimo patvirtinimo" — pačios IoTimeOutline ikonos sukimasis,
+   kad vartotojui aiškiai matytųsi "dar tikriname", o ne statiškas, "miręs"
+   puslapis, kol laukiama Paysera webhook'o. */
+.success-icon-spinning svg {
+  animation: success-icon-spin 1.6s linear infinite;
+}
+
+@keyframes success-icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .success-title {
   margin: 0 0 0.6rem;
   font-size: 1.8rem;

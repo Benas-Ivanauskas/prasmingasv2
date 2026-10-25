@@ -118,7 +118,22 @@ export default function BuySuccess() {
   if (!trip || !departure) return <NotFound />;
 
   if (!order) {
-    return <StatusPage message="Tikriname mokėjimo būseną..." />;
+    return (
+      <>
+        <Header />
+        <section className="success-page">
+          <div className="container">
+            <div className="success-card">
+              <div className="success-icon success-icon-spinning" aria-hidden="true">
+                <IoTimeOutline />
+              </div>
+              <h1 className="success-title">Tikriname mokėjimo būseną...</h1>
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </>
+    );
   }
 
   if (stillPending) {
@@ -128,7 +143,7 @@ export default function BuySuccess() {
         <section className="success-page">
           <div className="container">
             <div className="success-card">
-              <div className="success-icon" aria-hidden="true">
+              <div className="success-icon success-icon-spinning" aria-hidden="true">
                 <IoTimeOutline />
               </div>
               <h1 className="success-title">Laukiame mokėjimo patvirtinimo</h1>

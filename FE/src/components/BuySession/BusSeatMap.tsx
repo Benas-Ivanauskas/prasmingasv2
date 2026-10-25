@@ -11,9 +11,24 @@ interface BusSeatMapProps {
   // vietoj pasirinkimo pirkimui. HELD/TAKEN visada neliečiami — tikras
   // užsakymas, nepriklausomai nuo režimo.
   adminMode?: boolean;
+  // Vietos, kurias vartotojas PATS laiko per vis dar aktyvų (dar
+  // neatlaisvintą) hold'ą, grąžintą iš Step 3 (žr. BuyOneSession.tsx
+  // restoredSelection) — atlaisvinamas tik paspaudus "Toliau" iš naujo, tad
+  // kol vartotojas vis dar naršo Step 2, šios vietos serverio pusėje rodo
+  // tikrą HELD statusą, NET IF vartotojas jau lokaliai jas atžymėjo
+  // (pasirinko kitą vietą vietoj jų). Be šio sąrašo, tokia vieta klaidingai
+  // atrodytų "rezervuota" (kito žmogaus), nors iš tiesų tai tik pačio
+  // vartotojo dar neatlaisvintas senas pasirinkimas.
+  ownHeldSeatIds?: Set<string>;
 }
 
-export default function BusSeatMap({ seats, selectedSeatIds, onToggleSeat, adminMode }: BusSeatMapProps) {
+export default function BusSeatMap({
+  seats,
+  selectedSeatIds,
+  onToggleSeat,
+  adminMode,
+  ownHeldSeatIds,
+}: BusSeatMapProps) {
   const rows = buildBusSeatMap(seats);
 
   const renderSeat = (seat: Seat) => {
@@ -44,7 +59,8 @@ export default function BusSeatMap({ seats, selectedSeatIds, onToggleSeat, admin
     }
 
     const isSelected = selectedSeatIds.has(seat.id);
-    const isHeldDisabled = isHeld && !isSelected;
+    const isOwnHeld = ownHeldSeatIds?.has(seat.id) ?? false;
+    const isHeldDisabled = isHeld && !isSelected && !isOwnHeld;
     const isTakenDisabled = isTaken && !isSelected;
     const isDisabled = isHeldDisabled || isTakenDisabled || isBlocked;
 

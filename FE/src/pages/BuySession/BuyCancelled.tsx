@@ -39,8 +39,8 @@ export default function BuyCancelled() {
 
             <h1 className="success-title">Mokėjimas atšauktas</h1>
             <p className="success-text">
-              Jūsų rezervacija atšaukta — vietos/kajutės atlaisvintos. Galite pasirinkti iš naujo,
-              jei norite tęsti užsakymą.
+              Jūsų rezervacija atšaukta — vietos atlaisvintos. Galite pasirinkti iš naujo, jei
+              norite tęsti užsakymą.
             </p>
 
             <Link to={`/buy/${slug}/${departureId}`} className="btn-primary success-cta">

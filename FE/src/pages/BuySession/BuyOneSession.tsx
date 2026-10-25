@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -46,6 +46,18 @@ export default function BuyOneSession() {
   );
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidation | null>(null);
   const [holdError, setHoldError] = useState("");
+
+  // Vietos, kurias vartotojas PATS laiko per restoredSelection'o hold'ą —
+  // fiksuota VIENĄ kartą (ne perskaičiuojama kas toggleSeat paspaudimą),
+  // nes atlaisvinama tik sekantį kartą paspaudus "Toliau" (žr.
+  // handleContinue), ne čia pačiame puslapyje. Reikalinga BusSeatMap'ui, kad
+  // vietą pakeitus (pvz. 3D → 3C), senoji 3D neatrodytų klaidingai
+  // "rezervuota kito žmogaus", nors tai tik paties vartotojo dar
+  // neatlaisvintas senas hold'as.
+  const ownHeldSeatIds = useMemo(
+    () => new Set(restoredSelection?.selectedSeatIds ?? []),
+    [restoredSelection?.selectedSeatIds]
+  );
 
   // Nuolaidos kodas nuspręstas Step 1 ir keliauja per restoredSelection —
   // pritaikomas ir čia, kad kaina rodoma renkantis vietas/kajutes jau jį
@@ -251,6 +263,7 @@ export default function BuyOneSession() {
                 seats={seats}
                 selectedSeatIds={selectedSeatIds}
                 onToggleSeat={toggleSeat}
+                ownHeldSeatIds={ownHeldSeatIds}
               />
             )}
 
@@ -271,6 +284,7 @@ export default function BuyOneSession() {
                   seats={seats}
                   selectedSeatIds={selectedSeatIds}
                   onToggleSeat={toggleSeat}
+                  ownHeldSeatIds={ownHeldSeatIds}
                 />
                 <CruiseCabinPicker
                   cabinTypes={cabinTypes}
