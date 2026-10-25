@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
 export default function AdminNewsletter() {
   return (
     <>
@@ -9,13 +11,9 @@ export default function AdminNewsletter() {
       </div>
 
       <section className="admin-card">
-        <p>
-          CSV eksportas bus galimas, kai prenumeratoriai bus renkami realiu
-          laiku (reikalinga back-end integracija).
-        </p>
-        <button type="button" className="btn-primary" disabled>
+        <a href={`${API_URL}/api/admin/newsletter/export.csv`} className="btn-primary" style={{ display: "inline-block" }}>
           Atsisiųsti CSV
-        </button>
+        </a>
       </section>
     </>
   );

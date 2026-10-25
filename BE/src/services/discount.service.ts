@@ -29,7 +29,15 @@ export async function validateDiscountCode(rawCode: string): Promise<PublicDisco
 }
 
 function serializeDiscount(discount: Discount) {
-  return { ...discount, value: Number(discount.value) };
+  return {
+    ...discount,
+    value: Number(discount.value),
+    // <input type="date"> FE pusėje priima TIK griežtą "YYYY-MM-DD" —
+    // pilnas ISO datetime (numatytas Date objekto JSON serializavimas)
+    // tyliai nerodomas, nors reikšmė realiai išsaugota (laukas tiesiog
+    // atrodo tuščias). Čia, ne FE, nes tai vienintelis šaltinis tiesai.
+    expiresAt: discount.expiresAt ? discount.expiresAt.toISOString().slice(0, 10) : null,
+  };
 }
 
 async function assertCodeAvailable(code: string, excludeId?: string): Promise<void> {

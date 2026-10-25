@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 import {
@@ -8,8 +9,29 @@ import {
 } from "react-icons/io5";
 import "./Footer.css";
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("submitting");
+    try {
+      const res = await fetch(`${API_URL}/api/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus("success");
+      setEmail("");
+    } catch {
+      setStatus("error");
+    }
+  };
 
   return (
     <footer className="footer-wrapper">
@@ -18,21 +40,27 @@ export default function Footer() {
           <h2 className="footer-newsletter-title">
             Prenumeruokite mūsų naujienlaiškį
           </h2>
-          <form
-            className="footer-newsletter-form"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <input
-              type="email"
-              required
-              placeholder="Įrašykite Jūsų el. adresą"
-              aria-label="El. pašto adresas"
-              className="footer-newsletter-input"
-            />
-            <button type="submit" className="footer-newsletter-btn">
-              Prenumeruoti
-            </button>
-          </form>
+          {status === "success" ? (
+            <p className="footer-newsletter-success">Ačiū! Užsiprenumeravote sėkmingai.</p>
+          ) : (
+            <form className="footer-newsletter-form" onSubmit={handleSubscribe}>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Įrašykite Jūsų el. adresą"
+                aria-label="El. pašto adresas"
+                className="footer-newsletter-input"
+              />
+              <button type="submit" className="footer-newsletter-btn" disabled={status === "submitting"}>
+                {status === "submitting" ? "Siunčiama..." : "Prenumeruoti"}
+              </button>
+            </form>
+          )}
+          {status === "error" && (
+            <p className="footer-newsletter-error">Nepavyko užsiprenumeruoti. Patikrinkite el. paštą ir bandykite dar kartą.</p>
+          )}
         </div>
       </div>
 

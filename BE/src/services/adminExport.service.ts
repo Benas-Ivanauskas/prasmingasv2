@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { csvRow, toCsvDocument } from "../lib/csv.js";
 import { toNumber } from "./order.service.js";
 
 const CSV_COLUMNS = [
@@ -35,19 +36,6 @@ interface TravellerExtra {
   extraOptionId: string;
   name: string;
   price: number;
-}
-
-// RFC4180 stiliaus — kabutėmis apgaubiama TIK kai reikia (yra kablelis/
-// kabutė/eilutės lūžis), vidinės kabutės dvigubinamos.
-function csvCell(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
-
-function csvRow(values: string[]): string {
-  return values.map(csvCell).join(",");
 }
 
 // Vienas keleivis = viena eilutė. Order-lygio stulpeliai (Avansas/Pastabos/
@@ -114,8 +102,5 @@ export async function exportDepartureTravellersCsv(departureId: string): Promise
     }
   }
 
-  // ﻿ — UTF-8 BOM, kad Excel (ne tik LibreOffice/Notepad) teisingai
-  // atpažintų lietuviškas raides atidarant failą tiesiogiai, ne per
-  // "Import" dialogą su rankiniu encoding'o pasirinkimu.
-  return "﻿" + rows.join("\r\n") + "\r\n";
+  return toCsvDocument(rows);
 }

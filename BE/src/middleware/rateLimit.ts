@@ -39,3 +39,13 @@ export const checkoutRateLimit = rateLimit({
   legacyHeaders: false,
   message: { error: { message: "Per daug bandymų apmokėti. Bandykite vėliau." } },
 });
+
+// Viešam POST /api/newsletter/subscribe — be auth; apsauga nuo
+// piktnaudžiavimo (masinio svetimų el. paštų registravimo/spam'o).
+export const newsletterRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: "Per daug bandymų. Bandykite vėliau." } },
+});
