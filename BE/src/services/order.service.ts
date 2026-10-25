@@ -383,32 +383,41 @@ export async function releaseOrderInventory(tx: Prisma.TransactionClient, order:
 }
 
 export async function cancelPendingOrder(orderId: string): Promise<{ status: string }> {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      id: true,
-      status: true,
-      departureId: true,
-      departure: { select: { trip: { select: { tripType: true } } } },
-      travellers: { select: { id: true, cabinTypeId: true, cabinIndex: true } },
-    },
-  });
-  if (!order) {
-    throw new ApiError(404, "Užsakymas nerastas");
-  }
+  return prisma.$transaction(async (tx) => {
+    // Atominis apsauginis UPDATE — tas pats raštas kaip checkout'o vietos
+    // užrakinime. Anksčiau statusas buvo tikrinamas ATSKIRU `findUnique`
+    // PRIEŠ transakciją — du lygiagretūs kvietimai abu galėjo perskaityti
+    // "PENDING_PAYMENT" prieš kuriam nors spėjant įrašyti "CANCELLED", ir
+    // ABU atlaisvinti inventorių (dvigubas CabinType.takenUnits/
+    // Departure.flightSeatsTaken dekrementavimas). Dabar TIK VIENAS
+    // kvietimas (count===1) tęsia į releaseOrderInventory.
+    const result = await tx.order.updateMany({
+      where: { id: orderId, status: "PENDING_PAYMENT" },
+      data: { status: "CANCELLED" },
+    });
 
-  // Idempotentinis no-op — niekada nenuleisti jau apmokėto/atšaukto
-  // užsakymo. Saugu kviesti pakartotinai (pvz. naršyklės "atgal").
-  if (order.status !== "PENDING_PAYMENT") {
-    return { status: order.status };
-  }
+    if (result.count === 0) {
+      const existing = await tx.order.findUnique({ where: { id: orderId }, select: { status: true } });
+      if (!existing) {
+        throw new ApiError(404, "Užsakymas nerastas");
+      }
+      // Idempotentinis no-op — niekada nenuleisti jau apmokėto/atšaukto
+      // užsakymo. Saugu kviesti pakartotinai (pvz. naršyklės "atgal").
+      return { status: existing.status };
+    }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
+    const order = await tx.order.findUniqueOrThrow({
+      where: { id: orderId },
+      select: {
+        id: true,
+        departureId: true,
+        departure: { select: { trip: { select: { tripType: true } } } },
+        travellers: { select: { id: true, cabinTypeId: true, cabinIndex: true } },
+      },
+    });
     await releaseOrderInventory(tx, order);
+    return { status: "CANCELLED" };
   });
-
-  return { status: "CANCELLED" };
 }
 
 export interface OrderStatusResult {

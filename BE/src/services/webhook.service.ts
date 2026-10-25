@@ -1,8 +1,11 @@
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
+import { env } from "../config/env.js";
 import { verifyAndParseCallback, mapPayseraStatus } from "./paysera.service.js";
 import { generateAndSendForOrder } from "./documents.service.js";
-import { releaseOrderInventory } from "./order.service.js";
+import { releaseOrderInventory, toNumber } from "./order.service.js";
+
+const EXPECTED_CURRENCY = "EUR";
 
 // Kiekvienas gaunamas Paysera callback įrašomas WebhookLog'e PIRMIAUSIA,
 // prieš bandant susieti su Payment — taip nedingsta pėdsakas, jei parašas
@@ -33,6 +36,44 @@ export async function processPayseraCallback(data: string, ss1: string): Promise
     await prisma.webhookLog.create({
       data: { payload: parsed, signatureValid: true, providerOrderId, error: "Payment nerastas pagal providerOrderId" },
     });
+    return;
+  }
+
+  // Defense-in-depth — parašas jau patvirtina, kad callback'as pasirašytas
+  // MŪSŲ PAYSERA_SIGN_PASSWORD (apsaugo nuo išorinio klastojimo), bet
+  // IKI ŠIOL niekada netikrinome, ar paties callback'o amount/currency/
+  // projectid realiai sutampa su TUO Payment įrašu, su kuriuo jį susiejame
+  // pagal providerOrderId. Jei nesutampa — parašas vis tiek galioja, bet
+  // DUOMENYS nebeatitinka to, ko tikimės (Paysera pusės keistas edge
+  // case'as/klaida, ar bandymas panaudoti seną/kito projekto callback'ą) —
+  // nebepasitikima `status` lauku, žymima ANOMALIJA, TOLIAU NEAPDOROJAMA.
+  const expectedAmountCents = Math.round(toNumber(payment.amount) * 100);
+  const receivedAmountCents = Number(parsed.amount);
+  const mismatches: string[] = [];
+  if (parsed.projectid !== env.paysera.projectId) {
+    mismatches.push(`projectid: tikėtasi "${env.paysera.projectId}", gauta "${parsed.projectid}"`);
+  }
+  if (parsed.currency !== EXPECTED_CURRENCY) {
+    mismatches.push(`currency: tikėtasi "${EXPECTED_CURRENCY}", gauta "${parsed.currency}"`);
+  }
+  if (!Number.isFinite(receivedAmountCents) || receivedAmountCents !== expectedAmountCents) {
+    mismatches.push(`amount: tikėtasi ${expectedAmountCents} centų, gauta "${parsed.amount}"`);
+  }
+  if (mismatches.length > 0) {
+    await prisma.webhookLog.create({
+      data: {
+        payload: parsed,
+        signatureValid: true,
+        providerOrderId,
+        matchedPaymentId: payment.id,
+        processedAt: new Date(),
+        error: `ANOMALIJA: parašas galioja, bet callback'o duomenys NESUTAMPA su tikėtu Payment įrašu — ${mismatches.join("; ")}. REIKALINGAS RANKINIS patikrinimas.`,
+      },
+    });
+    logger.error(
+      { providerOrderId, paymentId: payment.id, mismatches },
+      "Paysera webhook'o amount/currency/projectid nesutampa su tikėtu Payment įrašu — galimas rimtas duomenų neatitikimas",
+    );
     return;
   }
 

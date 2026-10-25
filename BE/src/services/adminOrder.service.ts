@@ -355,22 +355,39 @@ export async function updateAdminOrderPaymentStatus(
 export async function cancelAdminOrder(id: string, adminId: string): Promise<{ status: string }> {
   const updated = await withAuditLog(
     async (tx) => {
-      const existing = await tx.order.findUnique({
+      // Atominis apsauginis UPDATE — tas pats raštas kaip checkout'o vietos
+      // užrakinime (order.service.ts). Jei šis endpoint'as iškviečiamas du
+      // kartus lygiagrečiai (dvigubas paspaudimas, tinklo retry), TIK VIENAS
+      // kvietimas realiai pakeičia statusą (count===1) ir tęsia į
+      // releaseOrderInventory — kitas mato count===0 ir NIEKADA antrą kartą
+      // nedekrementuoja CabinType.takenUnits/Departure.flightSeatsTaken
+      // (anksčiau čia NEBUVO jokios tokios apsaugos — vien pakartotinis
+      // paspaudimas būtų sugadinęs talpos skaitiklius CRUISE/FLIGHT kelionėms).
+      const result = await tx.order.updateMany({
+        where: { id, status: { notIn: ["CANCELLED", "EXPIRED"] } },
+        data: { status: "CANCELLED" },
+      });
+
+      if (result.count === 0) {
+        const existing = await tx.order.findUnique({ where: { id }, select: { id: true, status: true } });
+        if (!existing) {
+          throw new ApiError(404, "Užsakymas nerastas");
+        }
+        return existing;
+      }
+
+      const existing = await tx.order.findUniqueOrThrow({
         where: { id },
         select: {
           id: true,
+          status: true,
           departureId: true,
           departure: { select: { trip: { select: { tripType: true } } } },
           travellers: { select: { id: true, cabinTypeId: true, cabinIndex: true } },
         },
       });
-      if (!existing) {
-        throw new ApiError(404, "Užsakymas nerastas");
-      }
-
-      const order = await tx.order.update({ where: { id }, data: { status: "CANCELLED" } });
       await releaseOrderInventory(tx, existing);
-      return order;
+      return existing;
     },
     (order) => ({
       adminId,
