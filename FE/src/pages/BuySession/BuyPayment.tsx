@@ -72,6 +72,7 @@ export default function BuyPayment() {
   const secondsLeft = useCountdown(booking?.holdExpiresAt);
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidation | null>(null);
   const [checkoutError, setCheckoutError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -172,8 +173,9 @@ export default function BuyPayment() {
   };
 
   const handlePay = async () => {
-    if (isHoldExpired || !booking.holdId) return;
+    if (isHoldExpired || !booking.holdId || isSubmitting) return;
     setCheckoutError("");
+    setIsSubmitting(true);
 
     try {
       // Serveris pats perskaičiuoja kainą, lock'ina vietas/kajutes/bilietus
@@ -204,8 +206,12 @@ export default function BuyPayment() {
       // Realus išėjimas iš SPA — klientas nukreipiamas į Paysera, ne
       // client-side react-router navigacija.
       window.location.href = redirectUrl;
+      // isSubmitting deliberately stays true here (not reset) — the button
+      // should stay disabled/spinning through the brief gap before the
+      // browser actually navigates away, not flash back to clickable.
     } catch (err) {
       setCheckoutError(err instanceof Error ? err.message : "Nepavyko sukurti užsakymo");
+      setIsSubmitting(false);
     }
   };
 
@@ -495,6 +501,7 @@ export default function BuyPayment() {
           isValid={agreed && !isHoldExpired}
           onContinue={handlePay}
           buttonLabel={`Apmokėti ${formatEuro(amountDueNow)}`}
+          isLoading={isSubmitting}
           note={
             isHoldExpired
               ? "Rezervacijos laikas baigėsi — pradėkite iš naujo."

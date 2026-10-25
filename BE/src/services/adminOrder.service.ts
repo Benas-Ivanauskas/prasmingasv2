@@ -300,6 +300,18 @@ export async function updateAdminOrderPaymentStatus(
       if (!existing) {
         throw new ApiError(404, "Užsakymas nerastas");
       }
+      // Apsauga nuo atsitiktinio REALAUS Paysera Payment'o "pažymėjimo apmokėtu" —
+      // žemiau esantis kodas tiesiog mutuoja existing.payments[0] į COMPLETED,
+      // kas būtų katastrofiška realiam, webhook'o dar laukiančiam užsakymui
+      // (webhook'o idempotency patikra tada tyliai ignoruotų tikrą, vėliau
+      // ateisiantį apmokėjimą). Šis endpoint'as skirtas TIK admin'o rankiniu
+      // būdu sukurtiems užsakymams (provider:"manual").
+      if (existing.payments.some((p) => p.provider !== "manual")) {
+        throw new ApiError(
+          409,
+          "Šis užsakymas turi realų Paysera mokėjimą — statusas atsinaujins automatiškai po webhook'o patvirtinimo, rankinis pažymėjimas negalimas",
+        );
+      }
 
       const order = await tx.order.update({ where: { id }, data: { status: input.status } });
 

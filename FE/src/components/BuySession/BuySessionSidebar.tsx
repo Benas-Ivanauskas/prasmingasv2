@@ -18,6 +18,10 @@ interface BuySessionSidebarProps {
   isValid: boolean;
   onContinue: () => void;
   buttonLabel?: string;
+  // While true, the button shows a spinner instead of buttonLabel and is
+  // disabled alongside isValid — prevents a slow/async onContinue (e.g.
+  // Step 4's checkout call) from firing twice on a double-click.
+  isLoading?: boolean;
   note?: string;
   // Extra content rendered between the selection summary and the total —
   // e.g. Step 4's coupon-code field. Omitted everywhere else.
@@ -36,6 +40,7 @@ export default function BuySessionSidebar({
   isValid,
   onContinue,
   buttonLabel = "Toliau →",
+  isLoading = false,
   note,
   children,
 }: BuySessionSidebarProps) {
@@ -77,10 +82,17 @@ export default function BuySessionSidebar({
         <button
           type="button"
           className="btn-primary buy-session-continue"
-          disabled={!isValid}
+          disabled={!isValid || isLoading}
           onClick={onContinue}
         >
-          {buttonLabel}
+          {isLoading ? (
+            <>
+              <span className="buy-session-continue-spinner" aria-hidden="true" />
+              Apdorojama...
+            </>
+          ) : (
+            buttonLabel
+          )}
         </button>
         {note && <p className="buy-session-continue-note">{note}</p>}
       </div>

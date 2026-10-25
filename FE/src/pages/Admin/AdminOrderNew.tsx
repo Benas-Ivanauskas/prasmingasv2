@@ -17,7 +17,7 @@ import {
   formatTripDate,
   formatEuro,
 } from "../../utils/tripHelpers";
-import { getEmailError } from "../../utils/validation";
+import { formatLtPhone, getEmailError, isValidLtPhone, PHONE_PREFIX } from "../../utils/validation";
 import "../BuySession/BuyOneSession.css";
 
 const PAYMENT_LABELS: Record<OrderPaymentStatus, string> = {
@@ -52,7 +52,7 @@ export default function AdminOrderNew() {
   const [travellers, setTravellers] = useState<TravellerForm[]>([]);
 
   const [clientName, setClientName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(PHONE_PREFIX);
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [totalAmountOverride, setTotalAmountOverride] = useState<number | null>(null);
@@ -178,8 +178,8 @@ export default function AdminOrderNew() {
       setError("Įveskite kliento vardą.");
       return;
     }
-    if (!phone.trim()) {
-      setError("Įveskite kliento telefono numerį.");
+    if (!isValidLtPhone(phone)) {
+      setError("Įveskite pilną telefono numerį, pvz. +370 612 34567.");
       return;
     }
     if (!email.trim()) {
@@ -372,7 +372,19 @@ export default function AdminOrderNew() {
           </label>
           <label className="admin-field">
             <span className="admin-field-label">Telefonas *</span>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            <input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+370 6xx xxxxx"
+              value={phone}
+              onChange={(e) => setPhone(formatLtPhone(e.target.value))}
+              onFocus={(e) => {
+                const end = e.target.value.length;
+                requestAnimationFrame(() => e.target.setSelectionRange(end, end));
+              }}
+              required
+            />
           </label>
           <label className="admin-field">
             <span className="admin-field-label">El. paštas *</span>

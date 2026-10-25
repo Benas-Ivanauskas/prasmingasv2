@@ -393,9 +393,10 @@
 
 .admin-actions > div {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
 }
 
 .admin-empty {

@@ -20,6 +20,18 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   EXPIRED: "Nebegalioja",
 };
 
+// PENDING_PAYMENT reiškia DU visiškai skirtingus atvejus — admin'o rankiniu
+// būdu sukurtą užsakymą ("derybos", laukiama kliento patvirtinimo rankomis)
+// ir REALŲ viešo checkout užsakymą, kuris tiesiog dar neatidarė Paysera
+// webhook'o. Be šio atskyrimo abu atrodė identiškai, o "Pažymėti: apmokėta"
+// mygtukai rodėsi ir realiam, webhook'o dar laukiančiam užsakymui — pavojinga.
+function getStatusLabel(order: Order): string {
+  if (order.status === "PENDING_PAYMENT" && !order.createdByAdmin) {
+    return "Laukiama mokėjimo patvirtinimo";
+  }
+  return STATUS_LABELS[order.status];
+}
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
 
@@ -274,7 +286,7 @@ export default function AdminOrders() {
                       order.status === "CANCELLED" || order.status === "EXPIRED" ? "is-off" : "is-on"
                     }`}
                   >
-                    {STATUS_LABELS[order.status]}
+                    {getStatusLabel(order)}
                   </span>
                   {order.status === "DEPOSIT_PAID" && (
                     <div className="admin-muted">
@@ -301,7 +313,11 @@ export default function AdminOrders() {
                 </td>
                 <td className="admin-actions">
                   <div>
-                    {order.status === "PENDING_PAYMENT" && (
+                    {/* Rankinis "pažymėti apmokėta" TIK admin'o pačio sukurtiems
+                        užsakymams — realiam viešo checkout užsakymui statusą
+                        keičia IŠIMTINAI Paysera webhook'as (žr. BE apsaugą
+                        adminOrder.service.ts::updateAdminOrderPaymentStatus). */}
+                    {order.status === "PENDING_PAYMENT" && order.createdByAdmin && (
                       <>
                         <button type="button" className="admin-link" onClick={() => markPaid(order, "FULLY_PAID")}>
                           Pažymėti: pilnai apmokėta

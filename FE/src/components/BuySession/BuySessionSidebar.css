@@ -76,9 +76,31 @@
 
 .buy-session-continue {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background-color: var(--primary) !important;
   border-color: var(--primary) !important;
   color: #ffffff !important;
+}
+
+.buy-session-continue-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: buy-session-continue-spin 0.7s linear infinite;
+}
+
+@keyframes buy-session-continue-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .buy-session-continue:hover:not(:disabled) {
