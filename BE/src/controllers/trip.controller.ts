@@ -44,7 +44,10 @@ export async function downloadTripProgram(req: Request, res: Response) {
     .status(200)
     .set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": 'attachment; filename="keliones-programa.pdf"',
+      // inline (ne attachment) — atidaro kaip savo PDF puslapį naujame
+      // skirtuke, kaip ir Step 3 "Keliautojo atmintinė", ne priverstinį
+      // atsisiuntimą. Nuoseklu su generateTravellerMemoPdf elgsena.
+      "Content-Disposition": 'inline; filename="keliones-programa.pdf"',
     })
     .send(pdf);
 }

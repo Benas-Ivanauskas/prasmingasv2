@@ -314,7 +314,11 @@ export default function BuyTravellerInfo() {
                 />
                 <span>
                   {doc.before}
-                  {doc.url ? (
+                  {/* "Keliautojo atmintinė" sąmoningai NIEKADA nerodoma kaip
+                      pabraukta nuoroda — tik "Atsisiųsti" veikia (naudoja tą
+                      patį doc.url). Likiems trims (statiniams PDF) tekstas
+                      lieka nuoroda, kaip ir anksčiau. */}
+                  {doc.url && doc.key !== "agreedTravellerMemo" ? (
                     <a
                       href={doc.url}
                       target="_blank"

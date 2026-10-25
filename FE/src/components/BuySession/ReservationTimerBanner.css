@@ -72,4 +72,11 @@
 
 .reservation-expired-card .btn-primary {
   width: 100%;
+  /* .btn-primary pats neturi !important ant background-color (skirtingai
+     nuo kitų šio projekto mygtukų klasių) — be šito globali "* {
+     background-color: var(--surface) }" (index.css) nugali jo foną, tekstas
+     lieka baltas ant balto/permatomo fono, atrodo tuščias. */
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
 }

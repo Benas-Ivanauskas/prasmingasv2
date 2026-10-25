@@ -460,16 +460,6 @@ export default function BuyPayment() {
               placeholder="Jei turite papildomų klausimų ar pastabų dėl kelionės, parašykite čia..."
             />
 
-            <a
-              href={LEGAL_LINKS.tourismTerms}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="payment-terms-link"
-            >
-              <IoDocumentTextOutline aria-hidden="true" />
-              ORGANIZUOTOS TURISTINĖS KELIONĖS SUTARTIES SĄLYGOS
-            </a>
-
             <label className="payment-consent">
               <input
                 type="checkbox"
@@ -477,7 +467,8 @@ export default function BuyPayment() {
                 onChange={(e) => setAgreed(e.target.checked)}
               />
               <span>
-                Susipažinau ir sutinku su{" "}
+                <IoDocumentTextOutline aria-hidden="true" className="payment-consent-icon" /> Susipažinau ir
+                sutinku su{" "}
                 <a
                   href={LEGAL_LINKS.tourismTerms}
                   target="_blank"
