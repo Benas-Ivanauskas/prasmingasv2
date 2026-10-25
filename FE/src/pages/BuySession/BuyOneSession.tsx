@@ -246,6 +246,19 @@ export default function BuyOneSession() {
           to={`/buy/${trip.slug}/${departure.id}`}
           state={restoredSelection}
           className="buy-session-back-link"
+          onClick={() => {
+            // Deliberately going all the way back to Step 1 means Step 1's
+            // own choices (traveller count, deposit, etc.) are up for
+            // reconsideration too — the seat/cabin hold made here no longer
+            // has a guaranteed-valid context to return to, so release it
+            // immediately instead of leaving it to expire on its own 15 min
+            // TTL (hold.service.ts). Fire-and-forget: this is a client-side
+            // route change, not a page unload, so the request still goes out
+            // even though we don't wait for it before navigating.
+            if (restoredSelection?.holdId) {
+              releaseHold(restoredSelection.holdId).catch(() => {});
+            }
+          }}
         >
           ← Grįžti į kelionę
         </Link>
