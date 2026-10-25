@@ -28,3 +28,30 @@ export async function sendRemainingPaymentEmail(input: RemainingPaymentEmailInpu
     html: `<p>Jūsų užsakymo <strong>${input.orderNumber}</strong> likusi mokėtina suma: <strong>${amountText} €</strong>.</p><p><a href="${input.payUrl}">Apmokėti likusią sumą</a></p>`,
   });
 }
+
+export interface PaymentConfirmationEmailInput {
+  to: string;
+  subject: string;
+  introText: string;
+  items: { label: string; value: string }[];
+  outroParagraphs?: string[];
+}
+
+// Bendra HTML/text struktūra visiems trims patvirtinimo laiškams (FULL/DEPOSIT/
+// REMAINING, žr. documents.service.ts) — jie skiriasi tik subject/introText/
+// items/outroParagraphs reikšmėmis.
+export async function sendPaymentConfirmationEmail(input: PaymentConfirmationEmailInput): Promise<void> {
+  const itemsText = input.items.map((i) => `${i.label}: ${i.value}`).join("\n");
+  const itemsHtml = input.items.map((i) => `<li>${i.label}: <strong>${i.value}</strong></li>`).join("");
+  const outroText = (input.outroParagraphs ?? []).join("\n\n");
+  const outroHtml = (input.outroParagraphs ?? []).map((p) => `<p>${p}</p>`).join("");
+  const signature = 'Pagarbiai,\nVšĮ „Prasmingam gyvenimui“ komanda';
+
+  await transporter.sendMail({
+    from: env.email.from,
+    to: input.to,
+    subject: input.subject,
+    text: `Sveiki!\n\n${input.introText}\n\n${itemsText}${outroText ? `\n\n${outroText}` : ""}\n\n${signature}`,
+    html: `<h2>Sveiki!</h2><p>${input.introText}</p><ul>${itemsHtml}</ul>${outroHtml}<p>Pagarbiai,<br/>VšĮ „Prasmingam gyvenimui“ komanda</p>`,
+  });
+}

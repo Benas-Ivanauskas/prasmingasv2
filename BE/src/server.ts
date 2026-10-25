@@ -3,6 +3,7 @@ import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { expireStuckOrders } from "./jobs/expireStuckOrders.job.js";
+import { sendRemainingPaymentReminders } from "./jobs/sendRemainingPaymentReminders.job.js";
 
 app.listen(env.port, () => {
   logger.info(`Server listening on http://localhost:${env.port}`);
@@ -22,4 +23,10 @@ app.listen(env.port, () => {
 // užsakymų valymas, kas 15 min. Žr. jobs/expireStuckOrders.job.ts.
 cron.schedule("*/15 * * * *", () => {
   expireStuckOrders().catch((err) => logger.error({ err }, "expireStuckOrders cron nepavyko"));
+});
+
+// Fazė 8 — automatinis likusio mokėjimo priminimas pagal kiekvienos Departure
+// remainingPaymentDays terminą, kas 15 min. Žr. jobs/sendRemainingPaymentReminders.job.ts.
+cron.schedule("*/15 * * * *", () => {
+  sendRemainingPaymentReminders().catch((err) => logger.error({ err }, "sendRemainingPaymentReminders cron nepavyko"));
 });

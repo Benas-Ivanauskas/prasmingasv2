@@ -165,7 +165,7 @@ export async function processPayseraCallback(data: string, ss1: string): Promise
   });
 
   try {
-    await generateAndSendForOrder(result.order.id);
+    await generateAndSendForOrder(result.order.id, payment.type);
   } catch (err) {
     logger.error({ err, orderId: result.order.id }, "generateAndSendForOrder nepavyko — webhook'as jau pilnai apdorotas");
   }
