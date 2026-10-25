@@ -22,6 +22,7 @@ export const checkoutInputSchema = z.object({
   contact: z.object({
     email: z.string().email(),
     phone: z.string().min(1),
+    city: z.string().min(1),
   }),
   pickupCity: z.string().optional(),
   pickupTime: z.string().optional(),

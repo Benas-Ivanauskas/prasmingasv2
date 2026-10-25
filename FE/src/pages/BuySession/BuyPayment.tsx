@@ -196,7 +196,7 @@ export default function BuyPayment() {
         seatIds: booking.selectedSeatIds,
         cabinSelections: booking.cabinSelections,
         flightCount: isFlight ? travellerCount : undefined,
-        contact: { email: booking.contact.email, phone: booking.contact.phone },
+        contact: { email: booking.contact.email, phone: booking.contact.phone, city: booking.contact.city },
         pickupCity: booking.contact.pickupCity || undefined,
         wantsInvoice: booking.contact.wantsInvoice,
         wantsDeposit: Boolean(booking.wantsDeposit),

@@ -31,6 +31,10 @@ export default function AdminHome() {
           <h3>Veiksmų žurnalas</h3>
           <p>Kas ir kada sukūrė/redagavo/ištrynė keliones ir nuolaidų kodus</p>
         </Link>
+        <Link to="/admin/export" className="admin-section-card">
+          <h3>Keleivių CSV eksportas</h3>
+          <p>Atsisiųsti konkretaus išvykimo keleivių sąrašą CSV formatu</p>
+        </Link>
       </div>
     </>
   );

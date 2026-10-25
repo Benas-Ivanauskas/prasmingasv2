@@ -237,6 +237,7 @@
 .admin-main input[type="number"],
 .admin-main input[type="date"],
 .admin-main input[type="time"],
+.admin-main input[type="tel"],
 .admin-main select,
 .admin-main textarea {
   width: 100%;

@@ -265,6 +265,7 @@ export default function AdminOrders() {
               <th>Būsena</th>
               <th>Sukurta</th>
               <th>Sukurta administratoriaus</th>
+              <th>PVM sąskaita</th>
               <th>PDF</th>
               <th />
             </tr>
@@ -302,6 +303,7 @@ export default function AdminOrders() {
                 </td>
                 <td>{order.createdAt.slice(0, 10)}</td>
                 <td>{order.createdByAdmin ? "✓" : "—"}</td>
+                <td>{order.wantsInvoice ? "✓ Prašoma" : "—"}</td>
                 <td>
                   <button
                     type="button"
@@ -350,7 +352,7 @@ export default function AdminOrders() {
             ))}
             {filteredOrders.length === 0 && (
               <tr>
-                <td colSpan={10} className="admin-empty">
+                <td colSpan={11} className="admin-empty">
                   Užsakymų nerasta.
                 </td>
               </tr>

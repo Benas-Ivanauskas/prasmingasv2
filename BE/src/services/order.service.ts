@@ -276,6 +276,7 @@ export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
           discountId: discountRow?.id,
           userEmail: input.contact.email,
           userPhone: input.contact.phone,
+          city: input.contact.city,
           pickupCity: input.pickupCity,
           pickupTime: input.pickupTime,
         },

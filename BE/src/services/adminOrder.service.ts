@@ -59,6 +59,10 @@ function serializeAdminOrder(order: AdminOrderRow) {
     status: order.status,
     createdAt: order.createdAt.toISOString(),
     createdByAdmin: order.payments.some((p) => p.provider === "manual"),
+    // Step 1 "Su PVM sąskaita faktūra" pasirinkimas — kol kas tik rodoma
+    // admin'ui, joks automatinis siuntimas dar šito nenaudoja (žr. planą,
+    // "PVM sąskaitos siuntimas po kelionės" vis dar neįgyvendinta).
+    wantsInvoice: order.wantsInvoice,
     // Paskutinio REMAINING tipo Payment būsena — null, jei dar nė karto
     // nebuvo bandyta siųsti likusio mokėjimo nuorodos šiam užsakymui.
     // `payments` jau rikiuoti createdAt desc, tad pirmas rastas yra

@@ -70,7 +70,7 @@ export interface CheckoutRequestBody {
   seatIds?: string[];
   cabinSelections?: Record<string, number>;
   flightCount?: number;
-  contact: { email: string; phone: string };
+  contact: { email: string; phone: string; city: string };
   pickupCity?: string;
   pickupTime?: string;
   wantsInvoice: boolean;

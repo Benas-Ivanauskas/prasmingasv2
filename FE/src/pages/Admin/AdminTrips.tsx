@@ -62,6 +62,15 @@ export default function AdminTrips() {
           <tbody>
             {trips.map((trip) => {
               const active = trip.isActive ?? true;
+              // "Aktyvi" pilis yra RANKINIS trip.isActive laukas, ne
+              // pasibaigusių išvykimų indikatorius — bet admin'ui naudinga
+              // matyti, kai kelionė vis dar pažymėta "Aktyvi", bet NEBETURI
+              // nė vieno ACTIVE išvykimo (viešai jau nerodoma dėl
+              // trip.service.ts::buildTripWhere departures:{some:ACTIVE}
+              // filtro, nors isActive=true). Grynai informacinė pastaba,
+              // NIEKADA nekeičia paties isActive.
+              const allDeparturesFinished =
+                trip.departures.length > 0 && !trip.departures.some((d) => d.status === "ACTIVE");
               return (
                 <tr key={trip.id}>
                   <td>
@@ -79,6 +88,9 @@ export default function AdminTrips() {
                     >
                       {active ? "Aktyvi" : "Paslėpta"}
                     </button>
+                    {active && allDeparturesFinished && (
+                      <div className="admin-muted">Visi išvykimai pasibaigę</div>
+                    )}
                   </td>
                   <td className="admin-actions">
                     <div>

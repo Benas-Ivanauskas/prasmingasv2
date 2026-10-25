@@ -270,6 +270,11 @@ model Order {
   voucher       Voucher?    @relation(fields: [voucherId], references: [id])
   userEmail     String
   userPhone     String?
+  // Kliento paties įvestas gyvenamasis miestas (Step 3 formoje, PRIVALOMAS
+  // ten) — NEnullable admin'o rankiniams užsakymams (ta forma šio lauko
+  // neturi), tad čia nullable. Atskirai nuo pickupCity žemiau — tai NE
+  // įlipimo vieta, o kliento paties miesto įvestis.
+  city          String?
 
   // Visa grupė vienu užsakymu išvyksta iš to paties taško (BUS/CRUISE) — pasirenkama vieną kartą Buy1,
   // ne kiekvienam keleiviui atskirai. Nukopijuojama nuo Departure.pickupPoints pasirinkimo momentu

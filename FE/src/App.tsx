@@ -15,6 +15,7 @@ import AdminNewsletter from "./pages/Admin/AdminNewsletter";
 import AdminOrders from "./pages/Admin/AdminOrders";
 import AdminOrderNew from "./pages/Admin/AdminOrderNew";
 import AdminAuditLog from "./pages/Admin/AdminAuditLog";
+import AdminExport from "./pages/Admin/AdminExport";
 import BuyTripDetails from "./pages/BuySession/BuyTripDetails";
 import BuyOneSession from "./pages/BuySession/BuyOneSession";
 import BuyTravellerInfo from "./pages/BuySession/BuyTravellerInfo";
@@ -44,6 +45,7 @@ function App() {
               <Route path="orders" element={<AdminOrders />} />
               <Route path="orders/new" element={<AdminOrderNew />} />
               <Route path="audit-log" element={<AdminAuditLog />} />
+              <Route path="export" element={<AdminExport />} />
             </Route>
           </Route>
           <Route path="/buy/:slug/:departureId" element={<BuyTripDetails />}></Route>

@@ -52,4 +52,8 @@ export interface Order {
   // Paskutinio REMAINING tipo Payment būsena — null, jei likusio mokėjimo
   // nuoroda dar nė karto nesiųsta šiam užsakymui (Fazė 7-B).
   remainingPaymentStatus?: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | null;
+  // Klientas pažymėjo Step 1 "Su PVM sąskaita faktūra" — šiuo metu TIK
+  // informacinis (joks automatinis cron'as/laiškas dar šito nenaudoja),
+  // bet admin turi matyti, kam reikės PVM sąskaitą paruošti rankiniu būdu.
+  wantsInvoice: boolean;
 }
