@@ -21,6 +21,13 @@ import { UPLOADS_DIR } from "./middleware/upload.js";
 
 export const app = express();
 
+// Produkcijoje nginx yra reverse proxy prieš Node (žr. VPS setup'ą) — be šito
+// express-rate-limit meta ERR_ERL_UNEXPECTED_X_FORWARDED_FOR kiekvienai
+// rate-limit'intai route'ai (login/discount/hold/checkout), nes Express pagal
+// nutylėjimą nepasitiki X-Forwarded-For header'iu. "1" = pasitikima TIK
+// vienu proxy hop'u priekyje (nginx), ne bet kuriuo klientu teigiamu IP.
+app.set("trust proxy", 1);
+
 app.use(cors({ origin: env.frontendUrl, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
