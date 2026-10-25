@@ -1,3 +1,4 @@
+import path from "node:path";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
@@ -37,6 +38,12 @@ app.use(cookieParser());
 app.use(pinoHttp({ logger }));
 
 app.use("/uploads", express.static(UPLOADS_DIR));
+// Fiksuoti teisiniai/sutikimų PDF (privatumo politika, standartinė
+// informacijos forma, keliautojo atmintinė, vežimo oru sąlygos) —
+// talpinami BE/assets/documents/static/, admin'as juos įkelia rankiniu
+// būdu per serverį (NE per admin UI, tai ne dažnai keičiamas turinys).
+// Skirtingai nuo /uploads, šis katalogas SEKAMAS git'e (žr. .gitignore).
+app.use("/documents", express.static(path.join(process.cwd(), "assets/documents/static")));
 
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);

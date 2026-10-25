@@ -49,3 +49,14 @@ export const newsletterRateLimit = rateLimit({
   legacyHeaders: false,
   message: { error: { message: "Per daug bandymų. Bandykite vėliau." } },
 });
+
+// Viešam GET .../memo.pdf — be auth; kiekvienas kvietimas paleidžia realų
+// Puppeteer puslapio renderinimą (CPU/atmintis), tad griežtesnė apsauga nuo
+// piktnaudžiavimo nei paprastam GET endpoint'ui.
+export const memoRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: "Per daug bandymų. Bandykite vėliau." } },
+});

@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { ApiError } from "../middleware/errorHandler.js";
 import { getPublicTripBySlug, listPublicTrips, type TripListFilters } from "../services/trip.service.js";
+import { generateTravellerMemoPdf } from "../services/travellerMemo.service.js";
 
 const listQuerySchema = z.object({
   tripType: z.enum(["BUS", "FLIGHT", "CRUISE"]).optional(),
@@ -35,4 +36,16 @@ export async function getTripBySlug(req: Request, res: Response) {
   }
 
   res.json(trip);
+}
+
+export async function downloadTravellerMemo(req: Request, res: Response) {
+  const { slug, departureId } = req.params;
+  const pdf = await generateTravellerMemoPdf(slug as string, departureId as string);
+  res
+    .status(200)
+    .set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'inline; filename="atmintine.pdf"',
+    })
+    .send(pdf);
 }

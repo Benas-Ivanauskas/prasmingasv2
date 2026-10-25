@@ -280,7 +280,7 @@ export default function AdminOrders() {
                 </td>
                 <td>{order.clientName}</td>
                 <td>{order.phone}</td>
-                <td>{order.note || "—"}</td>
+                <td className="admin-table-wrap-cell">{order.note || "—"}</td>
                 <td>
                   <span
                     className={`admin-pill ${

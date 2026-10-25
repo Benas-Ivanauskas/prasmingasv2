@@ -13,6 +13,8 @@ import { downloadConsentDocument, lookupDiscountCode } from "../../api/trips";
 import type { DiscountValidation } from "../../types/discount";
 import { formatLtPhone, getEmailError, isValidEmail, isValidLtPhone, PHONE_PREFIX } from "../../utils/validation";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 import { useTripBySlug } from "../../hooks/useTripBySlug";
 import { useCountdown } from "../../hooks/useCountdown";
 import {
@@ -67,6 +69,9 @@ const CONSENT_DOCUMENTS: ConsentDocument[] = [
       ", kurioje aptartas asmens duomenų tvarkymas ir apsauga bei mano teisės ir jų įgyvendinimo tvarka.",
   },
   {
+    // url nustatomas dinamiškai komponente (žr. consentDocuments žemiau) —
+    // ŠIS dokumentas generuojamas PER KONKREČIĄ kelionę/išvykimą (BE
+    // Puppeteer, travellerMemo.service.ts), ne statinis failas kaip likę trys.
     key: "agreedTravellerMemo",
     documentKey: "traveller-memo",
     linkText: "Keliautojo atmintinė",
@@ -78,6 +83,7 @@ const CONSENT_DOCUMENTS: ConsentDocument[] = [
 const AIR_CARRIAGE_CONSENT: ConsentDocument = {
   key: "agreedAirCarriage",
   documentKey: "air-carriage-conditions",
+  url: LEGAL_LINKS.airCarriageConditions,
   linkText: "pagrindinėmis vežimo oru sąlygomis",
   before: "Susipažinau ir sutinku su ",
   after: ".",
@@ -161,9 +167,10 @@ export default function BuyTravellerInfo() {
   const pricing = getTripPricing(departure);
   const isFlight = trip.tripType === "FLIGHT";
   const isCruise = trip.tripType === "CRUISE";
-  const consentDocuments = isFlight
-    ? [...CONSENT_DOCUMENTS, AIR_CARRIAGE_CONSENT]
-    : CONSENT_DOCUMENTS;
+  const memoUrl = `${API_URL}/api/trips/${trip.slug}/departures/${departure.id}/memo.pdf`;
+  const consentDocuments = (isFlight ? [...CONSENT_DOCUMENTS, AIR_CARRIAGE_CONSENT] : CONSENT_DOCUMENTS).map((doc) =>
+    doc.key === "agreedTravellerMemo" ? { ...doc, url: memoUrl } : doc,
+  );
   const pickupPoints = departure.pickupPoints ?? [];
   // Cruise pricing is per cabin type, not a flat per-person departure cost —
   // a per-traveller price only makes sense for BUS/FLIGHT, so cruises get a
