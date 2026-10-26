@@ -439,10 +439,17 @@ model Document {
   orderId   String
   order     Order        @relation(fields: [orderId], references: [id])
   type      DocumentType
-  number    String?      @unique // sąskaitos numeris, jei taikoma šiam tipui — turi būti unikalus
-  // (Postgres @unique leidžia bet kiek NULL reikšmių, tad tipams be numerio, pvz.
-  // TRIP_PROGRAM, tai netrukdo). Numeris rezervuojamas tik Trip.nextInvoiceNumber
-  // atominiu increment TOJE PAČIOJE transakcijoje kaip šio įrašo sukūrimas (Fazė 6).
+  // Sąskaitos numeris priklauso UŽSAKYMUI, NE konkrečiam dokumento tipui —
+  // vienas pirkimas (ar apmokėtas FULL iš karto, ar DEPOSIT+REMAINING pora,
+  // ar vėliau dar ir post-trip VAT_INVOICE) visada skaičiuojamas kaip
+  // VIENAS numeris. Todėl NEBE @unique čia (buvo klaida — žr. invoice.
+  // service.ts::getOrCreateInvoiceNumber pataisymo komentarą) — tas pats
+  // `number` TYČIA pasikartoja per KELIS šio Document įrašus, kai jie
+  // priklauso tam pačiam orderId. Numeris rezervuojamas TIK PIRMAM šiam
+  // orderId sugeneruotam dokumentui (bet kurio tipo) — vėlesni to paties
+  // orderId dokumentai jį TIESIOG PERIMA, nauja Trip.nextInvoiceNumber
+  // atominė transakcija daugiau nebevykdoma.
+  number    String?
   // NIEKADA neužpildomas realiai — PDF visada generuojamas on-demand per
   // docxtemplater+LibreOffice (invoice.service.ts/contract.service.ts),
   // niekada necache'inamas/neupload'inamas. Šis įrašas tik sąskaitos

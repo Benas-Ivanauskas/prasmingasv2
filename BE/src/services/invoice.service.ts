@@ -58,31 +58,42 @@ function formatDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-// Atominis sąskaitos numerio rezervavimas + Document audito įrašas —
-// bendras VISIEMS keturiems tipams (FULL/DEPOSIT/REMAINING/VAT_INVOICE)
-// tos pačios Trip ribose, per TĄ PATĮ Trip.nextInvoiceNumber skaitiklį.
-// Kiekvienas kada nors sugeneruotas dokumentas gauna kitą eilės numerį
-// chronologine tvarka — NIEKADA nepersiskaičiuoja, net jei užsakymas
-// vėliau atšaukiamas (numeris jau "išleistas" per šį Document įrašą).
+// Sąskaitos numeris priklauso UŽSAKYMUI, NE konkrečiam dokumento tipui —
+// vienas pirkimas (ar apmokėtas FULL iš karto, ar DEPOSIT+REMAINING pora,
+// ar vėliau dar ir post-trip VAT_INVOICE) visada yra TAS PATS, VIENAS
+// numeris. (PATAISYTA 2026-10-27 — anksčiau klaidingai numeruodavo PER
+// DOKUMENTO TIPĄ, tad DEPOSIT ir REMAINING tai pačiai užsakymui gaudavo DU
+// SKIRTINGUS numerius — vartotojo pastebėta ir pataisyta.)
 //
-// IDEMPOTENTIŠKA (būtina admin'o on-demand atsisiuntimo mygtukams) — jei
-// šiam (orderId, documentType) numeris JAU rezervuotas anksčiau (webhook'o/
-// cron'o metu AR ankstesnio admin'o paspaudimo), grąžinamas TAS PATS
-// numeris, NIEKADA nekuriamas antras Document įrašas. `@@unique([orderId,
-// type])` (schema.prisma) yra DB lygmens garantija lenktynių atveju —
-// jei dvi lygiagrečios užklausos vis tiek abi praeitų pirminę patikrą,
-// antrosios `tx.document.create()` numestų unikalumo klaidą, kurią
-// pagaudami tiesiog iš naujo užklausiame ir grąžiname pirmosios rezultatą.
+// Algoritmas: ieško BET KOKIO jau esančio Document šiam orderId
+// (nepriklausomai nuo tipo) — jei rastas, PERIMA jo numerį (NIEKADA
+// nebevykdomas naujas Trip.nextInvoiceNumber increment). Jei šis KONKRETUS
+// documentType dar neturi SAVO Document audito įrašo (pvz. pirmą kartą
+// generuojama VAT_INVOICE užsakymui, kuris jau turėjo DEPOSIT_INVOICE/
+// REMAINING_INVOICE), sukuriamas naujas Document su TUO PAČIU numeriu —
+// `upsert` pagal `@@unique([orderId, type])`, idempotentiškas pakartotiniam
+// tos pačios kombinacijos kvietimui. Numeris rezervuojamas (atominis
+// Trip.nextInvoiceNumber increment) TIK PIRMAM šiam orderId kada nors
+// sugeneruotam dokumentui, bet kurio tipo — NIEKADA nepersiskaičiuoja, net
+// jei užsakymas vėliau atšaukiamas (numeris jau "išleistas").
 async function getOrCreateInvoiceNumber(
   orderId: string,
   tripId: string,
   documentType: DocumentType,
 ): Promise<string> {
-  const existing = await prisma.document.findFirst({
-    where: { orderId, type: documentType },
+  const existingForOrder = await prisma.document.findFirst({
+    where: { orderId },
     select: { number: true },
   });
-  if (existing?.number) return existing.number;
+
+  if (existingForOrder?.number) {
+    await prisma.document.upsert({
+      where: { orderId_type: { orderId, type: documentType } },
+      update: {},
+      create: { orderId, type: documentType, number: existingForOrder.number },
+    });
+    return existingForOrder.number;
+  }
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -97,11 +108,17 @@ async function getOrCreateInvoiceNumber(
       return invoiceNumber;
     });
   } catch (err) {
-    const retry = await prisma.document.findFirst({
-      where: { orderId, type: documentType },
-      select: { number: true },
-    });
-    if (retry?.number) return retry.number;
+    // Lenktynės — kita lygiagreti užklausa tarp mūsų pirminės paieškos ir
+    // šios transakcijos jau sukūrė Document šiam orderId.
+    const retry = await prisma.document.findFirst({ where: { orderId }, select: { number: true } });
+    if (retry?.number) {
+      await prisma.document.upsert({
+        where: { orderId_type: { orderId, type: documentType } },
+        update: {},
+        create: { orderId, type: documentType, number: retry.number },
+      });
+      return retry.number;
+    }
     throw err;
   }
 }
