@@ -443,10 +443,20 @@ model Document {
   // (Postgres @unique leidžia bet kiek NULL reikšmių, tad tipams be numerio, pvz.
   // TRIP_PROGRAM, tai netrukdo). Numeris rezervuojamas tik Trip.nextInvoiceNumber
   // atominiu increment TOJE PAČIOJE transakcijoje kaip šio įrašo sukūrimas (Fazė 6).
-  fileUrl   String       // @vercel/blob URL sugeneruoto PDF
+  // NIEKADA neužpildomas realiai — PDF visada generuojamas on-demand per
+  // docxtemplater+LibreOffice (invoice.service.ts/contract.service.ts),
+  // niekada necache'inamas/neupload'inamas. Šis įrašas tik sąskaitos
+  // numerio/audito sekimui.
+  fileUrl   String?
   sentAt    DateTime?
   createdAt DateTime     @default(now())
 
+  // DB lygmens garantija, kad tam pačiam užsakymui tas pats dokumento
+  // tipas niekada nebūtų sugeneruotas/sunumeruotas du kartus (žr.
+  // invoice.service.ts::getOrCreateInvoiceNumber — admin'o on-demand
+  // atsisiuntimo mygtukai pakartotinai kviečia tą pačią funkciją, ji
+  // turi grąžinti JAU esantį numerį, ne kurti antrą įrašą).
+  @@unique([orderId, type])
   @@index([orderId])
 }
 

@@ -2,6 +2,7 @@ import path from "node:path";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
@@ -32,6 +33,14 @@ export const app = express();
 // vienu proxy hop'u priekyje (nginx), ne bet kuriuo klientu teigiamu IP.
 app.set("trust proxy", 1);
 
+// crossOriginResourcePolicy: "cross-origin" — FE (Vercel, kitas domenas)
+// įterpia /uploads (rich text img src) ir /documents (teisiniai PDF) turinį
+// tiesiai iš šio BE domeno; helmet'o numatytasis "same-origin" tai užblokuotų.
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 app.use(cors({ origin: env.frontendUrl, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());

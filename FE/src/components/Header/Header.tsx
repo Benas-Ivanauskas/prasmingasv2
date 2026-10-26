@@ -5,7 +5,6 @@ import {
   IoInformationCircleOutline,
   IoMailOutline,
 } from "react-icons/io5";
-import { FiUser } from "react-icons/fi";
 import "./Header.css";
 
 export default function Header() {
@@ -83,15 +82,6 @@ export default function Header() {
             </li>
           </ul>
         </nav>
-
-        <div className="header-user">
-          <NavLink to="/login" className="user-btn">
-            <span className="user-icon">
-              <FiUser />
-            </span>
-            <span className="user-label">Prisijungti</span>
-          </NavLink>
-        </div>
       </div>
     </header>
   );

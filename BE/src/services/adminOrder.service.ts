@@ -68,6 +68,14 @@ function serializeAdminOrder(order: AdminOrderRow) {
     // `payments` jau rikiuoti createdAt desc, tad pirmas rastas yra
     // paskutinis bandymas (žr. createRemainingPaymentSession retry logiką).
     remainingPaymentStatus: order.payments.find((p) => p.type === "REMAINING")?.status ?? null,
+    // Kuriuos išankstinės sąskaitos variantus (FULL/DEPOSIT/REMAINING)
+    // galima atsisiųsti admin'o lentelėje — tiksliai atspindi, kas REALIAI
+    // apmokėta, ne vien spėjama iš `status` (FULLY_PAID gali reikšti IR
+    // vieną FULL mokėjimą, IR DEPOSIT+REMAINING porą — abu atvejai turi
+    // skirtingus, abu realius sugeneruotus/siunčiamus dokumentus).
+    completedPaymentTypes: Array.from(
+      new Set(order.payments.filter((p) => p.status === "COMPLETED").map((p) => p.type)),
+    ),
   };
 }
 
@@ -145,6 +153,7 @@ export async function createAdminManualOrder(
 
   const priceSnapshot = {
     baseUnitPrice: pricing.baseUnitPrice,
+    originalUnitPrice: pricing.originalUnitPrice,
     departureDiscountPercent: pricing.departureDiscountPercent,
     departureDiscountAmount: pricing.departureDiscountAmount,
     discountCode: null,

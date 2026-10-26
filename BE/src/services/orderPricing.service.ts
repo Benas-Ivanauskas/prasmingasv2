@@ -76,11 +76,22 @@ export interface PricingResult {
   payingDeposit: boolean;
   amountDueNow: number;
   remainingDueDate: Date | null;
-  cabinBreakdown: Array<{ cabinTypeId: string; type: CabinTypeName; qty: number; unitPrice: number }>;
+  cabinBreakdown: Array<{
+    cabinTypeId: string;
+    type: CabinTypeName;
+    qty: number;
+    unitPrice: number;
+    originalUnitPrice: number;
+  }>;
   perTravellerExtras: Array<Array<{ extraOptionId: string; name: string; price: number }>>;
   departureDiscountPercent: number;
   departureDiscountAmount: number;
   baseUnitPrice: number;
+  // Kaina PRIEŠ bet kokią nuolaidą — reikalinga sąskaitos faktūros "Bazinė
+  // kelionės kaina" eilutei (isankstine-saskaita.pdf). BUS/FLIGHT: raw
+  // departure.cost. CRUISE: žr. cabinBreakdown[].originalUnitPrice vietoj
+  // šio (nėra vieno bendro vieneto kainos, priklauso nuo kajutės tipo).
+  originalUnitPrice: number;
 }
 
 export function calculateOrderPricing(input: PricingInput): PricingResult {
@@ -89,6 +100,7 @@ export function calculateOrderPricing(input: PricingInput): PricingResult {
   let baseTotal: number;
   let cabinBreakdown: PricingResult["cabinBreakdown"] = [];
   let baseUnitPrice: number;
+  let originalUnitPrice: number;
 
   if (input.tripType === "CRUISE" && cabinSelections) {
     baseTotal = 0;
@@ -98,13 +110,21 @@ export function calculateOrderPricing(input: PricingInput): PricingResult {
       const unitPrice = getCabinFinalPrice(cabin);
       const unitSize = getCabinUnitSize(cabin.type);
       baseTotal += qty * unitSize * unitPrice;
-      cabinBreakdown.push({ cabinTypeId: cabin.id, type: cabin.type, qty, unitPrice });
+      cabinBreakdown.push({
+        cabinTypeId: cabin.id,
+        type: cabin.type,
+        qty,
+        unitPrice,
+        originalUnitPrice: cabin.pricePerPerson,
+      });
     }
     baseUnitPrice = cabinBreakdown[0]?.unitPrice ?? 0;
+    originalUnitPrice = cabinBreakdown[0]?.originalUnitPrice ?? 0;
   } else {
     const finalCost = getDepartureFinalCost(departure);
     baseTotal = finalCost * input.travellerCount;
     baseUnitPrice = finalCost;
+    originalUnitPrice = departure.cost;
   }
 
   const perTravellerExtras = travellerExtraIds.map((ids) =>
@@ -165,5 +185,6 @@ export function calculateOrderPricing(input: PricingInput): PricingResult {
     departureDiscountPercent,
     departureDiscountAmount,
     baseUnitPrice,
+    originalUnitPrice,
   };
 }

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { z } from "zod";
 import { ApiError } from "../middleware/errorHandler.js";
 import { adminManualOrderInputSchema, adminPaymentStatusInputSchema } from "../services/adminOrder.schemas.js";
 import {
@@ -9,6 +10,14 @@ import {
   cancelAdminOrder,
   sendRemainingPaymentLink,
 } from "../services/adminOrder.service.js";
+import { generateInvoicePdf, generateVatInvoicePdf, type InvoicePaymentType } from "../services/invoice.service.js";
+import { generateContractPdf } from "../services/contract.service.js";
+
+function sendPdf(res: Response, pdf: Buffer, filename: string) {
+  res.status(200).set({ "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${filename}"` }).send(pdf);
+}
+
+const invoiceQuerySchema = z.object({ paymentType: z.enum(["FULL", "DEPOSIT", "REMAINING"]) });
 
 function requireAdminId(req: Request): string {
   if (!req.admin) {
@@ -59,4 +68,43 @@ export async function payRemaining(req: Request, res: Response) {
   const adminId = requireAdminId(req);
   const result = await sendRemainingPaymentLink(req.params.id as string, adminId);
   res.json(result);
+}
+
+export async function downloadInvoice(req: Request, res: Response) {
+  const orderId = req.params.id as string;
+  const parsed = invoiceQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    throw new ApiError(400, "Neteisingas paymentType — turi būti FULL, DEPOSIT arba REMAINING");
+  }
+  const paymentType: InvoicePaymentType = parsed.data.paymentType;
+
+  const order = await getAdminOrderById(orderId);
+  if (!order.completedPaymentTypes.includes(paymentType)) {
+    throw new ApiError(400, `Šiam užsakymui nėra apmokėto ${paymentType} tipo mokėjimo — sąskaitos generuoti negalima`);
+  }
+
+  const pdf = await generateInvoicePdf(orderId, paymentType);
+  sendPdf(res, pdf, "isankstine-saskaita.pdf");
+}
+
+export async function downloadContract(req: Request, res: Response) {
+  const orderId = req.params.id as string;
+  const order = await getAdminOrderById(orderId);
+  if (order.completedPaymentTypes.length === 0) {
+    throw new ApiError(400, "Šiam užsakymui dar nėra jokio apmokėjimo — sutarties generuoti negalima");
+  }
+
+  const pdf = await generateContractPdf(orderId);
+  sendPdf(res, pdf, "keliones-sutartis.pdf");
+}
+
+export async function downloadVatInvoice(req: Request, res: Response) {
+  const orderId = req.params.id as string;
+  const order = await getAdminOrderById(orderId);
+  if (order.status !== "DEPOSIT_PAID" && order.status !== "FULLY_PAID") {
+    throw new ApiError(400, "Šis užsakymas dar neapmokėtas — PVM sąskaitos faktūros generuoti negalima");
+  }
+
+  const pdf = await generateVatInvoicePdf(orderId);
+  sendPdf(res, pdf, "pvm-saskaita-faktura.pdf");
 }

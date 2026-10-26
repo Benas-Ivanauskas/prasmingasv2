@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { TravellerForm } from "../../types/order";
+import { stripSpaces } from "../../utils/validation";
 // .traveller-card/.traveller-fields/.traveller-seat-badge styles live here —
 // shared with BuyTravellerInfo.tsx's own "Kontaktinė informacija" card,
 // which uses the same classes, so they stay defined in one place.
@@ -70,7 +71,7 @@ export default function TravellerFields({
           <input
             type="text"
             value={traveller.personalCode}
-            onChange={(e) => onChange("personalCode", e.target.value)}
+            onChange={(e) => onChange("personalCode", stripSpaces(e.target.value))}
           />
         </label>
 
@@ -81,7 +82,7 @@ export default function TravellerFields({
               <input
                 type="text"
                 value={traveller.passportNumber}
-                onChange={(e) => onChange("passportNumber", e.target.value)}
+                onChange={(e) => onChange("passportNumber", stripSpaces(e.target.value))}
               />
             </label>
             <label>

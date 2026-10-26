@@ -1,23 +1,47 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import type { PaymentType } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
+import { getCabinTypeLabel, type CabinTypeName } from "../lib/cabinLabels.js";
 import { sendPaymentConfirmationEmail } from "./email.service.js";
 import { toNumber } from "./order.service.js";
+import { generateInvoicePdf } from "./invoice.service.js";
+import { generateContractPdf } from "./contract.service.js";
+import { generateTripProgramPdf } from "./travellerMemo.service.js";
 
-type CabinTypeName = "QUAD" | "DOUBLE" | "TRIPLE";
+const STATIC_DOCS_DIR = path.join(process.cwd(), "assets/documents/static");
+const STANDARD_INFO_FORM_FILE = "standartine_informacijos_teikimo_formapdf.pdf";
+const AIR_CARRIAGE_CONDITIONS_FILE = "vezimo-oru-salygos.pdf";
 
-// Tas pats tekstas kaip FE tripHelpers.ts::getCabinTypeLabel — laikoma
-// atskirai BE pusėje, nes FE/BE nesidalina kodu.
-function getCabinTypeLabel(type: CabinTypeName): string {
-  switch (type) {
-    case "DOUBLE":
-      return "Dvivietė kajutė be lango";
-    case "TRIPLE":
-      return "Trivietė kajutė be lango";
-    case "QUAD":
-    default:
-      return "Vieta keturvietėje kajutėje be lango";
+async function buildAttachments(
+  orderId: string,
+  paymentType: PaymentType,
+  tripSlug: string,
+  tripType: "BUS" | "FLIGHT" | "CRUISE",
+): Promise<{ filename: string; content: Buffer }[]> {
+  const needsContractAndProgram = paymentType !== "REMAINING";
+
+  const [invoicePdf, contractPdf, programPdf, standardFormPdf] = await Promise.all([
+    generateInvoicePdf(orderId, paymentType),
+    needsContractAndProgram ? generateContractPdf(orderId) : Promise.resolve(null),
+    needsContractAndProgram ? generateTripProgramPdf(tripSlug) : Promise.resolve(null),
+    readFile(path.join(STATIC_DOCS_DIR, STANDARD_INFO_FORM_FILE)),
+  ]);
+
+  const attachments: { filename: string; content: Buffer }[] = [
+    { filename: "isankstine-saskaita.pdf", content: invoicePdf },
+    { filename: STANDARD_INFO_FORM_FILE, content: standardFormPdf },
+  ];
+  if (contractPdf) attachments.push({ filename: "keliones-sutartis.pdf", content: contractPdf });
+  if (programPdf) attachments.push({ filename: "keliones-programa.pdf", content: programPdf });
+  if (needsContractAndProgram && tripType === "FLIGHT") {
+    attachments.push({
+      filename: AIR_CARRIAGE_CONDITIONS_FILE,
+      content: await readFile(path.join(STATIC_DOCS_DIR, AIR_CARRIAGE_CONDITIONS_FILE)),
+    });
   }
+  return attachments;
 }
 
 // Grąžina po vieną eilutę kiekvienam kajutės tipui — sendPaymentConfirmationEmail
@@ -40,8 +64,11 @@ interface PriceSnapshot {
 // iškart po sėkmingos Order/Seat transakcijos, perduodamas TĄ Payment.type,
 // kuris KĄ TIK buvo patvirtintas (o ne iš naujo sprendžia iš Order.status, nes
 // FULLY_PAID vienodai reiškia ir "apmokėta iš karto", ir "apmokėtas likutis po
-// depozito"). NIEKADA nekuria Document įrašo — schema.prisma::Document.fileUrl
-// yra privalomas (realaus PDF/blob URL dar nėra), tai lieka PDF fazei.
+// depozito"). PDF priedai (invoice.service.ts/contract.service.ts/
+// travellerMemo.service.ts + statiniai failai) generuojami PRIEŠ siunčiant —
+// jei bet kuris generavimas meta klaidą, visa funkcija klaida (fail-closed),
+// `documentsSent`/`remainingDocumentsSent` lieka false, webhook'o pusėje
+// klaida pagaunama nefataliai (retry vėliau).
 export async function generateAndSendForOrder(orderId: string, paymentType: PaymentType): Promise<void> {
   const order = await prisma.order.findUniqueOrThrow({
     where: { id: orderId },
@@ -49,7 +76,7 @@ export async function generateAndSendForOrder(orderId: string, paymentType: Paym
       userEmail: true,
       totalAmount: true,
       priceSnapshot: true,
-      departure: { select: { date: true, trip: { select: { title: true, tripType: true } } } },
+      departure: { select: { date: true, trip: { select: { title: true, slug: true, tripType: true } } } },
       payments: { where: { type: paymentType, status: "COMPLETED" }, orderBy: { paidAt: "desc" }, take: 1 },
     },
   });
@@ -120,7 +147,14 @@ export async function generateAndSendForOrder(orderId: string, paymentType: Paym
     await prisma.order.update({ where: { id: orderId }, data: { documentAttempts: { increment: 1 } } });
   }
 
-  await sendPaymentConfirmationEmail({ to: order.userEmail, subject, introText, items, outroParagraphs });
+  const attachments = await buildAttachments(
+    orderId,
+    paymentType,
+    order.departure.trip.slug,
+    order.departure.trip.tripType,
+  );
+
+  await sendPaymentConfirmationEmail({ to: order.userEmail, subject, introText, items, outroParagraphs, attachments });
 
   // Žymima true TIK PO sėkmingo išsiuntimo (žr. schema.prisma komentarą) —
   // jei sendMail() aukščiau meta klaidą, šis update'as nepasiekiamas, abu

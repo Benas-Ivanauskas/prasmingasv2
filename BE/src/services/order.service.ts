@@ -197,6 +197,7 @@ export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
 
   const priceSnapshot = {
     baseUnitPrice: pricing.baseUnitPrice,
+    originalUnitPrice: pricing.originalUnitPrice,
     departureDiscountPercent: pricing.departureDiscountPercent,
     departureDiscountAmount: pricing.departureDiscountAmount,
     discountCode: discountRow?.code ?? null,

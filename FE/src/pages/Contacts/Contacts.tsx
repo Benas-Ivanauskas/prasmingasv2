@@ -7,6 +7,7 @@ import {
 } from "react-icons/io5";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import { stripSpaces } from "../../utils/validation";
 import "./Contacts.css";
 
 interface ContactFormData {
@@ -62,7 +63,7 @@ export default function Contacts() {
                     type="email"
                     required
                     value={form.email}
-                    onChange={(e) => updateField("email", e.target.value)}
+                    onChange={(e) => updateField("email", stripSpaces(e.target.value))}
                   />
                 </label>
 
@@ -71,7 +72,7 @@ export default function Contacts() {
                   <input
                     type="tel"
                     value={form.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
+                    onChange={(e) => updateField("phone", stripSpaces(e.target.value))}
                   />
                 </label>
 

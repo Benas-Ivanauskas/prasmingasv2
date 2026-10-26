@@ -22,6 +22,9 @@ export const env = {
   // atsarginio localhost varianto (tai būtų CORS saugumo spraga).
   frontendUrl: isProduction ? required("FRONTEND_URL") : (process.env.FRONTEND_URL ?? "http://localhost:5173"),
   logLevel: process.env.LOG_LEVEL ?? "debug",
+  // Produkcijoje (Linux VPS, po `apt install libreoffice`) paprastai tiesiog
+  // "soffice" ant PATH. Dev Windows kompiuteryje reikės pilno kelio .env'e.
+  libreofficePath: process.env.LIBREOFFICE_PATH ?? "soffice",
   // Sąmoningai NE per required() — tuščias .env vis tiek turi leisti
   // serveriui paleisti (kol vartotojas prideda tikrus Paysera kredencialus),
   // tiesiog createPaymentUrl() tada suformuos technišką, bet neveikiantį URL.

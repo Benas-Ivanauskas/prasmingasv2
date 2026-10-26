@@ -26,6 +26,26 @@ const transporter = nodemailer.createTransport({
   rateLimit: 2,
 });
 
+export interface VatInvoiceEmailInput {
+  to: string;
+  tripName: string;
+  attachment: Buffer;
+}
+
+// Siunčiama kitą dieną po kelionės pabaigos (žr. jobs/sendVatInvoices.job.ts)
+// — atskiras, paprastas siuntimas, NE sendPaymentConfirmationEmail'io bendra
+// items/outroParagraphs struktūra, nes tai nėra apmokėjimo patvirtinimas.
+export async function sendVatInvoiceEmail(input: VatInvoiceEmailInput): Promise<void> {
+  await transporter.sendMail({
+    from: env.email.from,
+    to: input.to,
+    subject: `PVM sąskaita faktūra — ${input.tripName}`,
+    text: `Sveiki!\n\nJūsų kelionė "${input.tripName}" jau baigėsi. Siunčiame PVM sąskaitą faktūrą.\n\nPagarbiai,\nVšĮ „Prasmingam gyvenimui“ komanda`,
+    html: `<p>Sveiki!</p><p>Jūsų kelionė <strong>${input.tripName}</strong> jau baigėsi. Siunčiame PVM sąskaitą faktūrą.</p><p>Pagarbiai,<br/>VšĮ „Prasmingam gyvenimui“ komanda</p>`,
+    attachments: [{ filename: "pvm-saskaita-faktura.pdf", content: input.attachment }],
+  });
+}
+
 export interface RemainingPaymentEmailInput {
   to: string;
   orderNumber: string;
@@ -53,6 +73,7 @@ export interface PaymentConfirmationEmailInput {
   // eilutė — value tada ignoruojamas.
   items: { label: string; value: string; subItems?: string[] }[];
   outroParagraphs?: string[];
+  attachments?: { filename: string; content: Buffer }[];
 }
 
 // Bendra HTML/text struktūra visiems trims patvirtinimo laiškams (FULL/DEPOSIT/
@@ -83,5 +104,6 @@ export async function sendPaymentConfirmationEmail(input: PaymentConfirmationEma
     subject: input.subject,
     text: `Sveiki!\n\n${input.introText}\n\n${itemsText}${outroText ? `\n\n${outroText}` : ""}\n\n${signature}`,
     html: `<h2>Sveiki!</h2><p>${input.introText}</p><ul>${itemsHtml}</ul>${outroHtml}<p>Pagarbiai,<br/>VšĮ „Prasmingam gyvenimui“ komanda</p>`,
+    attachments: input.attachments,
   });
 }

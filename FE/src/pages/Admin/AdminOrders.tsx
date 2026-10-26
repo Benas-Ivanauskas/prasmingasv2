@@ -6,11 +6,17 @@ import {
   adminUpdateOrderPaymentStatus,
   adminSendRemainingPaymentLink,
 } from "../../api/adminOrders";
-import { downloadOrderInvoicePdf } from "../../api/trips";
+import { downloadInvoicePdf, downloadContractPdf, downloadVatInvoicePdf } from "../../api/trips";
 import Pagination from "../../components/MainCards/Pagination";
 import type { Order, OrderPaymentStatus, OrderStatus } from "../../types/order";
 
 const ORDERS_PER_PAGE = 40;
+
+const INVOICE_TYPE_LABELS: Record<"FULL" | "DEPOSIT" | "REMAINING", string> = {
+  FULL: "Pilna",
+  DEPOSIT: "Avansas",
+  REMAINING: "Likutis",
+};
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING_PAYMENT: "Dar neapmokėta",
@@ -157,7 +163,7 @@ export default function AdminOrders() {
       return;
     }
     setLookupError("");
-    downloadOrderInvoicePdf(order);
+    downloadVatInvoicePdf(order.id);
   };
 
   return (
@@ -266,7 +272,9 @@ export default function AdminOrders() {
               <th>Sukurta</th>
               <th>Sukurta administratoriaus</th>
               <th>PVM sąskaita</th>
-              <th>PDF</th>
+              <th>Išankstinė sąskaita</th>
+              <th>Kelionės sutartis</th>
+              <th>PVM sąskaita faktūra</th>
               <th />
             </tr>
           </thead>
@@ -305,10 +313,35 @@ export default function AdminOrders() {
                 <td>{order.createdByAdmin ? "✓" : "—"}</td>
                 <td>{order.wantsInvoice ? "✓ Prašoma" : "—"}</td>
                 <td>
+                  {order.completedPaymentTypes.length === 0 ? (
+                    "—"
+                  ) : (
+                    order.completedPaymentTypes.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        className="admin-link"
+                        onClick={() => downloadInvoicePdf(order.id, type)}
+                      >
+                        {INVOICE_TYPE_LABELS[type]}
+                      </button>
+                    ))
+                  )}
+                </td>
+                <td>
+                  {order.completedPaymentTypes.includes("FULL") || order.completedPaymentTypes.includes("DEPOSIT") ? (
+                    <button type="button" className="admin-link" onClick={() => downloadContractPdf(order.id)}>
+                      Sutartis
+                    </button>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td>
                   <button
                     type="button"
                     className="admin-link"
-                    onClick={() => downloadOrderInvoicePdf(order)}
+                    onClick={() => downloadVatInvoicePdf(order.id)}
                   >
                     PDF
                   </button>

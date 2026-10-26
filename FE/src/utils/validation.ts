@@ -1,5 +1,12 @@
 export const PHONE_PREFIX = "+370 ";
 
+// For fields that must never contain whitespace (email, personal code,
+// passport number, etc.) — strips ALL spaces, not just leading/trailing
+// (unlike .trim()), so e.g. "123 4567" can't slip through as a personal code.
+export function stripSpaces(value: string): string {
+  return value.replace(/\s+/g, "");
+}
+
 // ASCII only on purpose: no Lithuanian letters (ą, č, ę, ė, į, š, ų, ū, ž),
 // no other accented/non-Latin characters, no spaces — those break mail
 // delivery and downstream systems (payment provider, invoices).

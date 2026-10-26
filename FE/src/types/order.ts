@@ -52,8 +52,12 @@ export interface Order {
   // Paskutinio REMAINING tipo Payment būsena — null, jei likusio mokėjimo
   // nuoroda dar nė karto nesiųsta šiam užsakymui (Fazė 7-B).
   remainingPaymentStatus?: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | null;
-  // Klientas pažymėjo Step 1 "Su PVM sąskaita faktūra" — šiuo metu TIK
-  // informacinis (joks automatinis cron'as/laiškas dar šito nenaudoja),
-  // bet admin turi matyti, kam reikės PVM sąskaitą paruošti rankiniu būdu.
+  // Klientas pažymėjo Step 1 "Su PVM sąskaita faktūra" — admin'as taip pat
+  // gali sugeneruoti/atsisiųsti ją rankiniu būdu bet kuriuo metu (žr.
+  // AdminOrders.tsx), nepriklausomai nuo automatinio post-trip cron'o.
   wantsInvoice: boolean;
+  // Kurie išankstinės sąskaitos variantai realiai apmokėti ir atsisiunčiami
+  // — tiksliai atspindi Payment įrašus, ne vien spėjama iš `status` (žr.
+  // BE adminOrder.service.ts::serializeAdminOrder komentarą).
+  completedPaymentTypes: ("FULL" | "DEPOSIT" | "REMAINING")[];
 }

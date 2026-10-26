@@ -1,7 +1,6 @@
 import { mockTrips } from "../../trip";
 import type { Trip } from "../types/trip";
 import type { DiscountValidation } from "../types/discount";
-import type { Order } from "../types/order";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
@@ -127,20 +126,27 @@ export async function fetchOrderById(orderId: string): Promise<OrderStatusRespon
   return res.json();
 }
 
-// No backend yet to actually render one — BE will need to generate the PVM
-// invoice PDF and serve it from a real file/URL. A deposit-paid order needs
-// two documents (deposit invoice + final-payment invoice), a fully paid one
-// needs a single combined invoice. Swap this for a real
-// `GET /api/orders/:id/invoice.pdf` later; the caller already awaits it.
-export async function downloadOrderInvoicePdf(order: Order): Promise<void> {
-  if (order.status === "DEPOSIT_PAID") {
-    console.log(
-      "TODO(BE): generate and download BOTH deposit and final-payment invoice PDFs for order",
-      order.orderNumber
-    );
-  } else {
-    console.log("TODO(BE): generate and download the full-payment invoice PDF for order", order.orderNumber);
-  }
+// Admin-only (requireAdmin cookie, auto-sent on same-origin top-level
+// navigation — same pattern as downloadTripProgramPdf/CSV export below).
+// One button per actually-completed payment type (Order.completedPaymentTypes)
+// — a DEPOSIT_PAID→FULLY_PAID order via REMAINING has TWO real invoices.
+export function downloadInvoicePdf(orderId: string, paymentType: "FULL" | "DEPOSIT" | "REMAINING"): void {
+  window.open(
+    `${API_URL}/api/admin/orders/${orderId}/invoice.pdf?paymentType=${paymentType}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+export function downloadContractPdf(orderId: string): void {
+  window.open(`${API_URL}/api/admin/orders/${orderId}/contract.pdf`, "_blank", "noopener,noreferrer");
+}
+
+// Generuoja/atsisiunčia PVM sąskaitą faktūrą BET KADA admin'o pageidavimu —
+// NESIUNČIA laiško klientui (tą automatiškai daro BE sendVatInvoices.job.ts
+// po kelionės pabaigos; šis mygtukas tik admin'o on-demand peržiūrai/atsisiuntimui).
+export function downloadVatInvoicePdf(orderId: string): void {
+  window.open(`${API_URL}/api/admin/orders/${orderId}/vat-invoice.pdf`, "_blank", "noopener,noreferrer");
 }
 
 // Real BE call (Puppeteer-rendered, travellerMemo.service.ts) — same

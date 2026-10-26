@@ -5,6 +5,7 @@ import { logger } from "./lib/logger.js";
 import { expireStuckOrders } from "./jobs/expireStuckOrders.job.js";
 import { sendRemainingPaymentReminders } from "./jobs/sendRemainingPaymentReminders.job.js";
 import { archiveFinishedDepartures } from "./jobs/archiveFinishedDepartures.job.js";
+import { sendVatInvoices } from "./jobs/sendVatInvoices.job.js";
 
 app.listen(env.port, () => {
   logger.info(`Server listening on http://localhost:${env.port}`);
@@ -37,4 +38,10 @@ cron.schedule("*/5 * * * *", () => {
 // patogesnis testuoti). Žr. jobs/archiveFinishedDepartures.job.ts.
 cron.schedule("*/15 * * * *", () => {
   archiveFinishedDepartures().catch((err) => logger.error({ err }, "archiveFinishedDepartures cron nepavyko"));
+});
+
+// PVM sąskaita faktūra — siunčiama kitą dieną po kelionės pabaigos, kartą
+// per dieną 07:00. Žr. jobs/sendVatInvoices.job.ts.
+cron.schedule("0 7 * * *", () => {
+  sendVatInvoices().catch((err) => logger.error({ err }, "sendVatInvoices cron nepavyko"));
 });

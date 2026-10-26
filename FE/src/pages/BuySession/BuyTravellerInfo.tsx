@@ -11,7 +11,14 @@ import ReservationTimerBanner from "../../components/BuySession/ReservationTimer
 import TravellerFields from "../../components/BuySession/TravellerFields";
 import { downloadConsentDocument, lookupDiscountCode } from "../../api/trips";
 import type { DiscountValidation } from "../../types/discount";
-import { formatLtPhone, getEmailError, isValidEmail, isValidLtPhone, PHONE_PREFIX } from "../../utils/validation";
+import {
+  formatLtPhone,
+  getEmailError,
+  isValidEmail,
+  isValidLtPhone,
+  PHONE_PREFIX,
+  stripSpaces,
+} from "../../utils/validation";
 import { LEGAL_LINKS } from "../../constants/legalLinks";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
@@ -360,7 +367,9 @@ export default function BuyTravellerInfo() {
                   autoComplete="email"
                   value={contact.email}
                   aria-invalid={touched.email && !isValidEmail(contact.email)}
-                  onChange={(e) => setContact((prev) => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setContact((prev) => ({ ...prev, email: stripSpaces(e.target.value) }))
+                  }
                   onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
                 />
                 {touched.email && getEmailError(contact.email) && (
