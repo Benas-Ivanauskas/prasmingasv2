@@ -233,6 +233,7 @@ export async function createAdminManualOrder(
           userComment: input.note,
           userEmail: input.email,
           userPhone: input.phone,
+          city: input.city,
         },
       });
 

@@ -19,6 +19,10 @@ export const adminManualOrderInputSchema = z.object({
   clientName: z.string().min(1),
   phone: z.string().min(1),
   email: z.string().email(),
+  // Order.city — sąskaitų "Adresas" šaltinis (žr. schema.prisma komentarą
+  // prie Order.city). Privalomas čia lygiai taip pat, kaip viešame
+  // checkout'e (order.schemas.ts::checkoutInputSchema).
+  city: z.string().min(1),
   note: z.string().max(2000).optional(),
   totalAmountOverride: z.number().nonnegative().optional(),
   paymentStatus: z.enum(["PENDING_PAYMENT", "DEPOSIT_PAID", "FULLY_PAID"]),

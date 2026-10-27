@@ -367,9 +367,16 @@ export default function AdminOrders() {
                       </>
                     )}
                     {order.status === "DEPOSIT_PAID" && (
-                      <button type="button" className="admin-link" onClick={() => sendRemainingLink(order)}>
-                        Siųsti likusio mokėjimo nuorodą
-                      </button>
+                      <>
+                        <button type="button" className="admin-link" onClick={() => sendRemainingLink(order)}>
+                          Siųsti likusio mokėjimo nuorodą
+                        </button>
+                        {order.createdByAdmin && (
+                          <button type="button" className="admin-link" onClick={() => markPaid(order, "FULLY_PAID")}>
+                            Pažymėti: likutis apmokėtas
+                          </button>
+                        )}
+                      </>
                     )}
                     <button
                       type="button"

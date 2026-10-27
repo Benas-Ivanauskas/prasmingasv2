@@ -9,12 +9,12 @@ import "./Header.css";
 
 export default function Header() {
   // If we're already on Home, the URL hash doesn't change on a repeat click
-  // (same "#search-form" as before), so Home's hash-watching effect won't
+  // (same "#paieska" as before), so Home's hash-watching effect won't
   // re-fire — scroll directly here instead. When navigating in from another
   // page, this element won't exist yet, so this is a harmless no-op and
   // Home's own effect (on mount) handles the scroll instead.
   const scrollToSearchForm = () => {
-    document.getElementById("search-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("paieska")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -45,9 +45,9 @@ export default function Header() {
             <li>
               {/* Plain Link, not NavLink — NavLink injects its own "active"
                   class whenever the pathname matches regardless of className,
-                  and "/#search-form" shares a pathname with "/". This just
+                  and "/#paieska" shares a pathname with "/". This just
                   scrolls to the search form, it isn't really "a page". */}
-              <Link to="/#search-form" className="nav-link" onClick={scrollToSearchForm}>
+              <Link to="/#paieska" className="nav-link" onClick={scrollToSearchForm}>
                 <span className="nav-icon">
                   <IoSearch />
                 </span>

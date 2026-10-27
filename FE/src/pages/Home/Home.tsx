@@ -16,11 +16,11 @@ export default function Home() {
   const [searchFormKey, setSearchFormKey] = useState(0);
   const location = useLocation();
 
-  // "Paieška" in the nav links here as /#search-form (from any page), so
+  // "Paieška" in the nav links here as /#paieska (from any page), so
   // landing on Home with that hash should scroll straight to the form.
   useEffect(() => {
-    if (location.hash === "#search-form") {
-      document.getElementById("search-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (location.hash === "#paieska") {
+      document.getElementById("paieska")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [location.hash]);
 

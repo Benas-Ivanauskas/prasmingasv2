@@ -9,7 +9,7 @@
      seamless card (Banner rounds the top, this rounds the bottom). */
   margin-bottom: 1.5rem;
   width: 100%;
-  /* Accounts for the sticky header (72px) when scrolled to via #search-form,
+  /* Accounts for the sticky header (72px) when scrolled to via #paieska,
      so the form doesn't land partially hidden underneath it. */
   scroll-margin-top: 90px;
 }

@@ -46,7 +46,7 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
   };
 
   return (
-    <section className="search-form-section" id="search-form">
+    <section className="search-form-section" id="paieska">
       <div className="container">
         <form className="search-card" onSubmit={handleSubmit}>
           {/* Top Search Controls */}

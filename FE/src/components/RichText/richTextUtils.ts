@@ -28,6 +28,14 @@ export function isHtml(value: string | undefined | null): boolean {
   return Boolean(value && /^\s*</.test(value));
 }
 
+// True when there's nothing worth rendering — covers "" / [] / whitespace-only
+// AND Tiptap's empty-but-truthy "<p></p>" (admin typed something, then
+// deleted it all; toRichHtml() alone wouldn't catch that since it's non-empty
+// HTML with no visible text).
+export function isRichTextEmpty(value: string | string[] | undefined | null): boolean {
+  return stripHtml(toRichHtml(value)).length === 0;
+}
+
 let hooked = false;
 
 // Admin-authored HTML is still sanitized before it reaches the public site:

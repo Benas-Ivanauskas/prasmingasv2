@@ -178,6 +178,12 @@
   gap: 1.5rem;
 }
 
+/* Only one of Įskaičiuota/Neįskaičiuota has content — don't leave the other
+   grid column as empty blank space. */
+.trip-included-grid.is-single {
+  grid-template-columns: 1fr;
+}
+
 /* Now sits at the END of "Kelionės programa" (after the ticket list),
    not as its own tab — needs its own top spacing/divider since it no
    longer starts a fresh tab panel. */

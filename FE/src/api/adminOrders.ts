@@ -59,6 +59,11 @@ export interface AdminManualOrderInput {
   clientName: string;
   phone: string;
   email: string;
+  // Order.city — vienintelis šaltinis sąskaitų "Adresas" laukui (NE
+  // pickupCity, kuris yra autobuso įlipimo vieta, visai kitas dalykas).
+  // Viešame checkout'e šis laukas privalomas (BuyTravellerInfo.tsx), tad
+  // čia irgi privalomas, kitaip rankinio užsakymo sąskaitos liktų be adreso.
+  city: string;
   note?: string;
   // Admin GALI rankiniu būdu perrašyti sumą (derėtasi telefonu) —
   // leidžiama tik čia, NE viešam checkout'ui.

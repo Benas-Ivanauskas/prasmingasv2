@@ -2,11 +2,15 @@
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 2rem;
-  /* top-align both columns — now that the stepper/title/subtitle live above
-     this grid rather than inside .buy-session-main, the sidebar's top edge
-     lines up with the seat map/cabin picker cards' top edge instead of with
-     the title block. */
-  align-items: start;
+  /* STRETCH (not "start") is required for position:sticky to have room to
+     work on the sidebar (BuySessionSidebar.css) — with "start", the sticky
+     element's containing block shrinks to its own content height, leaving
+     it nowhere to move while scrolling. Both columns' content still starts
+     at the same visual top edge regardless — stretch only changes the
+     invisible bottom extent of each box (neither .buy-session-main nor
+     .buy-session-sidebar has its own background/border, so there's nothing
+     to visibly "stretch"). */
+  align-items: stretch;
   padding-bottom: 3rem;
 }
 
@@ -78,11 +82,12 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  /* The bus seat map is always much taller than the 3-row cabin list
-     (full seat grid vs. a handful of stepper rows) — stretching the cabin
-     card to match left a large empty void under it, so both just size to
-     their own content and start at the same top edge instead. */
-  align-items: start;
+  /* STRETCH (not "start") — needed so CruiseCabinPicker's sticky wrapper
+     (see CruiseCabinPicker.tsx/.css) has room to stay visible while
+     scrolling the (usually much taller) bus seat map. The VISIBLE cabin
+     card itself doesn't stretch — only its transparent sticky wrapper
+     does — so there's no empty void under it. */
+  align-items: stretch;
 }
 
 @media (max-width: 900px) {

@@ -9,7 +9,7 @@ import TripMemo from "./TripMemo";
 import TripReviews from "./TripReviews";
 import TripDepartureTickets from "./TripDepartureTickets";
 import RichText from "../RichText/RichText";
-import { isHtml } from "../RichText/richTextUtils";
+import { isHtml, isRichTextEmpty } from "../RichText/richTextUtils";
 import "./TripTabs.css";
 
 export type TripDetailTab = "program" | "tickets" | "pickup" | "memo";
@@ -41,6 +41,8 @@ export default function TripTabs({
   onOpenProgramImage,
 }: TripTabsProps) {
   const pickupPoints = selectedDeparture?.pickupPoints ?? [];
+  const hasInclusions = !isRichTextEmpty(trip.inclusions);
+  const hasExclusions = !isRichTextEmpty(trip.exclusions);
 
   // "Išvykimo vietos" only shows up once there are pickup points. "Atmintinė"
   // is always present for every trip type; it shows a placeholder until the
@@ -125,20 +127,30 @@ export default function TripTabs({
             <h3 className="trip-tickets-heading">Kelionės bilietai</h3>
             <TripDepartureTickets trip={trip} departures={departures} />
 
-            <div className="trip-included-grid trip-included-grid-end">
-              <div>
-                <h3>
-                  <IoCheckmarkCircleOutline aria-hidden="true" /> Įskaičiuota
-                </h3>
-                <RichText value={trip.inclusions} />
+            {(hasInclusions || hasExclusions) && (
+              <div
+                className={`trip-included-grid trip-included-grid-end ${
+                  hasInclusions && hasExclusions ? "" : "is-single"
+                }`}
+              >
+                {hasInclusions && (
+                  <div>
+                    <h3>
+                      <IoCheckmarkCircleOutline aria-hidden="true" /> Įskaičiuota
+                    </h3>
+                    <RichText value={trip.inclusions} />
+                  </div>
+                )}
+                {hasExclusions && (
+                  <div>
+                    <h3>
+                      <IoCloseCircleOutline aria-hidden="true" /> Neįskaičiuota
+                    </h3>
+                    <RichText value={trip.exclusions} />
+                  </div>
+                )}
               </div>
-              <div>
-                <h3>
-                  <IoCloseCircleOutline aria-hidden="true" /> Neįskaičiuota
-                </h3>
-                <RichText value={trip.exclusions} />
-              </div>
-            </div>
+            )}
           </>
         )}
 

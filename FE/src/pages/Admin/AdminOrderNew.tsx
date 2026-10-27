@@ -54,6 +54,7 @@ export default function AdminOrderNew() {
   const [clientName, setClientName] = useState("");
   const [phone, setPhone] = useState(PHONE_PREFIX);
   const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
   const [note, setNote] = useState("");
   const [totalAmountOverride, setTotalAmountOverride] = useState<number | null>(null);
   // Vieta/kajutė užimama IŠKART, nepriklausomai nuo šio pasirinkimo (žr.
@@ -191,6 +192,13 @@ export default function AdminOrderNew() {
       setError(emailError);
       return;
     }
+    if (!city.trim()) {
+      // Vienintelis šaltinis sąskaitų "Adresas" laukui (ne pickupCity —
+      // žr. order.city komentarą schema.prisma) — be jo rankinio užsakymo
+      // sąskaitos visada būtų be adreso.
+      setError("Įveskite kliento miestą.");
+      return;
+    }
     const incompleteIndex = displayedTravellers.findIndex(
       (t) =>
         !t.firstName.trim() ||
@@ -237,6 +245,7 @@ export default function AdminOrderNew() {
         clientName: clientName.trim(),
         phone: phone.trim(),
         email: email.trim(),
+        city: city.trim(),
         note: note.trim() || undefined,
         travellers: displayedTravellers,
         seatIds,
@@ -389,6 +398,10 @@ export default function AdminOrderNew() {
           <label className="admin-field">
             <span className="admin-field-label">El. paštas *</span>
             <input value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </label>
+          <label className="admin-field">
+            <span className="admin-field-label">Miestas *</span>
+            <input value={city} onChange={(e) => setCity(e.target.value)} required />
           </label>
           <label className="admin-field is-wide">
             <span className="admin-field-label">Pastaba</span>

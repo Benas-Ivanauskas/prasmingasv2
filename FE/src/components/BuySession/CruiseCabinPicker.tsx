@@ -31,7 +31,8 @@ export default function CruiseCabinPicker({
   const freeTravellers = Math.max(0, maxTravellers - selectedTravellers);
 
   return (
-    <div className="cruise-cabin-picker">
+    <div className="cruise-cabin-picker-sticky">
+      <div className="cruise-cabin-picker">
       <h3 className="cruise-cabin-picker-title">Pasirinkite kajutę</h3>
 
       <p
@@ -132,6 +133,7 @@ export default function CruiseCabinPicker({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
