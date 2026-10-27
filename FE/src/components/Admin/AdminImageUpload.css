@@ -9,6 +9,42 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
+  border-radius: var(--radius-md);
+  transition: opacity 0.15s ease, outline-color 0.15s ease;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+.admin-image-upload-item.is-dragging {
+  opacity: 0.4;
+}
+
+.admin-image-upload-item.is-drag-over {
+  outline-color: var(--primary);
+}
+
+.admin-image-upload-drag-handle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  font-size: 0.85rem;
+  line-height: 1;
+  user-select: none;
+  cursor: grab;
+}
+
+.admin-image-upload-drag-handle:active {
+  cursor: grabbing;
 }
 
 .admin-image-upload-item img {
@@ -17,6 +53,7 @@
   object-fit: cover;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
+  pointer-events: none;
 }
 
 .admin-image-upload-error {

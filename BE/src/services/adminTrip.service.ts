@@ -89,6 +89,31 @@ async function assertSlugAvailable(slug: string, excludeId?: string): Promise<vo
   }
 }
 
+// Dubliavimui — originalo slug/invoiceName niekada tiesiogiai nekopijuojami
+// (slug unikalus DB lygmeniu; invoiceName nėra unikalus DB lygmeniu, bet du
+// aktyvūs trip'ai su tuo pačiu invoiceName generuotų vienodai atrodančius,
+// bet skirtingiems pirkimams priklausančius sąskaitų numerius — žr.
+// duplicateAdminTrip() žemiau).
+async function uniqueSlug(base: string): Promise<string> {
+  let candidate = `${base}-kopija`;
+  let n = 2;
+  while (await prisma.trip.findUnique({ where: { slug: candidate } })) {
+    candidate = `${base}-kopija-${n}`;
+    n++;
+  }
+  return candidate;
+}
+
+async function uniqueInvoiceName(base: string): Promise<string> {
+  let candidate = `${base}2`;
+  let n = 3;
+  while (await prisma.trip.findFirst({ where: { invoiceName: candidate } })) {
+    candidate = `${base}${n}`;
+    n++;
+  }
+  return candidate;
+}
+
 function departureScalarData(dep: DepartureInput) {
   return {
     date: new Date(dep.date),
@@ -372,6 +397,98 @@ export async function createAdminTrip(input: TripInput, adminId: string) {
       entityType: "Trip",
       entityId: createdTrip.id,
       payload: { slug: createdTrip.slug, title: createdTrip.title },
+    }),
+  );
+
+  return serializeTrip(trip);
+}
+
+export async function duplicateAdminTrip(id: string, adminId: string) {
+  const original = await prisma.trip.findUnique({ where: { id }, include: adminTripInclude });
+  if (!original) {
+    throw new ApiError(404, "Kelionė nerasta");
+  }
+
+  const [newSlug, newInvoiceName] = await Promise.all([
+    uniqueSlug(original.slug),
+    uniqueInvoiceName(original.invoiceName),
+  ]);
+
+  const trip = await withAuditLog(
+    (tx) =>
+      tx.trip.create({
+        data: {
+          slug: newSlug,
+          title: `${original.title} (kopija)`,
+          shortDescription: original.shortDescription,
+          description: original.description,
+          tripType: original.tripType,
+          category: original.category,
+          destinationCountry: original.destinationCountry,
+          filterTags: original.filterTags,
+          invoiceName: newInvoiceName,
+          isActive: false, // VISADA false po dubliavimo, nepriklausomai nuo originalo
+          badgeTag: original.badgeTag,
+          isLastMinute: original.isLastMinute,
+          bannerImage: original.bannerImage === null ? Prisma.JsonNull : toJson(original.bannerImage),
+          images: toJson(original.images),
+          programDays: toJson(original.programDays),
+          inclusions: toJson(original.inclusions),
+          exclusions: toJson(original.exclusions),
+          travellerMemo: original.travellerMemo,
+          seoTitle: original.seoTitle,
+          seoDescription: original.seoDescription,
+          departures: {
+            create: original.departures.map((dep) => ({
+              date: dep.date, // KOPIJUOJAMA kaip yra — admin pats pakoreguos
+              pickupPoints: toJson(dep.pickupPoints),
+              durationDays: dep.durationDays,
+              cost: dep.cost,
+              discount: dep.discount,
+              guaranteeThreshold: dep.guaranteeThreshold,
+              guaranteedOverride: dep.guaranteedOverride,
+              remainingPaymentDays: dep.remainingPaymentDays,
+              depositPercentage: dep.depositPercentage,
+              depositDeadline: dep.depositDeadline,
+              status: dep.status,
+              flightSeatsTotal: dep.flightSeatsTotal,
+              // flightSeatsTaken NEĮTRAUKTAS — numatyta 0, server-authoritative
+              // (ta pati konvencija kaip createAdminTrip).
+              seats: {
+                // TIK seatNumber + BLOCKED/FREE — niekada TAKEN/HELD/travellerId
+                // (tai priklauso realiems Order/Traveller originalo trip'e).
+                // Identiška taisyklė kaip createAdminTrip aukščiau.
+                create: dep.seats.map((s) => ({
+                  seatNumber: s.seatNumber,
+                  status: s.status === "BLOCKED" ? "BLOCKED" : "FREE",
+                })),
+              },
+              cabinTypes: {
+                // takenUnits NEĮTRAUKTAS — numatyta 0 (niekada nekopijuojama parduota būsena).
+                create: dep.cabinTypes.map((c) => ({
+                  type: c.type,
+                  pricePerPerson: c.pricePerPerson,
+                  discount: c.discount,
+                  totalUnits: c.totalUnits,
+                })),
+              },
+              extraOptions: {
+                create: dep.extraOptions.map((e) => ({ name: e.name, price: e.price, sortOrder: e.sortOrder })),
+              },
+            })),
+          },
+          reviews: {
+            create: original.reviews.map((r) => ({ authorName: r.authorName, comment: r.comment })),
+          },
+        },
+        include: adminTripInclude,
+      }),
+    (createdTrip) => ({
+      adminId,
+      action: "trip.duplicate",
+      entityType: "Trip",
+      entityId: createdTrip.id,
+      payload: { sourceTripId: original.id, slug: createdTrip.slug, title: createdTrip.title },
     }),
   );
 

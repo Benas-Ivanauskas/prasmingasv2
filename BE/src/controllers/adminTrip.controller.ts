@@ -3,6 +3,7 @@ import { ApiError } from "../middleware/errorHandler.js";
 import {
   createAdminTrip,
   deleteAdminTrip,
+  duplicateAdminTrip,
   getAdminTripById,
   listAdminTrips,
   updateAdminTrip,
@@ -47,6 +48,12 @@ export async function updateTrip(req: Request, res: Response) {
   const force = req.query.force === "true";
   const trip = await updateAdminTrip(req.params.id as string, input, adminId, force);
   res.json(trip);
+}
+
+export async function duplicateTrip(req: Request, res: Response) {
+  const adminId = requireAdminId(req);
+  const trip = await duplicateAdminTrip(req.params.id as string, adminId);
+  res.status(201).json(trip);
 }
 
 export async function deleteTrip(req: Request, res: Response) {

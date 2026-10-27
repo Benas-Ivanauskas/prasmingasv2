@@ -32,7 +32,7 @@ export default function RequireAuth() {
   }
 
   if (status === "anon") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/prisijungti" replace />;
   }
 
   return <Outlet />;

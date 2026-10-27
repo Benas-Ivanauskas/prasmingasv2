@@ -215,6 +215,10 @@ function buildInvoiceData(order: OrderDocumentData, snapshot: PriceSnapshot, tri
       discountAmount: p.discountAmount.toFixed(2),
       couponDiscountPercent: String(couponDiscountPercent),
       couponDiscount: couponDiscount.toFixed(2),
+      // Tuščias masyvas = docxtemplater eilutės ciklas praleidžia visą
+      // lentelės eilutę (ta pati technika kaip 0€ extraOptions filtravimas) —
+      // "Nuolaida su kodu" nerodoma, jei kodas nebuvo pritaikytas šiam keleiviui.
+      couponLine: couponDiscount > 0 ? [{}] : [],
       // 0 € extra (pvz. "Gidas" įskaičiuotas nemokamai) NErodomas sąskaitoje
       // — atrodytų kaip triukšmas ("+0.00 €"), ne nauda; kainos skaičiavimui
       // (extrasTotal aukščiau) tai neturi įtakos, nes 0 sudėjimas nieko
@@ -227,8 +231,11 @@ function buildInvoiceData(order: OrderDocumentData, snapshot: PriceSnapshot, tri
   const total = users.reduce((sum, u) => sum + Number(u.price), 0);
   const mainTraveller = travellers[0];
 
+  // durationDays skaičiuoja KALENDORINES dienas imtinai (pvz. išvykimas 31
+  // d., trukmė 2 d. => grįžimas 01 d.), tad grįžimo data = išvykimas +
+  // (durationDays - 1), ne + durationDays.
   const tripReturnDate = new Date(order.departure.date);
-  tripReturnDate.setDate(tripReturnDate.getDate() + order.departure.durationDays);
+  tripReturnDate.setDate(tripReturnDate.getDate() + order.departure.durationDays - 1);
 
   // Kai klientas pažymėjo "Noriu PVM sąskaitos faktūros" IR perka kaip
   // įmonė (companyName užpildytas), dokumento pirkėjo blokas rodo ĮMONĘ,

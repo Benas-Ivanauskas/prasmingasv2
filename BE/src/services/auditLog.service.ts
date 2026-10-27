@@ -9,6 +9,7 @@ export type AuditAction =
   | "trip.create"
   | "trip.update"
   | "trip.delete"
+  | "trip.duplicate"
   | "discount.create"
   | "discount.update"
   | "discount.delete"

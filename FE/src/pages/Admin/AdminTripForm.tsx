@@ -188,7 +188,7 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
               }}
             />
           </Field>
-          <Field label="Adresas (slug) *" hint={`/trips/${trip.slug || "…"}`}>
+          <Field label="Adresas (slug) *" hint={`/kelione/${trip.slug || "…"}`}>
             <input
               value={trip.slug}
               onChange={(e) => {

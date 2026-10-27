@@ -44,6 +44,6 @@ export const env = {
     secure: (process.env.SMTP_SECURE ?? "0") === "1",
     user: process.env.SMTP_USER ?? "",
     pass: process.env.SMTP_PASS ?? "",
-    from: process.env.EMAIL_FROM ?? "Prasmingas <noreply@prasmingas.lt>",
+    from: process.env.EMAIL_FROM ?? "Prasmingam gyvenimui <info@prasmingas.lt>",
   },
 };

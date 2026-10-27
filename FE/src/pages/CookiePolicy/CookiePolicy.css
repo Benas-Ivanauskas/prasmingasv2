@@ -1,0 +1,71 @@
+.cookie-page {
+  padding: 2.5rem 0 4rem;
+}
+
+.cookie-page :where(h1, h2, p, ul, li, a) {
+  background-color: transparent;
+}
+
+.cookie-container {
+  max-width: 820px;
+}
+
+.cookie-page h1 {
+  font-size: 1.9rem;
+  margin: 0 0 2rem;
+  color: var(--text);
+}
+
+.cookie-page h2 {
+  font-size: 1.15rem;
+  margin: 2.2rem 0 0.9rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+
+.cookie-page h2:first-of-type {
+  margin-top: 0;
+}
+
+.cookie-page p {
+  color: var(--text);
+  line-height: 1.65;
+  margin: 0 0 0.9rem;
+}
+
+.cookie-page ul {
+  margin: 0 0 0.9rem;
+  padding-left: 1.3rem;
+}
+
+.cookie-page li {
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.cookie-page a {
+  color: var(--primary);
+}
+
+.cookie-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.2rem;
+  font-size: 0.92rem;
+}
+
+.cookie-page th,
+.cookie-page td {
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-light);
+  color: var(--text);
+  vertical-align: top;
+}
+
+.cookie-page th {
+  background-color: var(--surface-alt, #f8fafc);
+  font-weight: 700;
+}

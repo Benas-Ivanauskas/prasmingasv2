@@ -43,8 +43,11 @@ export async function generateContractPdf(orderId: string): Promise<Buffer> {
       ? snapshot.cabinBreakdown.map((c) => `${c.qty} x ${getCabinTypeLabel(c.type)}`).join(", ")
       : "";
 
+  // durationDays skaičiuoja KALENDORINES dienas imtinai (pvz. išvykimas 31
+  // d., trukmė 2 d. => grįžimas 01 d.), tad grįžimo data = išvykimas +
+  // (durationDays - 1), ne + durationDays.
   const tripReturnDate = new Date(order.departure.date);
-  tripReturnDate.setDate(tripReturnDate.getDate() + order.departure.durationDays);
+  tripReturnDate.setDate(tripReturnDate.getDate() + order.departure.durationDays - 1);
 
   // Ta pati logika kaip invoice.service.ts::buildInvoiceData — kai klientas
   // perka kaip įmonė, sutartis irgi rodo ĮMONĘ kaip pirkėją, ne keleivį.

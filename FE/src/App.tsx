@@ -5,6 +5,7 @@ import TripPage from "./pages/TripPage/TripPage";
 import Contacts from "./pages/Contacts/Contacts";
 import About from "./pages/About/About";
 import Terms from "./pages/Terms/Terms";
+import CookiePolicy from "./pages/CookiePolicy/CookiePolicy";
 import Login from "./pages/Login/Login";
 import RequireAuth from "./components/Admin/RequireAuth";
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -31,11 +32,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />}></Route>
-          <Route path="/trips/:slug" element={<TripPage />}></Route>
-          <Route path="/contacts" element={<Contacts />}></Route>
-          <Route path="/about" element={<About />}></Route>
+          <Route path="/kelione/:slug" element={<TripPage />}></Route>
+          <Route path="/kontaktai" element={<Contacts />}></Route>
+          <Route path="/apie-mus" element={<About />}></Route>
           <Route path="/organizuotos-turistines-keliones-salygos" element={<Terms />}></Route>
-          <Route path="/login" element={<Login />}></Route>
+          <Route path="/slapuku-politika" element={<CookiePolicy />}></Route>
+          <Route path="/prisijungti" element={<Login />}></Route>
           <Route element={<RequireAuth />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminHome />} />

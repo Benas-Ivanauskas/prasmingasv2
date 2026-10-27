@@ -50,6 +50,15 @@ export async function adminSaveTrip(trip: Trip, isNew = false, force = false): P
   return null;
 }
 
+export async function adminDuplicateTrip(id: string): Promise<Trip> {
+  const res = await fetch(`${API_URL}/api/admin/trips/${id}/duplicate`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res));
+  return res.json();
+}
+
 export async function adminDeleteTrip(id: string): Promise<void> {
   const res = await fetch(`${API_URL}/api/admin/trips/${id}`, {
     method: "DELETE",

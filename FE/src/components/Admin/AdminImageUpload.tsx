@@ -45,6 +45,8 @@ export default function AdminImageUpload({
   multiple = false,
 }: AdminImageUploadProps) {
   const [error, setError] = useState("");
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = async (fileList: FileList | null) => {
@@ -84,6 +86,14 @@ export default function AdminImageUpload({
     );
   };
 
+  const moveImage = (from: number, to: number) => {
+    if (from === to) return;
+    const next = [...images];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onChange(next.map((img, i) => ({ ...img, sortOrder: i })));
+  };
+
   // Single mode shows exactly one button either way — "add" when empty,
   // "replace" once a photo is set. Gallery mode always offers "add more".
   const addButtonLabel = multiple
@@ -99,7 +109,32 @@ export default function AdminImageUpload({
       {images.length > 0 && (
         <div className="admin-image-upload-grid">
           {images.map((img, i) => (
-            <div key={i} className="admin-image-upload-item">
+            <div
+              key={i}
+              className={`admin-image-upload-item${draggedIndex === i ? " is-dragging" : ""}${dragOverIndex === i && draggedIndex !== i ? " is-drag-over" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (draggedIndex !== null && draggedIndex !== i) setDragOverIndex(i);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedIndex !== null) moveImage(draggedIndex, i);
+                setDraggedIndex(null);
+                setDragOverIndex(null);
+              }}
+            >
+              <div
+                className="admin-image-upload-drag-handle"
+                title="Tempti ir perrikiuoti"
+                draggable
+                onDragStart={() => setDraggedIndex(i)}
+                onDragEnd={() => {
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+              >
+                ⠿
+              </div>
               <img src={img.url} alt={img.alt || ""} />
               <input
                 placeholder="Aprašymas (alt)"

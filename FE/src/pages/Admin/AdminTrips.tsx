@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { adminDeleteTrip, adminListTrips, adminSaveTrip } from "../../api/adminTrips";
+import { Link, useNavigate } from "react-router-dom";
+import { adminDeleteTrip, adminDuplicateTrip, adminListTrips, adminSaveTrip } from "../../api/adminTrips";
 import type { Trip, TripType } from "../../types/trip";
 
 const TYPE_LABELS: Record<TripType, string> = {
@@ -10,6 +10,7 @@ const TYPE_LABELS: Record<TripType, string> = {
 };
 
 export default function AdminTrips() {
+  const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
 
   const reload = () => adminListTrips().then((list) => setTrips([...list]));
@@ -33,6 +34,15 @@ export default function AdminTrips() {
     if (!window.confirm(`Ištrinti kelionę „${trip.title}“? Šio veiksmo atšaukti negalima.`)) return;
     await adminDeleteTrip(trip.id);
     reload();
+  };
+
+  const duplicate = async (trip: Trip) => {
+    try {
+      const created = await adminDuplicateTrip(trip.id);
+      navigate(`/admin/trips/${created.id}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Nepavyko dubliuoti kelionės");
+    }
   };
 
   return (
@@ -94,12 +104,15 @@ export default function AdminTrips() {
                   </td>
                   <td className="admin-actions">
                     <div>
-                    <Link to={`/trips/${trip.slug}`} target="_blank" className="admin-link">
+                    <Link to={`/kelione/${trip.slug}`} target="_blank" className="admin-link">
                       Peržiūrėti
                     </Link>
                     <Link to={`/admin/trips/${trip.id}`} className="admin-link">
                       Redaguoti
                     </Link>
+                    <button type="button" className="admin-link" onClick={() => duplicate(trip)}>
+                      Dubliuoti
+                    </button>
                     <button type="button" className="admin-link is-danger" onClick={() => remove(trip)}>
                       Ištrinti
                     </button>

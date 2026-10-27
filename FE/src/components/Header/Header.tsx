@@ -56,7 +56,7 @@ export default function Header() {
             </li>
             <li>
               <NavLink
-                to="/about"
+                to="/apie-mus"
                 className={({ isActive }) =>
                   `nav-link ${isActive ? "active" : ""}`
                 }
@@ -69,7 +69,7 @@ export default function Header() {
             </li>
             <li>
               <NavLink
-                to="/contacts"
+                to="/kontaktai"
                 className={({ isActive }) =>
                   `nav-link ${isActive ? "active" : ""}`
                 }

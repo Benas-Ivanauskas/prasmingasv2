@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createTrip,
   deleteTrip,
+  duplicateTrip,
   getTrip,
   listTrips,
   updateTrip,
@@ -16,4 +17,5 @@ adminTripRouter.get("/", listTrips);
 adminTripRouter.get("/:id", getTrip);
 adminTripRouter.post("/", createTrip);
 adminTripRouter.put("/:id", updateTrip);
+adminTripRouter.post("/:id/duplicate", duplicateTrip);
 adminTripRouter.delete("/:id", requireRole("ADMIN"), deleteTrip);

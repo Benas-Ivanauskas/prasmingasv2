@@ -160,7 +160,7 @@ export default function MainCard({ searchFilters = null, onClearSearch }: MainCa
   };
 
   const handleTripClick = (trip: Trip) => {
-    navigate(`/trips/${trip.slug}`);
+    navigate(`/kelione/${trip.slug}`);
   };
 
   return (

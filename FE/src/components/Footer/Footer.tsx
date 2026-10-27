@@ -117,10 +117,10 @@ export default function Footer() {
 
           <div className="footer-col">
             <h4 className="footer-col-title">Struktūra</h4>
-            <NavLink to="/about" className="footer-link">
+            <NavLink to="/apie-mus" className="footer-link">
               Apie mus
             </NavLink>
-            <NavLink to="/contacts" className="footer-link">
+            <NavLink to="/kontaktai" className="footer-link">
               Kontaktai
             </NavLink>
           </div>
@@ -142,6 +142,14 @@ export default function Footer() {
               className="footer-link"
             >
               Privatumo politika
+            </a>
+            <a
+              href={LEGAL_LINKS.cookiePolicy}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
+              Slapukų politika
             </a>
           </div>
         </div>

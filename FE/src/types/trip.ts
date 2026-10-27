@@ -94,7 +94,7 @@ export interface Trip {
   // the card's PHOTO (top-right corner, TripCard.tsx), not the small text
   // tag under the title. Independent of badgeTag; either/both/neither.
   isLastMinute?: boolean;
-  // Wide/panoramic format for the /trips/:slug cover ONLY (TripHero) —
+  // Wide/panoramic format for the /kelione/:slug cover ONLY (TripHero) —
   // separate from images[0], which is used everywhere else (list card,
   // buy-session sidebar, overview gallery). Falls back to images[0] when
   // unset, so existing trips need no migration.
