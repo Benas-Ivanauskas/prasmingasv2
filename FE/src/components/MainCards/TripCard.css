@@ -76,6 +76,31 @@
   color: #ffffff !important;
 }
 
+/* Top-Right "Paskutinė minutė" Badge — admin toggle (Trip.isLastMinute) */
+.trip-card-badge-lastminute {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+.trip-card-badge-lastminute svg {
+  font-size: 1.1rem;
+  color: #ffffff !important;
+}
+
 /* Bottom-Left Price Badge ("NUO 55.25 €") */
 .trip-card-badge-from {
   position: absolute;

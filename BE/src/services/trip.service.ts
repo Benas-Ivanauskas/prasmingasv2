@@ -57,6 +57,7 @@ const tripSelect = {
   filterTags: true,
   isActive: true,
   badgeTag: true,
+  isLastMinute: true,
   bannerImage: true,
   images: true,
   programDays: true,

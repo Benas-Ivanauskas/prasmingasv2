@@ -6,6 +6,7 @@ import {
   IoGlobeOutline,
   IoChevronDown,
   IoChevronUp,
+  IoTimeOutline,
 } from "react-icons/io5";
 import type { Trip, TripType } from "../../types/trip";
 import {
@@ -110,6 +111,15 @@ export default function TripCard({ trip, mainDepartureId, onClick, className = "
           {renderTypeIcon(trip.tripType)}
           <span>{duration}d.</span>
         </div>
+
+        {/* Top-Right "Paskutinė minutė" Badge — admin-only toggle (Trip.isLastMinute),
+            independent of the free-text badgeTag shown in the card body below. */}
+        {trip.isLastMinute && (
+          <div className="trip-card-badge-lastminute">
+            <IoTimeOutline aria-hidden="true" />
+            <span>Paskutinė minutė</span>
+          </div>
+        )}
 
         {/* Bottom-Left Starting Price Badge ("NUO 55.25 €") */}
         <div className="trip-card-badge-from">

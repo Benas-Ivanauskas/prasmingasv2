@@ -73,6 +73,8 @@ export interface CheckoutRequestBody {
   pickupCity?: string;
   pickupTime?: string;
   wantsInvoice: boolean;
+  companyName?: string;
+  companyDetails?: string;
   wantsDeposit: boolean;
   discountCode?: string;
   userComment?: string;

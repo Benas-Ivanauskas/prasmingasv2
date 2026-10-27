@@ -66,6 +66,7 @@ export const tripInputSchema = z.object({
   invoiceName: z.string().min(1),
   isActive: z.boolean().default(true),
   badgeTag: z.string().nullable().optional(),
+  isLastMinute: z.boolean().default(false),
   bannerImage: z.unknown().nullable().optional(),
   images: z.array(z.unknown()).default([]),
   programDays: z.array(z.unknown()).default([]),

@@ -41,6 +41,8 @@ export default function BuyTripDetails() {
   >(null);
   const [wantsDeposit, setWantsDeposit] = useState(restoredSelection?.wantsDeposit ?? false);
   const [wantsInvoice, setWantsInvoice] = useState(restoredSelection?.wantsInvoice ?? false);
+  const [companyName, setCompanyName] = useState(restoredSelection?.companyName ?? "");
+  const [companyDetails, setCompanyDetails] = useState(restoredSelection?.companyDetails ?? "");
 
   // Restauruoja anksčiau pritaikytą nuolaidos kodą (atėjus iš Step 2
   // "← Atgal") — lookup dabar realus BE kvietimas, tad vyksta asinchroniškai
@@ -109,6 +111,8 @@ export default function BuyTripDetails() {
       discountCode: appliedDiscount?.code,
       wantsDeposit: payingDeposit,
       wantsInvoice,
+      companyName: wantsInvoice ? companyName.trim() || undefined : undefined,
+      companyDetails: wantsInvoice ? companyDetails.trim() || undefined : undefined,
     };
     navigate(`/buy/${trip.slug}/${departure.id}/seats`, { state: tripDetailsState });
   };
@@ -245,6 +249,28 @@ export default function BuyTripDetails() {
                 />
                 Noriu gauti sąskaitą faktūrą
               </label>
+              {wantsInvoice && (
+                <div className="traveller-fields" style={{ marginTop: "0.75rem" }}>
+                  <label>
+                    Įmonės pavadinimas
+                    <input
+                      type="text"
+                      placeholder="Jei perka įmonė — palikite tuščia, jei fizinis asmuo"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Rekvizitai
+                    <textarea
+                      rows={3}
+                      placeholder="Įmonės kodas, PVM mokėtojo kodas, adresas"
+                      value={companyDetails}
+                      onChange={(e) => setCompanyDetails(e.target.value)}
+                    />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 

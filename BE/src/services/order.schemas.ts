@@ -27,6 +27,11 @@ export const checkoutInputSchema = z.object({
   pickupCity: z.string().optional(),
   pickupTime: z.string().optional(),
   wantsInvoice: z.boolean().default(false),
+  // Tik laisvo teksto laukai — asmuo/įmonė neatskiriama atskiru flag'u,
+  // sprendžiama pagal tai, ar companyName užpildytas (žr. invoice.service.ts
+  // ::buildInvoiceData). Abu neprivalomi net ir wantsInvoice=true atveju.
+  companyName: z.string().trim().optional(),
+  companyDetails: z.string().trim().optional(),
   wantsDeposit: z.boolean().default(false),
   discountCode: z.string().optional(),
   userComment: z.string().max(2000).optional(),

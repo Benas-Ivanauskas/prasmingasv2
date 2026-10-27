@@ -273,6 +273,8 @@ export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
           totalAmount: pricing.finalTotal,
           priceSnapshot,
           wantsInvoice: input.wantsInvoice,
+          companyName: input.companyName || null,
+          companyDetails: input.companyDetails || null,
           userComment: input.userComment,
           discountId: discountRow?.id,
           userEmail: input.contact.email,

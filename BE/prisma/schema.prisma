@@ -89,6 +89,11 @@ model Trip {
   // apmokėjimo instrukcijos, organizatoriaus info ir pan.) — ne kiekviena kelionė turi.
   travellerMemo      String?
   badgeTag           String?      // pvz. "Paskutinė minutė!", rodoma kortelėje/trip page
+  // Admin'o rankinis perjungiklis — rodo raudoną ženkliuką kortelės
+  // nuotraukos dešiniame viršutiniame kampe (TripCard.tsx). Atskirai nuo
+  // badgeTag (laisvo teksto ženkliuko kortelės KŪNE po pavadinimu) —
+  // abu gali būti naudojami kartu arba nepriklausomai vienas nuo kito.
+  isLastMinute       Boolean      @default(false)
 
   seoTitle           String?
   seoDescription     String?
@@ -261,6 +266,14 @@ model Order {
   //   extrasTotal, cabinBreakdown?: [{ type, qty, unitPrice }] }
   priceSnapshot Json
   wantsInvoice  Boolean     @default(false)
+  // Užpildoma TIK kai wantsInvoice=true, IR net tada neprivaloma (privatus
+  // asmuo palieka tuščia). Kai companyName užpildytas, generuojami
+  // dokumentai (isankstine-saskaita/kelionės sutartis/PVM sąskaita
+  // faktūra) rodo ĮMONĘ kaip pirkėją vietoj pirmo keleivio (žr.
+  // invoice.service.ts::buildInvoiceData). companyDetails — laisvas
+  // tekstas (įmonės kodas/PVM kodas/adresas, kaip pats klientas surašo).
+  companyName    String?
+  companyDetails String?
   userComment   String?
   discountId    String?
   discount      Discount?   @relation(fields: [discountId], references: [id])

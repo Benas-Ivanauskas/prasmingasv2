@@ -134,6 +134,8 @@ export default function BuyTravellerInfo() {
         city: "",
         pickupCity: "",
         wantsInvoice: seatSelection.wantsInvoice ?? false,
+        companyName: seatSelection.companyName,
+        companyDetails: seatSelection.companyDetails,
       }
   );
   // One set of selected extras per traveller — extras like baggage are

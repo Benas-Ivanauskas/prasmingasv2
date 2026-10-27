@@ -124,6 +124,7 @@ function tripScalarData(input: TripInput) {
     invoiceName: input.invoiceName,
     isActive: input.isActive,
     badgeTag: input.badgeTag ?? null,
+    isLastMinute: input.isLastMinute,
     bannerImage: input.bannerImage === null || input.bannerImage === undefined ? Prisma.JsonNull : toJson(input.bannerImage),
     images: toJson(input.images),
     programDays: toJson(input.programDays),

@@ -199,6 +199,8 @@ export default function BuyPayment() {
         contact: { email: booking.contact.email, phone: booking.contact.phone, city: booking.contact.city },
         pickupCity: booking.contact.pickupCity || undefined,
         wantsInvoice: booking.contact.wantsInvoice,
+        companyName: booking.contact.companyName,
+        companyDetails: booking.contact.companyDetails,
         wantsDeposit: Boolean(booking.wantsDeposit),
         discountCode: booking.discountCode,
         userComment: comment || undefined,
@@ -382,7 +384,11 @@ export default function BuyPayment() {
               </span>
               <span className="payment-contact-chip">
                 <IoReceiptOutline aria-hidden="true" />
-                {booking.contact.wantsInvoice ? "Su PVM sąskaita faktūra" : "Be sąskaitos faktūros"}
+                {booking.contact.wantsInvoice
+                  ? booking.contact.companyName
+                    ? `Sąskaita faktūra: ${booking.contact.companyName}`
+                    : "Su PVM sąskaita faktūra"
+                  : "Be sąskaitos faktūros"}
               </span>
             </div>
           </div>

@@ -90,6 +90,10 @@ export interface Trip {
   nextInvoiceNumber?: number;
   isActive?: boolean;
   badgeTag?: string; // e.g., "Paskutinė minutė!", "Paskutinė minutė! Sekmadienis"
+  // Separate admin toggle from badgeTag above — shows a red ribbon badge on
+  // the card's PHOTO (top-right corner, TripCard.tsx), not the small text
+  // tag under the title. Independent of badgeTag; either/both/neither.
+  isLastMinute?: boolean;
   // Wide/panoramic format for the /trips/:slug cover ONLY (TripHero) —
   // separate from images[0], which is used everywhere else (list card,
   // buy-session sidebar, overview gallery). Falls back to images[0] when

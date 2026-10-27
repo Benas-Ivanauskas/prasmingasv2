@@ -228,6 +228,8 @@ export default function BuyOneSession() {
       discountCode: restoredSelection?.discountCode,
       wantsDeposit: restoredSelection?.wantsDeposit,
       wantsInvoice: restoredSelection?.wantsInvoice,
+      companyName: restoredSelection?.companyName,
+      companyDetails: restoredSelection?.companyDetails,
       // Filtruojame nulines reikšmes PRIEŠ perduodant toliau — kitaip BE
       // checkout'o zod schema (cabinSelections: z.record(..., z.number().
       // int().positive())) atmeta VISĄ užsakymą su "expected number to be

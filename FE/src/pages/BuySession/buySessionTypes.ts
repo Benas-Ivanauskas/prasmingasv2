@@ -10,6 +10,13 @@ export interface ContactForm {
   city: string;
   pickupCity: string; // BUS/CRUISE only — which of the departure's pickupPoints
   wantsInvoice: boolean; // mirrors schema.prisma's Order.wantsInvoice
+  // Only ever filled in when wantsInvoice is true, and even then optional
+  // (a private person just leaves these blank) — mirror schema.prisma's
+  // Order.companyName/companyDetails. When companyName is present, the
+  // generated invoice/contract documents show the company as the buyer
+  // instead of the first traveller (see BE invoice.service.ts::buildInvoiceData).
+  companyName?: string;
+  companyDetails?: string; // free text — code/VAT code/address, however the buyer wants to write it
 }
 
 // Step 1's ("Kelionė") own decisions — date (implicit, via the URL's
@@ -22,6 +29,8 @@ export interface TripDetailsState {
   discountCode?: string;
   wantsDeposit: boolean;
   wantsInvoice: boolean;
+  companyName?: string;
+  companyDetails?: string;
 }
 
 // What Step 2 (Vietos) hands off to Step 3 (Keleiviai) via router state — the
@@ -48,6 +57,8 @@ export interface SeatSelectionState {
   discountCode?: string;
   wantsDeposit?: boolean;
   wantsInvoice?: boolean;
+  companyName?: string;
+  companyDetails?: string;
 }
 
 // Legal-document acknowledgements collected once per order (not per

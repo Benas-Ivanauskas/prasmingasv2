@@ -233,6 +233,14 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
             />
             Kelionė aktyvi (rodoma svetainėje)
           </label>
+          <label className="admin-check">
+            <input
+              type="checkbox"
+              checked={trip.isLastMinute ?? false}
+              onChange={(e) => set("isLastMinute", e.target.checked)}
+            />
+            Paskutinės minutės kelionė (raudonas ženkliukas ant kortelės nuotraukos)
+          </label>
           <div className="admin-field is-wide">
             <span className="admin-field-label">Trumpas aprašymas</span>
             <RichTextEditor

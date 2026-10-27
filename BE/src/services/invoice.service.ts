@@ -215,7 +215,11 @@ function buildInvoiceData(order: OrderDocumentData, snapshot: PriceSnapshot, tri
       discountAmount: p.discountAmount.toFixed(2),
       couponDiscountPercent: String(couponDiscountPercent),
       couponDiscount: couponDiscount.toFixed(2),
-      extraOptions: p.extras.map((e) => ({ extraName: e.name, extraPrice: e.price.toFixed(2) })),
+      // 0 € extra (pvz. "Gidas" įskaičiuotas nemokamai) NErodomas sąskaitoje
+      // — atrodytų kaip triukšmas ("+0.00 €"), ne nauda; kainos skaičiavimui
+      // (extrasTotal aukščiau) tai neturi įtakos, nes 0 sudėjimas nieko
+      // nekeičia — filtruojama TIK rodomas sąrašas, ne pati suma.
+      extraOptions: p.extras.filter((e) => e.price > 0).map((e) => ({ extraName: e.name, extraPrice: e.price.toFixed(2) })),
       price: price.toFixed(2),
     };
   });
@@ -226,11 +230,17 @@ function buildInvoiceData(order: OrderDocumentData, snapshot: PriceSnapshot, tri
   const tripReturnDate = new Date(order.departure.date);
   tripReturnDate.setDate(tripReturnDate.getDate() + order.departure.durationDays);
 
+  // Kai klientas pažymėjo "Noriu PVM sąskaitos faktūros" IR perka kaip
+  // įmonė (companyName užpildytas), dokumento pirkėjo blokas rodo ĮMONĘ,
+  // ne pirmą keleivį — telefonas/el.paštas LIEKA kontaktinio asmens (kažkas
+  // realus vis tiek turi būti pasiekiamas).
+  const isCompany = Boolean(order.companyName?.trim());
+
   return {
-    mainTravellersName: `${mainTraveller.firstName} ${mainTraveller.lastName}`,
+    mainTravellersName: isCompany ? order.companyName!.trim() : `${mainTraveller.firstName} ${mainTraveller.lastName}`,
     mainNumber: order.userPhone ?? "",
     mainEmail: order.userEmail,
-    mainAddress: order.city ?? "",
+    mainAddress: isCompany ? (order.companyDetails?.trim() ?? "") : (order.city ?? ""),
     tripName: order.departure.trip.title,
     numberOfCust: travellers.length,
     tripDate: formatDate(order.departure.date),

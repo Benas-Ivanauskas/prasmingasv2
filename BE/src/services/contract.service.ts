@@ -46,13 +46,21 @@ export async function generateContractPdf(orderId: string): Promise<Buffer> {
   const tripReturnDate = new Date(order.departure.date);
   tripReturnDate.setDate(tripReturnDate.getDate() + order.departure.durationDays);
 
+  // Ta pati logika kaip invoice.service.ts::buildInvoiceData — kai klientas
+  // perka kaip įmonė, sutartis irgi rodo ĮMONĘ kaip pirkėją, ne keleivį.
+  const isCompany = Boolean(order.companyName?.trim());
+
   const data = {
     date: formatDate(new Date()),
     orderNumber: order.orderNumber,
     mainNumber: order.userPhone ?? "",
     mainEmail: order.userEmail,
-    mainAddress: order.city ?? "",
-    mainTravellersName: mainTraveller ? `${mainTraveller.firstName} ${mainTraveller.lastName}` : "",
+    mainAddress: isCompany ? (order.companyDetails?.trim() ?? "") : (order.city ?? ""),
+    mainTravellersName: isCompany
+      ? order.companyName!.trim()
+      : mainTraveller
+        ? `${mainTraveller.firstName} ${mainTraveller.lastName}`
+        : "",
     users: travellers.map((t) => ({
       name: `${t.firstName} ${t.lastName}`,
       birthdate: formatDate(t.birthDate),

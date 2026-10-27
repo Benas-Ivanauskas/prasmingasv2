@@ -16,6 +16,8 @@ export async function getOrderDocumentData(orderId: string) {
       city: true,
       pickupCity: true,
       userComment: true,
+      companyName: true,
+      companyDetails: true,
       priceSnapshot: true,
       totalAmount: true,
       discount: { select: { code: true, type: true, value: true } },
