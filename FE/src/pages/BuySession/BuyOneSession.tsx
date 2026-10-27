@@ -228,7 +228,15 @@ export default function BuyOneSession() {
       discountCode: restoredSelection?.discountCode,
       wantsDeposit: restoredSelection?.wantsDeposit,
       wantsInvoice: restoredSelection?.wantsInvoice,
-      ...(trip.tripType === "CRUISE" ? { cabinSelections } : {}),
+      // Filtruojame nulines reikšmes PRIEŠ perduodant toliau — kitaip BE
+      // checkout'o zod schema (cabinSelections: z.record(..., z.number().
+      // int().positive())) atmeta VISĄ užsakymą su "expected number to be
+      // >0", nes React state čia natūraliai turi po 0 įrašą kiekvienam
+      // NEpasirinktam kajutės tipui (ne tik pasirinktiems). Ta pati
+      // filtravimo logika, kuri jau naudojama aukščiau statant hold'o body.
+      ...(trip.tripType === "CRUISE"
+        ? { cabinSelections: Object.fromEntries(Object.entries(cabinSelections).filter(([, qty]) => qty > 0)) }
+        : {}),
       ...hold,
     };
     navigate(`/buy/${trip.slug}/${departure.id}/travellers?count=${passengerCount}`, {
