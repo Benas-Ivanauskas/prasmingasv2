@@ -1,3 +1,13 @@
+/* Normally redundant (the grid item itself is already stretched by
+   .buy-session-body's align-items:stretch), but BuyOneSession.tsx wraps
+   this <aside> in an extra plain <div> (for the hold-error message) that
+   sits between it and the grid cell — without this, <aside> would collapse
+   to its own content height there, breaking the sticky card's room to
+   move even though its grandparent grid cell is correctly stretched. */
+.buy-session-sidebar {
+  height: 100%;
+}
+
 .buy-session-sidebar-card {
   background-color: var(--surface);
   border: 1px solid var(--border-light);

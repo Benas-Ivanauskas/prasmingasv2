@@ -346,7 +346,11 @@ function assertDepartureRemovable(
 }
 
 export async function listAdminTrips() {
-  const trips = await prisma.trip.findMany({ include: adminTripInclude, orderBy: { createdAt: "desc" } });
+  const trips = await prisma.trip.findMany({
+    where: { archived: false },
+    include: adminTripInclude,
+    orderBy: { createdAt: "desc" },
+  });
   const serialized = trips.map(serializeTrip);
   await Promise.all(serialized.map(applyHoldAvailability));
   return serialized;
@@ -581,7 +585,10 @@ export async function deleteAdminTrip(id: string, adminId: string) {
 
       const hasOrders = await tx.order.findFirst({ where: { departure: { tripId: id } } });
       if (hasOrders) {
-        await tx.trip.update({ where: { id }, data: { isActive: false } });
+        // archived=true papildomai paslepia iš listAdminTrips() — be šito
+        // pakartotinis "Ištrinti" paspaudimas atrodytų, lyg nieko nevyktų,
+        // nes kelionė VIS TIEK liktų matoma admin sąraše kaip "Paslėpta".
+        await tx.trip.update({ where: { id }, data: { isActive: false, archived: true } });
         return { id, slug: trip.slug, softDeleted: true };
       }
 

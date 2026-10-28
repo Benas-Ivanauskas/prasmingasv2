@@ -71,6 +71,13 @@ model Trip {
   invoiceName        String       // trumpas pavadinimas sąskaitoms, pvz. "TAU", "KEN"
   nextInvoiceNumber  Int          @default(1) // atomic increment sąskaitų numeracijai (žr. InvoiceService)
   isActive           Boolean      @default(true)
+  // Pažymima TIK adminTrip.service.ts::deleteAdminTrip soft-delete šakoje
+  // (kelionė turi susijusių Order įrašų, tad tikras DB ištrynimas neįmanomas
+  // dėl Order->Departure FK) — NIEKADA rankiniu "Aktyvi/Paslėpta" perjungimu
+  // (tas pats, kas visada, lieka tik isActive). Paslepia kelionę IŠ VISO iš
+  // admin'o sąrašo (listAdminTrips), kad pakartotinis "Ištrinti" paspaudimas
+  // nebeatrodytų, lyg niekas nevyktų — duomenys DB'je lieka nepaliesti.
+  archived           Boolean      @default(false)
 
   images             Json         @default("[]") // [{ url, alt, sortOrder }] — @vercel/blob URL'ai
   // { url, alt, sortOrder } arba null — platus/panoraminis formatas TIK /trips/:slug
@@ -138,9 +145,13 @@ model Departure {
   cost                 Decimal         @db.Decimal(10, 2) // bazinė kaina bus/flight; kruizui nenaudojama tiesiogiai
   discount             Decimal?        @db.Decimal(10, 2) // visada procentas (pvz. 20 = 20%) — žr. FE getTripPricing, nėra atskiro "fiksuota suma" varianto šiam laukui
   // "Garantuota kelionė" ženklas pagrindiniame puslapyje/kortelėje. isGuaranteed = TRUE, jei
-  // (parduota_vietų / bendras_vietų * 100) >= guaranteeThreshold, ARBA guaranteedOverride = true
-  // (adminas gali rankiniu būdu pažymėti kaip garantuotą nepriklausomai nuo užpildymo %).
-  guaranteeThreshold   Int?            // procentas (0-100), nuo kada laikoma "garantuota" automatiškai
+  // parduota_vietų >= guaranteeThreshold, ARBA guaranteedOverride = true (adminas gali rankiniu
+  // būdu pažymėti kaip garantuotą nepriklausomai nuo rezervacijų skaičiaus). guaranteeThreshold
+  // yra ŽMONIŲ SKAIČIUS (ne procentas — adminui nepatogu skaičiuotis procentaliai), žr.
+  // FE/src/utils/tripHelpers.ts::getTripAvailability. Null → numatyta 70% nuo talpos (skaičiuojama
+  // dinamiškai). Iki 2026-10-28 šis laukas buvo procentas (0-100) — konvertuota vienkartiniu
+  // skriptu `prisma/convert-guarantee-threshold.ts`.
+  guaranteeThreshold   Int?            // žmonių skaičius, nuo kada laikoma "garantuota" automatiškai
   guaranteedOverride   Boolean         @default(false)
   remainingPaymentDays Int             @default(5) // kiek dienų prieš kelionę siųsti likusio mokėjimo priminimą (taip pat naudojama depozito likučio terminui skaičiuoti, žr. depositPercentage)
   // e.g. 30 = siūloma 30% depozito galimybė checkout metu; null/0 = tik pilnas apmokėjimas.

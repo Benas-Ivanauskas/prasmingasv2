@@ -321,7 +321,7 @@ export default function BuyOneSession() {
             )}
           </div>
 
-          <div>
+          <div className="buy-session-sidebar-wrap">
             {holdError && <p className="hold-error">{holdError}</p>}
             <BuySessionSidebar
               trip={trip}

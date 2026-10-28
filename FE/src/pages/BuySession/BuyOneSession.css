@@ -19,6 +19,19 @@
   flex-direction: column;
 }
 
+/* This page (uniquely among the 4 buy steps) wraps BuySessionSidebar in an
+   extra plain <div> to fit the hold-error message above it. That wrapper
+   sits BETWEEN the stretched grid cell and .buy-session-sidebar (the
+   sidebar's own root, see BuySessionSidebar.css) — without an explicit
+   height, it collapses to its own content size (block default), breaking
+   the stretch chain the sticky card needs, even though the grid cell
+   itself is correctly stretched. height:100% here plus on
+   .buy-session-sidebar (BuySessionSidebar.css) relays the real, stretched
+   height all the way down to the sticky card. */
+.buy-session-sidebar-wrap {
+  height: 100%;
+}
+
 /* Every element here defaults to a white background via index.css's global
    `body, * { background-color: var(--surface) }` reset — anything in this
    page that doesn't explicitly want its own background (plain text, labels,

@@ -300,29 +300,38 @@ export interface AvailabilityInfo {
   isSoldOut: boolean;
 }
 
+// Shared by getTripAvailability (below) and the admin departure editor's
+// "Garantuota nuo" hint — total/taken headcount, counted consistently
+// across all 3 trip types (CRUISE cabins counted in PEOPLE via unit size,
+// not raw cabin units). totalSeats is null when the departure has no
+// capacity configured at all yet (distinct from a configured-but-empty 0).
+export function getDepartureCapacity(departure?: Departure): { totalSeats: number | null; takenSeats: number } {
+  if (!departure) return { totalSeats: null, takenSeats: 0 };
+
+  if (departure.seats && departure.seats.length > 0) {
+    const totalSeats = departure.seats.length;
+    const freeSeats = departure.seats.filter((s) => s.status === "FREE").length;
+    return { totalSeats, takenSeats: totalSeats - freeSeats };
+  }
+  if (departure.flightSeatsTotal != null) {
+    return { totalSeats: departure.flightSeatsTotal, takenSeats: departure.flightSeatsTaken ?? 0 };
+  }
+  if (departure.cabinTypes && departure.cabinTypes.length > 0) {
+    // Units differ per type (places vs cabins), so count people.
+    const totalSeats = departure.cabinTypes.reduce((acc, c) => acc + c.totalUnits * getCabinUnitSize(c.type), 0);
+    const takenSeats = departure.cabinTypes.reduce((acc, c) => acc + c.takenUnits * getCabinUnitSize(c.type), 0);
+    return { totalSeats, takenSeats };
+  }
+  return { totalSeats: null, takenSeats: 0 };
+}
+
 export function getTripAvailability(departure?: Departure): AvailabilityInfo {
   if (!departure) {
     return { text: "vietų yra", isGuaranteed: false, isSoldOut: false };
   }
 
-  let freeSeats: number | null = null;
-  let totalSeats = 0;
-  let takenSeats = 0;
-
-  if (departure.seats && departure.seats.length > 0) {
-    totalSeats = departure.seats.length;
-    freeSeats = departure.seats.filter((s) => s.status === "FREE").length;
-    takenSeats = totalSeats - freeSeats;
-  } else if (departure.flightSeatsTotal != null) {
-    totalSeats = departure.flightSeatsTotal;
-    takenSeats = departure.flightSeatsTaken ?? 0;
-    freeSeats = Math.max(0, totalSeats - takenSeats);
-  } else if (departure.cabinTypes && departure.cabinTypes.length > 0) {
-    // Units differ per type (places vs cabins), so count people.
-    totalSeats = departure.cabinTypes.reduce((acc, c) => acc + c.totalUnits * getCabinUnitSize(c.type), 0);
-    takenSeats = departure.cabinTypes.reduce((acc, c) => acc + c.takenUnits * getCabinUnitSize(c.type), 0);
-    freeSeats = Math.max(0, totalSeats - takenSeats);
-  }
+  const { totalSeats, takenSeats } = getDepartureCapacity(departure);
+  const freeSeats = totalSeats === null ? null : Math.max(0, totalSeats - takenSeats);
 
   const isSoldOut = freeSeats !== null && freeSeats <= 0;
 
@@ -333,10 +342,14 @@ export function getTripAvailability(departure?: Departure): AvailabilityInfo {
     text = `liko ${freeSeats} viet.`;
   }
 
-  // Guaranteed departure logic: either override is true or percentage of taken seats exceeds threshold
-  const threshold = departure.guaranteeThreshold || 70;
-  const takenPercent = totalSeats > 0 ? (takenSeats / totalSeats) * 100 : 0;
-  const isGuaranteed = departure.guaranteedOverride || (totalSeats > 0 && takenPercent >= threshold);
+  // Guaranteed departure logic: either override is true, or the number of
+  // booked travellers reaches an admin-set headcount threshold (people, not
+  // a percentage — easier for admins to reason about than a % of capacity).
+  // No explicit threshold set → fall back to the same 70%-of-capacity
+  // default this always used, just computed as a headcount now.
+  const threshold = departure.guaranteeThreshold ?? (totalSeats !== null ? Math.ceil(totalSeats * 0.7) : Infinity);
+  const isGuaranteed =
+    departure.guaranteedOverride || (totalSeats !== null && totalSeats > 0 && takenSeats >= threshold);
 
   return {
     text,

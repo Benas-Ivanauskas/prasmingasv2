@@ -43,6 +43,9 @@ export interface Departure {
   durationDays: number;
   cost: number;
   discount: number | null; // e.g. 20 (meaning 20%)
+  // Headcount, not a percentage — e.g. 25 meaning "guaranteed once 25
+  // travellers have booked". null falls back to 70% of capacity (see
+  // tripHelpers.ts::getTripAvailability).
   guaranteeThreshold: number | null;
   guaranteedOverride: boolean;
   remainingPaymentDays?: number;

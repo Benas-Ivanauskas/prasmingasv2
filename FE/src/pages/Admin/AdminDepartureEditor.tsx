@@ -1,6 +1,6 @@
 import type { CabinTypeName, Departure, DepartureStatus, TripType } from "../../types/trip";
 import { BUS_SIZES, resizeSeats } from "../../api/adminTrips";
-import { getCabinTypeLabel } from "../../utils/tripHelpers";
+import { getCabinTypeLabel, getDepartureCapacity } from "../../utils/tripHelpers";
 import BusSeatMap from "../../components/BuySession/BusSeatMap";
 import { Field, NumberInput } from "./AdminFormFields";
 import { patchAt, removeAt } from "./adminFormHelpers";
@@ -34,6 +34,7 @@ export default function AdminDepartureEditor({
   const cabinTypes = d.cabinTypes ?? [];
   const extraOptions = d.extraOptions ?? [];
   const busSize = d.seats?.length ?? 0;
+  const { totalSeats: capacity } = getDepartureCapacity(d);
 
   // Leidžia adminui pažymėti/atžymėti FREE↔BLOCKED vietas (gidui/personalui) —
   // HELD/TAKEN niekada nepaliečiamos čia (tikras užsakymas, apsaugota BE pusėje).
@@ -84,7 +85,10 @@ export default function AdminDepartureEditor({
             ))}
           </select>
         </Field>
-        <Field label="Garantuota nuo (% užpildymo)">
+        <Field
+          label="Garantuota nuo (žmonių skaičiaus)"
+          hint={capacity !== null ? `Iš viso vietų: ${capacity}. Palikus tuščią — 70% nuo šio skaičiaus.` : undefined}
+        >
           <NumberInput
             min={0}
             value={d.guaranteeThreshold}
