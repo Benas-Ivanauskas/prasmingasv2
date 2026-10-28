@@ -1,9 +1,10 @@
+import { useState } from "react";
 import type { CabinTypeName, Departure, DepartureStatus, TripType } from "../../types/trip";
 import { BUS_SIZES, resizeSeats } from "../../api/adminTrips";
 import { getCabinTypeLabel, getDepartureCapacity } from "../../utils/tripHelpers";
 import BusSeatMap from "../../components/BuySession/BusSeatMap";
 import { Field, NumberInput } from "./AdminFormFields";
-import { patchAt, removeAt } from "./adminFormHelpers";
+import { patchAt, removeAt, moveAt } from "./adminFormHelpers";
 
 interface Props {
   index: number;
@@ -35,6 +36,8 @@ export default function AdminDepartureEditor({
   const extraOptions = d.extraOptions ?? [];
   const busSize = d.seats?.length ?? 0;
   const { totalSeats: capacity } = getDepartureCapacity(d);
+  const [draggedPickupIndex, setDraggedPickupIndex] = useState<number | null>(null);
+  const [pickupDragOverIndex, setPickupDragOverIndex] = useState<number | null>(null);
 
   // Leidžia adminui pažymėti/atžymėti FREE↔BLOCKED vietas (gidui/personalui) —
   // HELD/TAKEN niekada nepaliečiamos čia (tikras užsakymas, apsaugota BE pusėje).
@@ -181,7 +184,34 @@ export default function AdminDepartureEditor({
         </p>
       )}
       {pickupPoints.map((p, i) => (
-        <div key={i} className="admin-row">
+        <div
+          key={i}
+          className={`admin-row admin-row-draggable${draggedPickupIndex === i ? " is-dragging" : ""}${pickupDragOverIndex === i && draggedPickupIndex !== i ? " is-drag-over" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (draggedPickupIndex !== null && draggedPickupIndex !== i) setPickupDragOverIndex(i);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (draggedPickupIndex !== null) {
+              onChange({ pickupPoints: moveAt(pickupPoints, draggedPickupIndex, i) });
+            }
+            setDraggedPickupIndex(null);
+            setPickupDragOverIndex(null);
+          }}
+        >
+          <span
+            className="admin-row-drag-handle"
+            title="Tempti ir perrikiuoti"
+            draggable
+            onDragStart={() => setDraggedPickupIndex(i)}
+            onDragEnd={() => {
+              setDraggedPickupIndex(null);
+              setPickupDragOverIndex(null);
+            }}
+          >
+            ⠿
+          </span>
           <input
             placeholder={tripType === "FLIGHT" ? "Oro uostas" : "Miestas"}
             value={p.city}

@@ -90,6 +90,19 @@
 
 .admin-footer-actions {
   justify-content: flex-end;
+  /* Floats above the form content while scrolling instead of only being
+     reachable at the very bottom of a long form — admin explicitly okay
+     with it overlapping content underneath it. */
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -4px 12px rgba(23, 59, 58, 0.08);
 }
 
 .admin-btn-ghost {
@@ -286,6 +299,41 @@
 .admin-row > input,
 .admin-row > select {
   flex: 1;
+}
+
+.admin-row-draggable {
+  border-radius: var(--radius-md);
+  transition: opacity 0.15s ease, outline-color 0.15s ease;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+.admin-row-draggable.is-dragging {
+  opacity: 0.4;
+}
+
+.admin-row-draggable.is-drag-over {
+  outline-color: var(--primary);
+}
+
+.admin-row-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  background-color: var(--border-light);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  user-select: none;
+  cursor: grab;
+}
+
+.admin-row-drag-handle:active {
+  cursor: grabbing;
 }
 
 .admin-add {
