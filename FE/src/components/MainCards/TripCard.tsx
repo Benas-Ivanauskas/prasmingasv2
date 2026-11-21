@@ -63,10 +63,11 @@ export default function TripCard({ trip, mainDepartureId, onClick, className = "
     ? orderedDepartures
     : orderedDepartures.slice(0, 1);
 
-  // Tag highlight logic
+  // Tag highlight logic — badgeTag/isLastMinute dabar priklauso konkrečiam
+  // išvykimui (Departure), ne visai kelionei, tad skaitomi iš mainDeparture.
   const tagText =
-    trip.badgeTag ||
-    (trip.badgeTag === ""
+    mainDeparture?.badgeTag ||
+    (mainDeparture?.badgeTag === ""
       ? ""
       : mainPricing.hasDiscount
       ? "Paskutinė minutė!"
@@ -112,9 +113,9 @@ export default function TripCard({ trip, mainDepartureId, onClick, className = "
           <span>{duration}d.</span>
         </div>
 
-        {/* Top-Right "Paskutinė minutė" Badge — admin-only toggle (Trip.isLastMinute),
+        {/* Top-Right "Paskutinė minutė" Badge — admin-only toggle (Departure.isLastMinute),
             independent of the free-text badgeTag shown in the card body below. */}
-        {trip.isLastMinute && (
+        {mainDeparture?.isLastMinute && (
           <div className="trip-card-badge-lastminute">
             <IoTimeOutline aria-hidden="true" />
             <span>Paskutinė minutė</span>

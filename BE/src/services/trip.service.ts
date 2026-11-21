@@ -26,6 +26,8 @@ const departureSelect = {
   status: true,
   flightSeatsTotal: true,
   flightSeatsTaken: true,
+  badgeTag: true,
+  isLastMinute: true,
   seats: { select: { id: true, seatNumber: true, status: true } },
   cabinTypes: {
     select: {
@@ -56,8 +58,6 @@ const tripSelect = {
   destinationCountry: true,
   filterTags: true,
   isActive: true,
-  badgeTag: true,
-  isLastMinute: true,
   bannerImage: true,
   images: true,
   programDays: true,

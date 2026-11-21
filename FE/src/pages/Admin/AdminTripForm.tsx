@@ -216,10 +216,10 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
           <Field label="Sąskaitų trumpinys *" hint="Pvz. TAU, KEN">
             <input value={trip.invoiceName ?? ""} onChange={(e) => set("invoiceName", e.target.value)} />
           </Field>
-          <Field label="Ženkliukas (badge)" hint="Pvz. Paskutinė minutė!">
-            <input value={trip.badgeTag ?? ""} onChange={(e) => set("badgeTag", e.target.value)} />
-          </Field>
-          <Field label="Filtrų žymos" hint="Per kablelį: uzsienyje, autobusu, italija">
+          <Field
+            label="Filtrų žymos"
+            hint="Per kablelį: uzsienyje, autobusu, italija. „kaledines“ — rodo antraštės filtre „Kalėdinės ir naujametinės“."
+          >
             <input
               value={(trip.filterTags ?? []).join(",")}
               onChange={(e) => set("filterTags", e.target.value.split(","))}
@@ -232,14 +232,6 @@ function AdminTripForm({ initial, isNew }: { initial: Trip; isNew?: boolean }) {
               onChange={(e) => set("isActive", e.target.checked)}
             />
             Kelionė aktyvi (rodoma svetainėje)
-          </label>
-          <label className="admin-check">
-            <input
-              type="checkbox"
-              checked={trip.isLastMinute ?? false}
-              onChange={(e) => set("isLastMinute", e.target.checked)}
-            />
-            Paskutinės minutės kelionė (raudonas ženkliukas ant kortelės nuotraukos)
           </label>
           <div className="admin-field is-wide">
             <span className="admin-field-label">Trumpas aprašymas</span>

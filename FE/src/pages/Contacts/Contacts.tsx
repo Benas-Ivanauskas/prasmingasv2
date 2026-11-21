@@ -145,6 +145,11 @@ export default function Contacts() {
                 </div>
 
                 <div className="contacts-meta-row">
+                  <span className="contacts-info-label">PVM mokėtojo kodas</span>
+                  <span className="contacts-info-value">LT100016276316</span>
+                </div>
+
+                <div className="contacts-meta-row">
                   <span className="contacts-info-label">Adresas</span>
                   <span className="contacts-info-value">
                     Vytauto g. 131-4, Garliava, LT-53210 Kauno r.

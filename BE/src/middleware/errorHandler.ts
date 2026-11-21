@@ -18,8 +18,19 @@ export function notFoundHandler(req: Request, res: Response) {
 export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
   const status = err instanceof ApiError ? err.status : 500;
 
+  // Anksčiau TIK 5xx buvo loginama — kiekviena 4xx klaida (pvz. "vieta jau
+  // užimta", "nebeliko bilietų", webhook'o atmestas parašas) tyliai
+  // dingdavo be jokio pėdsako, liko tik bendra pino-http eilutė su statusu,
+  // be PRIEŽASTIES. Dabar loginama VISADA (req.log — susietas su tos pačios
+  // užklausos pino-http req.id, kad būtų lengva susieti su jos completion
+  // eilute); err.stack (pino automatinis err serializeris) parodo TIKSLIAI,
+  // kurioje funkcijoje/faile klaida kilo, be papildomo rankinio žymėjimo
+  // kiekvienoje throw vietoje.
+  const context = { err, method: req.method, path: req.originalUrl };
   if (status >= 500) {
-    logger.error({ err }, "Unhandled error");
+    (req.log ?? logger).error(context, "Unhandled error");
+  } else {
+    (req.log ?? logger).warn(context, err instanceof Error ? err.message : "Request error");
   }
 
   // Nenumatytoms (5xx) klaidoms klientui NIEKADA nesiunčiamas err.message —

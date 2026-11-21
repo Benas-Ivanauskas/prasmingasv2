@@ -56,51 +56,18 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Category Filter Tabs */
-.main-cards-tabs {
+/* Rastų kelionių kiekis + "Išvalyti filtrus" (kairė .main-cards-toolbar pusė) —
+   kategorijų pilys perkeltos į Header.tsx, čia jų nebelieka. */
+.main-cards-count-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.category-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background-color: var(--surface) !important;
-  color: var(--text);
+.main-cards-count {
   font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.category-tab:hover {
-  background-color: var(--primary-soft) !important;
-  border-color: var(--primary);
-  color: var(--primary-dark);
-}
-
-.category-tab.active {
-  background-color: var(--primary) !important;
-  border-color: var(--primary);
-  color: #ffffff !important;
-}
-
-.category-tab .tab-count {
-  font-size: 0.76rem;
-  padding: 1px 6px;
-  border-radius: 10px;
-  background-color: rgba(0, 0, 0, 0.08) !important;
-  color: inherit;
-}
-
-.category-tab.active .tab-count {
-  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: var(--text-muted);
 }
 
 /* Clear-all-filters action, only shown while a search or tab is active */

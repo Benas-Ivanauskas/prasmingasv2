@@ -68,7 +68,6 @@ export const mockTrips: Trip[] = [
     tripType: "BUS",
     category: "SIGHTSEEING",
     destinationCountry: "Latvija",
-    badgeTag: "",
     filterTags: ["uzsienyje", "pazintines", "autobusu", "latvija"],
     invoiceName: "LAT",
     nextInvoiceNumber: 1,
@@ -313,6 +312,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteedOverride: true,
         remainingPaymentDays: 1,
         status: "ACTIVE",
+        badgeTag: "",
         seats: makeBusSeats(
           "s-lat-1",
           48,
@@ -357,6 +357,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         depositPercentage: 30,
         depositDeadline: "2026-10-15T00:00:00.000Z",
         status: "ACTIVE",
+        badgeTag: "",
         seats: makeBusSeats("s-lat-2", 53),
         extraOptions: [
           {
@@ -385,7 +386,6 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
     tripType: "BUS",
     category: "SIGHTSEEING",
     destinationCountry: "Lietuva",
-    badgeTag: "Paskutinė minutė!",
     filterTags: ["lietuva", "pazintines", "autobusu", "savaitgaliui"],
     invoiceName: "SIA",
     nextInvoiceNumber: 1,
@@ -447,6 +447,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteedOverride: true,
         remainingPaymentDays: 2,
         status: "ACTIVE",
+        badgeTag: "Paskutinė minutė!",
         // Smaller 48-seat bus — demo of a different bus size per trip.
         seats: makeBusSeats("s-siauliai", 48, [3, 4, 17]),
         extraOptions: [
@@ -476,7 +477,6 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
     tripType: "BUS",
     category: "SIGHTSEEING",
     destinationCountry: "Lietuva",
-    badgeTag: "Paskutinė minutė! Sekmadienis",
     filterTags: ["lietuva", "pazintines", "autobusu", "savaitgaliui"],
     invoiceName: "MIL",
     nextInvoiceNumber: 1,
@@ -543,6 +543,7 @@ Prievolių užtikrinimo draudimas Nr. 710-741-101069, ERGO Insurance SE Lietuvos
         guaranteedOverride: true,
         remainingPaymentDays: 3,
         status: "ACTIVE",
+        badgeTag: "Paskutinė minutė! Sekmadienis",
         seats: makeBusSeats("s-bistrampolis", 49, [3, 4, 15, 16, 27]),
         extraOptions: [
           {

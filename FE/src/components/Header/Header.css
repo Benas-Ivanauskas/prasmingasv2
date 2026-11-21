@@ -16,11 +16,96 @@
   background-color: transparent;
 }
 
-.header-container {
+/* Kontaktų juosta virš pagrindinės antraštės eilutės */
+.header-topbar {
+  background-color: var(--primary-dark) !important;
+}
+
+.header-topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 72px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-block: 6px;
+  font-size: 0.8rem;
+}
+
+.header-topbar-contacts {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.header-topbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-decoration: none;
+}
+
+.header-topbar-item:hover {
+  color: #ffffff !important;
+}
+
+.header-topbar-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.header-topbar-link:hover {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.header-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+  min-height: 72px;
+  padding-block: 8px;
+}
+
+.header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.header-search-btn:hover {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
 }
 
 /* Brand Logo / Title */
@@ -43,35 +128,76 @@
   color: var(--primary-dark);
 }
 
-/* Navigation List (Desktop) */
-.header-nav {
-  display: flex;
+/* Filtrų hamburger mygtukas + jo atsidarantis skydelis. Pakeičia anksčiau
+   visada rodytą pilių eilutę — ji per plačią/daug punktų turinčią
+   kategorijų sąrašą priversdavo sticky antraštę augti į 2 eilutes, kurios
+   scrolinant uždengia nemažai turinio. Dabar antraštės eilutė visada
+   lieka ta pati vieno aukščio: logotipas + "Filtrai" mygtukas + paieška. */
+.filters-btn {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-light);
+  background-color: var(--surface) !important;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filters-btn svg {
+  font-size: 1.1rem;
+}
+
+.filters-btn:hover,
+.filters-btn.is-open {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  border-color: transparent;
+}
+
+.filters-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 270px;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 8px;
+  z-index: 110;
+}
+
+.filters-panel.is-open {
+  display: block;
 }
 
 .navbar-list {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 2px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.navbar-list li {
-  display: flex;
-}
-
 .nav-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 9999px;
-  font-size: 0.95rem;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
   font-weight: 500;
   color: var(--text-muted);
   text-decoration: none;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -79,7 +205,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .nav-label {
@@ -97,120 +224,129 @@
   font-weight: 600;
 }
 
-/* User Profile / Login Action */
-.header-user {
-  display: flex;
-  align-items: center;
-}
-
-.user-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 9999px;
-  background-color: var(--primary-soft) !important;
-  color: var(--primary) !important;
-  font-weight: 600;
-  font-size: 0.95rem;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.user-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-}
-
-.user-btn:hover {
-  background-color: var(--primary) !important;
-  color: #ffffff !important;
-}
-
 /* =========================================
    MOBILE RESPONSIVE (<= 768px)
    ========================================= */
 
 @media (max-width: 768px) {
+  .header-topbar-inner {
+    font-size: 0.72rem;
+    padding-block: 5px;
+  }
+
+  /* Siauras ekranas (pvz. 375px) — logotipas + "Filtrai" mygtukas +
+     paieška turi tilpti vienoje eilutėje, tad tarpai/paddingai čia
+     sutraukiami kiek galima labiau nekeičiant likusios dizaino logikos. */
   .header-container {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "brand user"
-      "nav   nav";
-    row-gap: 12px;
-    height: auto;
-    padding-top: 12px;
-    padding-bottom: 10px;
+    gap: 6px 8px;
+    min-height: 56px;
+    padding-block: 6px;
+  }
+
+  .header-right-group {
+    gap: 4px;
+  }
+
+  .filters-btn {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    gap: 5px;
+  }
+
+  .filters-btn svg {
+    font-size: 1.25rem;
+  }
+
+  .header-search-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.92rem;
+  }
+
+  .header-topbar-contacts {
+    gap: 10px;
+  }
+
+  /* Telefono/el.pašto/FB ikonos didesnės ir be teksto šalia (vietos
+     taupymui), bet "Apie mus"/"Kontaktai" tekstas lieka matomas. */
+  .header-topbar-item span {
+    display: none;
+  }
+
+  .header-topbar-item svg {
+    font-size: 1.25rem;
+  }
+
+  .header-topbar-link {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+
+  .header-topbar-link svg {
+    font-size: 1.15rem;
   }
 
   .header-brand {
-    grid-area: brand;
-    align-self: center;
     min-width: 0;
   }
 
   .brand-logo {
-    font-size: clamp(0.78rem, 3.4vw, 0.92rem);
+    font-size: clamp(0.82rem, 3.6vw, 0.95rem);
     letter-spacing: -0.02em;
     line-height: 1.2;
   }
 
-  .header-user {
-    grid-area: user;
-    align-self: center;
-    flex-shrink: 0;
+  .filters-panel {
+    right: 0;
+    left: 0;
+    width: auto;
+  }
+}
+
+/* =========================================
+   DESKTOP (>= 1080px) — pilys visada matomos eilutėje,
+   hamburger mygtukas/skydelis liko tik siauresniems ekranams.
+   ========================================= */
+
+@media (min-width: 1080px) {
+  .header-container {
+    flex-wrap: nowrap;
   }
 
-  .user-btn {
-    padding: 6px 12px;
-    font-size: 0.82rem;
-    gap: 5px;
-    white-space: nowrap;
+  .header-right-group {
+    gap: 8px;
   }
 
-  .header-nav {
-    grid-area: nav;
-    width: 100%;
-    border-top: 1px solid var(--border-light);
-    padding-top: 8px;
+  .filters-btn {
+    display: none;
+  }
+
+  .header-filters {
+    display: flex;
+    min-width: 0;
+  }
+
+  .filters-panel {
+    display: flex !important;
+    position: static;
+    background-color: transparent !important;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    width: auto;
   }
 
   .navbar-list {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 2px;
   }
 
   .nav-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 8px 4px;
-    border-radius: var(--radius-md);
-    gap: 4px;
-    text-align: center;
-  }
-
-  .nav-icon {
-    font-size: 1.3rem;
-  }
-
-  .nav-label {
-    font-size: 0.75rem;
+    padding: 6px 9px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    gap: 5px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  .nav-link.active {
-    background-color: var(--primary-soft) !important;
-    color: var(--primary) !important;
   }
 }

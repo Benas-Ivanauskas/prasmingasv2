@@ -127,6 +127,12 @@ export default function AdminDepartureEditor({
             }
           />
         </Field>
+        <Field label="Ženkliukas (badge)" hint="Pvz. Paskutinė minutė! — rodomas TIK šios datos kortelėje.">
+          <input
+            value={d.badgeTag ?? ""}
+            onChange={(e) => onChange({ badgeTag: e.target.value })}
+          />
+        </Field>
         <label className="admin-check">
           <input
             type="checkbox"
@@ -134,6 +140,14 @@ export default function AdminDepartureEditor({
             onChange={(e) => onChange({ guaranteedOverride: e.target.checked })}
           />
           Visada žymėti kaip garantuotą
+        </label>
+        <label className="admin-check">
+          <input
+            type="checkbox"
+            checked={d.isLastMinute ?? false}
+            onChange={(e) => onChange({ isLastMinute: e.target.checked })}
+          />
+          Paskutinės minutės kelionė (raudonas ženkliukas ant kortelės nuotraukos)
         </label>
       </div>
 

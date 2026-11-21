@@ -59,6 +59,14 @@ export interface Departure {
   status: DepartureStatus;
   flightSeatsTotal?: number | null;
   flightSeatsTaken?: number;
+  // Per-departure — viena kelionė gali turėti kelias datas, rodomas kaip
+  // kelios atskiros kortelės (viena/departure), tad ženkliukas turi liesti
+  // TIK vieną konkrečią datą, ne visas iš karto.
+  badgeTag?: string | null; // e.g., "Paskutinė minutė!", "Paskutinė minutė! Sekmadienis"
+  // Separate admin toggle from badgeTag above — shows a red ribbon badge on
+  // the card's PHOTO (top-right corner, TripCard.tsx), not the small text
+  // tag under the title. Independent of badgeTag; either/both/neither.
+  isLastMinute?: boolean;
   seats?: Seat[];
   cabinTypes?: CabinType[];
   extraOptions?: ExtraOption[];
@@ -92,11 +100,6 @@ export interface Trip {
   invoiceName?: string;
   nextInvoiceNumber?: number;
   isActive?: boolean;
-  badgeTag?: string; // e.g., "Paskutinė minutė!", "Paskutinė minutė! Sekmadienis"
-  // Separate admin toggle from badgeTag above — shows a red ribbon badge on
-  // the card's PHOTO (top-right corner, TripCard.tsx), not the small text
-  // tag under the title. Independent of badgeTag; either/both/neither.
-  isLastMinute?: boolean;
   // Wide/panoramic format for the /kelione/:slug cover ONLY (TripHero) —
   // separate from images[0], which is used everywhere else (list card,
   // buy-session sidebar, overview gallery). Falls back to images[0] when

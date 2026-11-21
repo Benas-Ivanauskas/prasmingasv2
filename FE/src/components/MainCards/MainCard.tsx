@@ -1,19 +1,23 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { IoCloseCircleOutline } from "react-icons/io5";
 import { fetchTrips } from "../../api/trips";
-import type { Trip, TripType, TripSearchFilters } from "../../types/trip";
+import type { Trip, TripSearchFilters } from "../../types/trip";
 import {
   getTripCardEntries,
   getTripPricing,
   matchesSearchFilters,
+  pluralizeLt,
   type TripCardEntry,
 } from "../../utils/tripHelpers";
 import TripCard from "./TripCard";
 import Pagination from "./Pagination";
 import "./MainCard.css";
 
-type CategoryFilter = "ALL" | TripType | "GUARANTEED";
+// Kategorijų pilys gyvena Header.tsx (veikia iš bet kurio puslapio, kaip
+// "/?category=BUS"), ne čia — šis komponentas tik SKAITO ?category iš URL,
+// kad abu komponentai dalintųsi ta pačia filtro būsena be prop-drilling.
+export type CategoryFilter = "ALL" | "BUS" | "FLIGHT" | "CRUISE" | "GUARANTEED" | "CHRISTMAS";
 type SortOption = "default" | "price-asc" | "price-desc" | "date-asc";
 
 const ITEMS_PER_PAGE = 20;
@@ -25,6 +29,7 @@ interface MainCardProps {
 
 export default function MainCard({ searchFilters = null, onClearSearch }: MainCardProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Track which cards have their dates expanded
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
@@ -40,7 +45,7 @@ export default function MainCard({ searchFilters = null, onClearSearch }: MainCa
       return newSet;
     });
   };
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("ALL");
+  const selectedCategory = (searchParams.get("category") as CategoryFilter) || "ALL";
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const sectionRef = useRef<HTMLElement>(null);
@@ -73,23 +78,59 @@ export default function MainCard({ searchFilters = null, onClearSearch }: MainCa
   );
 
   // Reset to a clean "ALL" view whenever a new search comes in, so a leftover
-  // tab selection from a previous search can't silently zero out the results.
-  // Adjusted during render (React's recommended pattern for resetting state
-  // in response to a prop change) rather than in an effect, which would cost
-  // an extra render pass — see react-hooks/set-state-in-effect.
-  const [prevSearchFilters, setPrevSearchFilters] = useState(searchFilters);
-  if (searchFilters !== prevSearchFilters) {
-    setPrevSearchFilters(searchFilters);
-    setSelectedCategory("ALL");
+  // category selection from a previous search can't silently zero out the
+  // results. The category now lives in the URL (set from Header.tsx, which
+  // is reachable from every page) rather than local state, so this reset
+  // is a navigation side effect — an effect, not the in-render derived-state
+  // trick the old purely-local version used. Skips its very first run (on
+  // mount) — otherwise landing directly on "/?category=BUS" from Header
+  // would immediately strip the category it was supposed to apply.
+  const isFirstSearchRender = useRef(true);
+  useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false;
+      return;
+    }
+    if (searchParams.has("category")) {
+      setSearchParams(
+        (prev) => {
+          prev.delete("category");
+          return prev;
+        },
+        { replace: true }
+      );
+    }
+    setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFilters]);
+
+  // Clicking a category pill in Header.tsx navigates here with a new
+  // ?category= value — reset back to page 1 so a stale page number from a
+  // previous (possibly shorter) category list can't land out of range.
+  // Render-time derived-state comparison (not an effect) — React's own
+  // recommended pattern for resetting state in response to a prop/URL
+  // change, avoids an extra render pass (the searchFilters reset above
+  // has to be an effect instead, since it also needs to call
+  // setSearchParams — a navigation side effect, not just local state).
+  const [prevCategory, setPrevCategory] = useState(selectedCategory);
+  if (selectedCategory !== prevCategory) {
+    setPrevCategory(selectedCategory);
     setCurrentPage(1);
   }
 
   // Filter cards by category
   const filteredCardEntries = useMemo(() => {
     return searchFilteredEntries.filter(({ trip, departure }) => {
-      if (selectedCategory === "ALL") return true;
-      if (selectedCategory === "GUARANTEED") return departure.guaranteedOverride;
-      return trip.tripType === selectedCategory;
+      switch (selectedCategory) {
+        case "ALL":
+          return true;
+        case "GUARANTEED":
+          return departure.guaranteedOverride;
+        case "CHRISTMAS":
+          return trip.filterTags?.includes("kaledines") ?? false;
+        default:
+          return trip.tripType === selectedCategory;
+      }
     });
   }, [searchFilteredEntries, selectedCategory]);
 
@@ -123,26 +164,15 @@ export default function MainCard({ searchFilters = null, onClearSearch }: MainCa
     return sortedCardEntries.slice(start, start + ITEMS_PER_PAGE);
   }, [sortedCardEntries, currentPage]);
 
-  // Category counts (reflect the current search, not the whole catalog)
-  const categoryCounts = useMemo(() => {
-    return {
-      ALL: searchFilteredEntries.length,
-      BUS: searchFilteredEntries.filter((e) => e.trip.tripType === "BUS").length,
-      FLIGHT: searchFilteredEntries.filter((e) => e.trip.tripType === "FLIGHT").length,
-      CRUISE: searchFilteredEntries.filter((e) => e.trip.tripType === "CRUISE").length,
-      GUARANTEED: searchFilteredEntries.filter((e) => e.departure.guaranteedOverride).length,
-    };
-  }, [searchFilteredEntries]);
-
-  const handleCategoryChange = (category: CategoryFilter) => {
-    setSelectedCategory(category);
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters = searchFilters !== null || selectedCategory !== "ALL";
+  const hasActiveFilters = searchFilters !== null;
 
   const handleResetFilters = () => {
-    setSelectedCategory("ALL");
+    if (searchParams.has("category")) {
+      setSearchParams((prev) => {
+        prev.delete("category");
+        return prev;
+      });
+    }
     setCurrentPage(1);
     onClearSearch?.();
   };
@@ -177,54 +207,15 @@ export default function MainCard({ searchFilters = null, onClearSearch }: MainCa
             </div>
           </div>
 
-          {/* Filter Toolbar */}
+          {/* Filter Toolbar — kategorijų pilys dabar Header.tsx (veikia iš bet
+              kurio puslapio per "/?category=X"), čia lieka tik rastų kelionių
+              kiekis (kairėje) ir rūšiavimas (dešinėje). */}
           <div className="main-cards-toolbar">
-            <div className="main-cards-tabs" role="tablist" aria-label="Kelionių tipai">
-              <button
-                type="button"
-                className={`category-tab ${selectedCategory === "ALL" ? "active" : ""}`}
-                onClick={() => handleCategoryChange("ALL")}
-              >
-                Visos
-                <span className="tab-count">{categoryCounts.ALL}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`category-tab ${selectedCategory === "BUS" ? "active" : ""}`}
-                onClick={() => handleCategoryChange("BUS")}
-              >
-                Autobusu
-                <span className="tab-count">{categoryCounts.BUS}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`category-tab ${selectedCategory === "FLIGHT" ? "active" : ""}`}
-                onClick={() => handleCategoryChange("FLIGHT")}
-              >
-                Lėktuvu
-                <span className="tab-count">{categoryCounts.FLIGHT}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`category-tab ${selectedCategory === "CRUISE" ? "active" : ""}`}
-                onClick={() => handleCategoryChange("CRUISE")}
-              >
-                Kruizai
-                <span className="tab-count">{categoryCounts.CRUISE}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`category-tab ${selectedCategory === "GUARANTEED" ? "active" : ""}`}
-                onClick={() => handleCategoryChange("GUARANTEED")}
-              >
-                Garantuotos
-                <span className="tab-count">{categoryCounts.GUARANTEED}</span>
-              </button>
-
+            <div className="main-cards-count-group">
+              <span className="main-cards-count">
+                Rasta {sortedCardEntries.length}{" "}
+                {pluralizeLt(sortedCardEntries.length, "kelionė", "kelionės", "kelionių")}
+              </span>
               {hasActiveFilters && (
                 <button
                   type="button"

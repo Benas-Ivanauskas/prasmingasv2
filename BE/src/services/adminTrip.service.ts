@@ -129,6 +129,8 @@ function departureScalarData(dep: DepartureInput) {
     status: dep.status,
     flightSeatsTotal: dep.flightSeatsTotal ?? null,
     // flightSeatsTaken sąmoningai NEĮTRAUKTAS — server-authoritative, keičiamas tik checkout transakcijoje.
+    badgeTag: dep.badgeTag ?? null,
+    isLastMinute: dep.isLastMinute,
   };
 }
 
@@ -148,8 +150,6 @@ function tripScalarData(input: TripInput) {
     filterTags: input.filterTags,
     invoiceName: input.invoiceName,
     isActive: input.isActive,
-    badgeTag: input.badgeTag ?? null,
-    isLastMinute: input.isLastMinute,
     bannerImage: input.bannerImage === null || input.bannerImage === undefined ? Prisma.JsonNull : toJson(input.bannerImage),
     images: toJson(input.images),
     programDays: toJson(input.programDays),
@@ -432,8 +432,6 @@ export async function duplicateAdminTrip(id: string, adminId: string) {
           filterTags: original.filterTags,
           invoiceName: newInvoiceName,
           isActive: false, // VISADA false po dubliavimo, nepriklausomai nuo originalo
-          badgeTag: original.badgeTag,
-          isLastMinute: original.isLastMinute,
           bannerImage: original.bannerImage === null ? Prisma.JsonNull : toJson(original.bannerImage),
           images: toJson(original.images),
           programDays: toJson(original.programDays),
@@ -456,6 +454,8 @@ export async function duplicateAdminTrip(id: string, adminId: string) {
               depositDeadline: dep.depositDeadline,
               status: dep.status,
               flightSeatsTotal: dep.flightSeatsTotal,
+              badgeTag: dep.badgeTag,
+              isLastMinute: dep.isLastMinute,
               // flightSeatsTaken NEĮTRAUKTAS — numatyta 0, server-authoritative
               // (ta pati konvencija kaip createAdminTrip).
               seats: {

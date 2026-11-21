@@ -29,7 +29,6 @@ async function main() {
         invoiceName: trip.invoiceName || trip.slug.slice(0, 10).toUpperCase(),
         nextInvoiceNumber: trip.nextInvoiceNumber ?? 1,
         isActive: trip.isActive ?? true,
-        badgeTag: trip.badgeTag || null,
         bannerImage: trip.bannerImage ?? undefined,
         images: trip.images ?? [],
         programDays: trip.programDays ?? [],
@@ -53,6 +52,8 @@ async function main() {
             status: dep.status ?? "ACTIVE",
             flightSeatsTotal: dep.flightSeatsTotal ?? null,
             flightSeatsTaken: dep.flightSeatsTaken ?? 0,
+            badgeTag: dep.badgeTag || null,
+            isLastMinute: dep.isLastMinute ?? false,
             seats: {
               create: (dep.seats ?? []).map((s) => ({ seatNumber: s.seatNumber, status: s.status })),
             },

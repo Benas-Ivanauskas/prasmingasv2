@@ -95,12 +95,6 @@ model Trip {
   // Laisvo teksto blokas "Atmintinė" skirtukui (išvykimo vietos/laikai, sutarties sąlygos,
   // apmokėjimo instrukcijos, organizatoriaus info ir pan.) — ne kiekviena kelionė turi.
   travellerMemo      String?
-  badgeTag           String?      // pvz. "Paskutinė minutė!", rodoma kortelėje/trip page
-  // Admin'o rankinis perjungiklis — rodo raudoną ženkliuką kortelės
-  // nuotraukos dešiniame viršutiniame kampe (TripCard.tsx). Atskirai nuo
-  // badgeTag (laisvo teksto ženkliuko kortelės KŪNE po pavadinimu) —
-  // abu gali būti naudojami kartu arba nepriklausomai vienas nuo kito.
-  isLastMinute       Boolean      @default(false)
 
   seoTitle           String?
   seoDescription     String?
@@ -162,6 +156,14 @@ model Departure {
   // checkout endpoint'e (Fazė 5) — ne tik FE, kuris tik slepia/rodo mygtuką.
   depositDeadline      DateTime?
   status               DepartureStatus @default(ACTIVE)
+  badgeTag             String?         // pvz. "Paskutinė minutė!", rodoma kortelėje/trip page — PER IŠVYKIMĄ, ne visai kelionei (viena kelionė gali turėti kelias datas, badge turi liesti tik vieną iš jų)
+  // Admin'o rankinis perjungiklis — rodo raudoną ženkliuką kortelės
+  // nuotraukos dešiniame viršutiniame kampe (TripCard.tsx). Atskirai nuo
+  // badgeTag (laisvo teksto ženkliuko kortelės KŪNE po pavadinimu) —
+  // abu gali būti naudojami kartu arba nepriklausomai vienas nuo kito.
+  // Perkelta iš Trip (žr. migraciją 20261121...) — anksčiau klaidingai
+  // rodėsi VISŲ tos kelionės išvykimo datų kortelėse vienu metu.
+  isLastMinute         Boolean         @default(false)
   createdAt            DateTime        @default(now())
 
   // Tik FLIGHT tipui — skrydžiui NĖRA konkrečių vietų (Seat), tik bendras bilietų skaičiaus baseinas.
