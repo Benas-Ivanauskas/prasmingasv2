@@ -32,7 +32,7 @@
 .trip-card-media {
   position: relative;
   width: 100%;
-  height: 140px;
+  height: 200px;
   overflow: hidden;
   background-color: #f1f5f9;
 }
@@ -238,14 +238,23 @@
   background-color: var(--surface) !important;
 }
 
+/* Grid su FIKSUOTU (ne 1fr) vidurio stulpeliu "vietų yra"/G blokui —
+   1fr leisdavo šiam stulpeliui "prarysti" VISĄ likusį 368px kortelės
+   plotį (trumpoje eilutėje be nuolaidos tai siekdavo ~195px vien šiam
+   blokui), dėl ko tarpai atrodė perdėtai dideli. Grynas flex be
+   margin-left:auto (bandytas variantas) viską sugrūsdavo prie kairės, o
+   kaina netekdavo fiksuoto dešinio krašto — irgi ne tai, ko reikėjo.
+   100px fiksuotas stulpelis + grid justify-content:space-between
+   išlaiko kainą prie dešinio krašto, bet tarpai aplink "vietų yra" lieka
+   saikingi, VIENODI visose eilutėse (nepriklausomai nuo G ar kainos
+   teksto ilgio). */
 .trip-departure-row {
-  padding: 6px 16px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  row-gap: 2px;
+  padding: 6px 14px;
+  display: grid;
+  grid-template-columns: auto 100px auto;
   justify-content: space-between;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   font-size: 0.86rem;
   background-color: var(--surface) !important;
   transition: background-color 0.15s ease;
@@ -261,10 +270,12 @@
 
 /* Date */
 .trip-card-date {
+  font-size: 0.78rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: #334155;
+  flex-shrink: 0;
 }
 
 .trip-card-date.is-first {
@@ -273,10 +284,16 @@
 }
 
 /* Availability & Guaranteed */
+/* inline-flex + justify-self:center — dėžė susitraukia iki pat "vietų
+   yra" teksto pločio ir centruojasi 100px stulpelyje pagal TIK jį, o G
+   ženkliukas absoliučiai pozicionuojamas greta (neskaičiuojamas į dėžės
+   plotį), kad tekstas centruotųsi toje pačioje vietoje nepriklausomai,
+   ar G rodomas, ar ne. */
 .trip-card-status {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-self: center;
   white-space: nowrap;
 }
 
@@ -284,6 +301,7 @@
   color: #64748b;
   font-size: 0.84rem;
   font-weight: 500;
+  line-height: 1;
 }
 
 .trip-card-availability.sold-out {
@@ -292,9 +310,15 @@
 }
 
 .guarantee-badge {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   background-color: #dc2626 !important;
   color: #ffffff !important;
   font-weight: 800;
@@ -313,7 +337,7 @@
   justify-content: flex-end;
   gap: 6px;
   white-space: nowrap;
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .trip-card-price-group .discount-text {
@@ -370,25 +394,45 @@
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .trip-card-media {
-    height: 150px;
+    height: 190px;
   }
 
   .trip-departure-row {
-    padding: 6px 10px;
+    padding: 6px 8px;
+    grid-template-columns: auto 70px auto;
     gap: 4px;
     font-size: 0.78rem;
   }
 
   .trip-card-date {
-    font-size: 0.78rem;
+    font-size: 0.7rem;
   }
 
   .trip-card-availability {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
+  }
+
+  .guarantee-badge {
+    width: 15px;
+    height: 15px;
+    font-size: 0.64rem;
+    margin-left: 4px;
+  }
+
+  .trip-card-price-group {
+    gap: 4px;
+  }
+
+  .trip-card-price-group .discount-text {
+    font-size: 0.72rem;
+  }
+
+  .trip-card-price-group .original-strike {
+    font-size: 0.74rem;
   }
 
   .trip-card-price-group .final-price {
-    font-size: 0.94rem;
+    font-size: 0.86rem;
   }
 
   .trip-card-expand-btn {
